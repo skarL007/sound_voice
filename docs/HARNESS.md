@@ -1,15 +1,15 @@
 # Harness Engineering — VoiceLaunch TTS
 
-## 1. Visão do Produto
+## 1. Visao do Produto
 
-Launcher desktop (Electron) para execução local de modelos TTS open-source, com foco em **acessibilidade para pessoas com deficiência na fala e mudas**. O usuário digita ou seleciona frases predefinidas, o sistema sintetiza voz e a envia como **microfone virtual** para qualquer aplicação (Discord, Zoom, jogos, etc.).
+Launcher desktop (Electron) para execucao local de modelos TTS open-source, com foco em comunicacao assistiva local. O usuario digita ou seleciona frases predefinidas, o sistema sintetiza voz e a envia como **microfone virtual** para qualquer aplicacao (Discord, Zoom, jogos, etc.).
 
 ### Diferenciais
 - Detecção automática de hardware e recomendação de modelos
 - Download e configuração one-click de modelos e dependências
 - Clonagem de voz integrada no launcher (6–30s de áudio de referência)
 - Saída como microfone virtual sem configurações manuais complexas
-- Interface pensada para acessibilidade (atalhos de teclado, modo de digitação rápida, frases favoritas)
+- Interface pensada para uso rapido e assistivo (atalhos de teclado, digitacao agil, frases favoritas)
 
 ---
 

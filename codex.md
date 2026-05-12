@@ -1,13 +1,13 @@
 # VoiceLaunch TTS - Estado do Projeto
 
 > Atualizado em: 2026-05-12
-> Status: **MVP LOCAL ESTABILIZADO - BOOT E PACOTE ENDURECIDOS, BETA CORE PENDENTE**
+> Status: **MVP LOCAL ESTABILIZADO - REPO PUBLICADO, README ALINHADO E BETA CORE PENDENTE**
 
 ---
 
 ## Estado Atual Para Retomada
 
-- **Fonte de verdade desta pasta:** este checkout nao possui diretorio `.git`; a continuidade aqui depende de `codex.md`, `README.md`, `CHANGELOG.md` e `docs/`.
+- **Fonte de verdade desta pasta:** este checkout voltou a ser um repositorio Git valido; a continuidade agora depende de `codex.md`, `README.md`, `CHANGELOG.md`, `docs/` e do remoto publicado.
 - **Fluxo principal real do MVP local:** `Piper` primeiro, `Kokoro` como upgrade de qualidade, `XTTS v2` somente como trilha avancada em `NVIDIA/CUDA`.
 - **Fora do caminho principal:** `MeloTTS`, `Fish Speech` e `Bark` seguem experimentais e ocultos por padrao.
 - **Verificacao fresca desta rodada:** `npm test` = **21 testes passando**; `npm run build` = **build OK**.
@@ -15,6 +15,7 @@
 - **Verificacao de runtime desta rodada:** `npm run dev` e `dist/win-unpacked/VoiceLaunch TTS.exe` subiram em execucao real.
 - **Validacao extra de runtime empacotado:** o backend standalone respondeu em `/health` e o fallback de porta foi exercitado com sucesso quando `9472` estava ocupado.
 - **Artefato canonico desta rodada:** `dist/VoiceLaunch-TTS-Setup-1.0.0.exe`, gerado em `2026-05-12 03:16`.
+- **Repositorio publicado:** `https://github.com/skarL007/sound_voice` em `main`, com `origin/main` sincronizado no commit `dbd9f6bb712c7beed3b249dae8930a98a874ec81`.
 
 ---
 
@@ -100,9 +101,20 @@ dist/
 
 ---
 
+## Documentacao e posicionamento publico
+
+- [x] `README.md` reescrito para refletir o fluxo real do MVP local
+- [x] Linguagem publica ajustada para um tom mais humano e inclusivo
+- [x] Fluxograma Mermaid adicionado ao `README.md`
+- [x] `package.json` alinhado com o repositorio real publicado no GitHub
+- [x] Docs publicas e copy institucional alinhadas ao posicionamento atual do produto
+
+---
+
 ## Proximo Foco Recomendado
 
 1. Executar a trilha **Core** de `docs/BETA_PROGRAM.md` em maquina limpa.
 2. Validar VB-Cable + Discord/Zoom em maquina limpa.
 3. Definir um canal direto de suporte ao beta para testers nao tecnicos.
 4. So depois decidir sobre beta ampliado, XTTS no pacote final e assinatura de codigo.
+5. Na proxima retomada, usar `README.md` como entrada publica e `codex.md` como checkpoint operacional.

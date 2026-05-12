@@ -1,14 +1,14 @@
 {
   "name": "voicelaunch-tts",
   "version": "1.0.0",
-  "description": "Launcher TTS open-source para acessibilidade - geração de voz como microfone virtual",
+  "description": "Open-source local TTS launcher for assistive communication and virtual microphone workflows",
   "main": "./out/main/index.js",
   "author": "VoiceLaunch Team",
   "license": "MIT",
   "private": true,
   "repository": {
     "type": "git",
-    "url": "https://github.com/voicelaunch/voicelaunch-tts.git"
+    "url": "https://github.com/skarL007/sound_voice.git"
   },
   "scripts": {
     "dev": "electron-vite dev",

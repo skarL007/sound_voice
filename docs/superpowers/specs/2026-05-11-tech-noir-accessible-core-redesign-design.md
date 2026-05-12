@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Redesenhar o nucleo visual do VoiceLaunch TTS para deixá-lo mais elegante, bonito e gamer, sem perder legibilidade, foco operacional e acessibilidade para pessoas com deficiência na fala e mudas.
+Redesenhar o nucleo visual do VoiceLaunch TTS para deixa-lo mais elegante, bonito e gamer, sem perder legibilidade, foco operacional e acessibilidade para pessoas que usam comunicacao assistiva.
 
 O redesign cobre apenas o nucleo do launcher:
 

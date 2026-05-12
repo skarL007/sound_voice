@@ -1,12 +1,12 @@
-# Microfone Virtual — Guia Técnico
+# Microfone Virtual - Guia Tecnico
 
 ## Como Funciona
 
-O VoiceLaunch TTS usa o **VB-Audio Virtual Cable** para rotear o áudio gerado como se fosse um microfone real. Isso permite que pessoas com deficiência na fala usem o TTS em qualquer aplicativo (Discord, Zoom, jogos, etc.).
+O VoiceLaunch TTS usa o **VB-Audio Virtual Cable** para rotear o audio gerado como se fosse um microfone real. Isso permite levar a voz sintetizada para qualquer aplicativo compativel com entrada de microfone, como Discord, Zoom e jogos.
 
 ## Arquitetura
 
-```
+```text
 [VoiceLaunch TTS] --audio--> [CABLE Input (VB-Audio)]
                                      |
                                      v
@@ -16,54 +16,54 @@ O VoiceLaunch TTS usa o **VB-Audio Virtual Cable** para rotear o áudio gerado c
                          [Discord / Zoom / Jogos]
 ```
 
-## Instalação
+## Instalacao
 
-### Automática (recomendada)
-O instalador NSIS do VoiceLaunch inclui o VB-Cable e o instala silenciosamente.
+### Pelo app
+O app tenta abrir o instalador embutido quando ele estiver presente no pacote. Se esse instalador nao estiver disponivel, o fluxo oficial e abrir o site do VB-Audio para instalacao manual.
 
 ### Manual
 1. Baixe em: https://vb-audio.com/Cable/
 2. Execute `VBCABLE_Setup.exe`
 3. Reinicie o computador
 
-## Configuração nos Aplicativos
+## Configuracao nos Aplicativos
 
 ### Discord
-1. Configurações de Usuário > Voz e Vídeo
+1. Configuracoes de Usuario > Voz e Video
 2. Dispositivo de Entrada: **CABLE Output**
-3. Desative "Supressão de Ruído" e "Cancelamento de Eco" para melhor qualidade
+3. Desative "Supressao de Ruido" e "Cancelamento de Eco" para melhor qualidade
 
 ### Zoom
-1. Configurações > Áudio
+1. Configuracoes > Audio
 2. Microfone: **CABLE Output**
-3. Desmarque "Suprimir ruído de fundo"
+3. Desmarque "Suprimir ruido de fundo"
 
-### Jogos (geral)
-1. Configurações de Áudio/Voz
+### Jogos
+1. Configuracoes de Audio ou Voz
 2. Microfone: **CABLE Output**
 
-## Modos de Operação
+## Modos de Operacao
 
 ### Push to Talk (PTT)
-- O TTS só é enviado ao microfone virtual quando você segura uma tecla configurada
-- Útil para evitar transmissão acidental
+- O TTS so e enviado ao microfone virtual quando voce segura uma tecla configurada
+- Util para evitar transmissao acidental
 
 ### Always On
-- Todo áudio gerado vai direto ao microfone virtual
-- Recomendado para conversação contínua
+- Todo audio gerado vai direto ao microfone virtual
+- Recomendado para conversacao continua
 
 ## Merge com Microfone Real
 
-Para usar TTS e fala real simultaneamente, instale **VoiceMeeter Banana** (gratuito):
+Para usar TTS e fala real simultaneamente, instale **VoiceMeeter Banana**:
 1. Configure o microfone real no input 1
 2. Configure CABLE Output no input 2
 3. Selecione VoiceMeeter Output como microfone no aplicativo
 
-## Solução de Problemas
+## Solucao de Problemas
 
-| Problema | Solução |
+| Problema | Solucao |
 |----------|---------|
-| Nenhum som no app | Verifique se CABLE Output está selecionado como microfone |
-| Só ouço eco | Desative "Listen to this device" no Painel de Controle de Som |
+| Nenhum som no app | Verifique se CABLE Output esta selecionado como microfone |
+| So ouco eco | Desative "Listen to this device" no Painel de Controle de Som |
 | Qualidade ruim | Aumente a taxa de amostragem do VB-Cable para 48000 Hz |
-| Delay alto | Use modelos leves (Piper, Kokoro) em modo CPU |
+| Delay alto | Use modelos leves como Piper e Kokoro em modo CPU |

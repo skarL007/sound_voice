@@ -257,8 +257,8 @@ export default function SettingsPage() {
       <div className="glass-panel p-5">
         <h2 className="text-lg font-medium text-white mb-3">Sobre o VoiceLaunch TTS</h2>
         <p className="text-sm text-slate-400 leading-relaxed mb-4">
-          VoiceLaunch TTS e uma ferramenta de acessibilidade gratuita e open source projetada para pessoas com deficiencia na fala.
-          Toda a sintese principal acontece localmente no seu computador.
+          VoiceLaunch TTS e uma ferramenta gratuita e open source de comunicacao assistiva local.
+          Ela ajuda quem prefere, precisa ou escolhe transformar texto em voz com rapidez, autonomia e privacidade.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
           <div className="bg-slate-800/50 p-3 rounded-lg">
