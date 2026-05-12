@@ -1,0 +1,63 @@
+appId: com.voicelaunch.tts
+productName: VoiceLaunch TTS
+copyright: Copyright © 2026 VoiceLaunch Team
+directories:
+  output: dist
+  buildResources: build
+files:
+  - out/**/*
+  - assets/**/*
+extraResources:
+  - from: python_dist/
+    to: python_dist/
+    filter:
+      - "**/*"
+  - from: assets/model-registry.json
+    to: assets/model-registry.json
+  - from: assets/vbcable/
+    to: vbcable/
+    filter:
+      - "**/*"
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
+  shortcutName: VoiceLaunch TTS
+  include: build/installer.nsh
+win:
+  artifactName: VoiceLaunch-TTS-Setup-${version}.${ext}
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: build/icon.ico
+  requestedExecutionLevel: requireAdministrator
+  signAndEditExecutable: false
+  # Code Signing Configuration
+  # --------------------------
+  # Option 1: Standard Code Signing (PFX file)
+  #   Set environment variables before building:
+  #   $env:WIN_CSC_LINK="C:\certs\voicelaunch.pfx"
+  #   $env:WIN_CSC_KEY_PASSWORD="your-password"
+  #
+  # Option 2: EV Code Signing (Hardware token)
+  #   $env:WIN_CSC_LINK="C:\certs\token-config.json"
+  #   $env:CSC_KEY_PASSWORD="token-PIN"
+  #
+  # Option 3: Azure Key Vault / Cloud HSM
+  #   Configure via electron-builder signing hooks in scripts/sign.js
+  #
+  # For CI/CD (GitHub Actions), add secrets:
+  #   WIN_CSC_LINK, WIN_CSC_KEY_PASSWORD
+  #
+  # Without signing, Windows Defender SmartScreen will warn users.
+  # For testing/beta, this is acceptable. For public release, signing is REQUIRED.
+publish:
+  provider: github
+  owner: voicelaunch
+  repo: voicelaunch-tts
+  channel: latest
+  releaseType: release
+extraMetadata:
+  main: out/main/index.js

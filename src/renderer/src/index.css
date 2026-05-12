@@ -1,0 +1,205 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+    --vl-bg-0: #06090d;
+    --vl-bg-1: #0c1219;
+    --vl-bg-2: #111a24;
+    --vl-panel-0: #16212d;
+    --vl-panel-1: #1b2836;
+    --vl-line-soft: #243446;
+    --vl-line-strong: #33506b;
+    --vl-text-strong: #f3f7fb;
+    --vl-text-body: #c8d3df;
+    --vl-text-soft: #8fa1b3;
+    --vl-cyan: #49e6ff;
+    --vl-ember: #ff8a5b;
+  }
+
+  html, body, #root {
+    @apply h-full w-full;
+  }
+
+  body {
+    @apply text-slate-100 antialiased;
+    background:
+      radial-gradient(circle at top left, rgba(73,230,255,0.12), transparent 30%),
+      radial-gradient(circle at top right, rgba(255,138,91,0.12), transparent 26%),
+      linear-gradient(180deg, #0c1219 0%, #06090d 100%);
+    font-family: 'Atkinson Hyperlegible Next', 'Segoe UI', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  .app-shell {
+    @apply h-full flex flex-col;
+    background:
+      linear-gradient(180deg, rgba(12,18,25,0.96), rgba(6,9,13,0.98)),
+      repeating-linear-gradient(
+        90deg,
+        rgba(255,255,255,0.015) 0,
+        rgba(255,255,255,0.015) 1px,
+        transparent 1px,
+        transparent 24px
+      );
+  }
+
+  .glass-panel,
+  .panel-surface {
+    @apply rounded-[18px] border backdrop-blur-sm;
+    background: linear-gradient(180deg, rgba(27,40,54,0.92), rgba(22,33,45,0.9));
+    border-color: rgba(51,80,107,0.55);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
+  }
+
+  .panel-muted {
+    @apply rounded-2xl border;
+    background: rgba(10, 14, 20, 0.82);
+    border-color: rgba(36, 52, 70, 0.88);
+  }
+
+  .titlebar-btn {
+    @apply p-2 rounded-xl transition-all duration-200;
+  }
+
+  .nav-link {
+    @apply relative flex items-center gap-3 rounded-2xl px-3 lg:px-4 py-3 transition-all duration-200;
+  }
+
+  .status-pill {
+    @apply inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium;
+  }
+
+  .btn-primary {
+    @apply px-4 py-2 text-white font-semibold rounded-[14px] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+    background: linear-gradient(135deg, #49e6ff, #1fd0f0 52%, #117d95);
+    box-shadow: 0 10px 28px rgba(31, 208, 240, 0.28);
+  }
+
+  .btn-secondary {
+    @apply px-4 py-2 font-medium rounded-[14px] transition-all duration-200;
+    background: rgba(17, 26, 36, 0.92);
+    color: #c8d3df;
+    border: 1px solid rgba(51, 80, 107, 0.65);
+  }
+
+  .input-field {
+    @apply w-full rounded-[14px] border px-4 py-2 transition-all;
+    background: rgba(9, 13, 19, 0.9);
+    border-color: rgba(51, 80, 107, 0.72);
+    color: #f3f7fb;
+  }
+}
+
+@layer utilities {
+  .card-hover {
+    @apply transition-all duration-200 hover:bg-chrome-800 hover:border-chrome-500;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(30, 41, 59, 0.5);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(71, 85, 105, 0.8);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 1);
+}
+
+:focus-visible {
+  outline: 2px solid #49e6ff;
+  outline-offset: 3px;
+}
+
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible,
+.input-field:focus-visible,
+.nav-link:focus-visible {
+  box-shadow: 0 0 0 3px rgba(73, 230, 255, 0.22);
+}
+
+.high-contrast .panel-surface,
+.high-contrast .panel-muted,
+.high-contrast .btn-primary,
+.high-contrast .btn-secondary,
+.high-contrast .input-field,
+.high-contrast .glass-panel {
+  background: #000000 !important;
+  border: 2px solid #ffffff !important;
+  box-shadow: none !important;
+}
+
+.high-contrast * {
+  color-scheme: dark;
+}
+
+.high-contrast h1,
+.high-contrast h2,
+.high-contrast h3 {
+  color: #ffff00 !important;
+}
+
+.high-contrast :where(p, span, label, li, a, small, strong, em, button, input, textarea, select) {
+  color: #ffffff !important;
+}
+
+.large-font {
+  font-size: 18px;
+}
+
+.large-font .text-xs {
+  font-size: 14px !important;
+}
+
+.large-font .text-sm {
+  font-size: 16px !important;
+}
+
+.large-font .text-base {
+  font-size: 18px !important;
+}
+
+.large-font .text-lg {
+  font-size: 20px !important;
+}
+
+.large-font .text-xl {
+  font-size: 24px !important;
+}
+
+.large-font .text-2xl {
+  font-size: 28px !important;
+}
+
+.large-font .text-3xl {
+  font-size: 32px !important;
+}
+
+.large-font button,
+.large-font input,
+.large-font select,
+.large-font textarea {
+  font-size: 18px !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition-duration: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+}

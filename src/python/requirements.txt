@@ -1,0 +1,15 @@
+# VoiceLaunch TTS — Python Dependencies
+# Instale o core obrigatório:
+#   pip install -r requirements-core.txt
+#
+# Depois instale os engines que deseja usar:
+#   pip install -r requirements-piper.txt
+#   pip install -r requirements-kokoro.txt
+#   pip install -r requirements-melotts.txt
+#   pip install -r requirements-xtts.txt
+#   pip install -r requirements-bark.txt
+#
+# Para GPU AMD no Windows, use o torch com DirectML:
+#   pip install torch-directml
+
+-r requirements-core.txt

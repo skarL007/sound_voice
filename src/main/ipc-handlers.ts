@@ -1,0 +1,448 @@
+import { ipcMain, shell, Notification, app } from 'electron'
+import { autoUpdater } from 'electron-updater'
+import { spawn } from 'child_process'
+import { getMainWindow, getBackendManager } from './index'
+import { detectHardware } from './hardware-detector'
+import { downloadModelWithProgress, cancelDownload } from './download-manager'
+import { loadSettings, saveSettings } from './settings-store'
+import { logMain, getLogs, clearLogs } from './logger'
+import { join } from 'path'
+import { existsSync, readdirSync, statSync, unlinkSync, rmdirSync, readFileSync, mkdirSync, writeFileSync } from 'fs'
+import { validateModelId, validateAudioExtension, isHttpUrl } from './security-utils'
+import { getBundledVBCableInstallerCandidates, isAutoUpdateEnabled } from './app-config'
+
+const USER_DATA = app.getPath('userData')
+const MODELS_DIR = join(USER_DATA, 'models')
+const VOICES_DIR = join(USER_DATA, 'voices')
+
+if (!existsSync(MODELS_DIR)) mkdirSync(MODELS_DIR, { recursive: true })
+if (!existsSync(VOICES_DIR)) mkdirSync(VOICES_DIR, { recursive: true })
+
+// Registry de modelos
+const MODEL_REGISTRY_PATH = join(__dirname, '../../assets/model-registry.json')
+
+function loadModelRegistry(): any[] {
+  try {
+    const data = readFileSync(MODEL_REGISTRY_PATH, 'utf-8')
+    return JSON.parse(data).models
+  } catch {
+    return []
+  }
+}
+
+function getBackendUrl(): string {
+  const backend = getBackendManager()
+  const port = backend?.getStatus().port || 9472
+  return `http://127.0.0.1:${port}`
+}
+
+export function registerIpcHandlers(): void {
+  // Window controls
+  ipcMain.on('window:minimize', () => {
+    getMainWindow()?.minimize()
+  })
+  ipcMain.on('window:maximize', () => {
+    const win = getMainWindow()
+    if (win?.isMaximized()) win?.unmaximize()
+    else win?.maximize()
+  })
+  ipcMain.on('window:close', () => {
+    getMainWindow()?.close()
+  })
+  ipcMain.on('window:always-on-top', (_, value: boolean) => {
+    getMainWindow()?.setAlwaysOnTop(value, 'floating')
+  })
+
+  ipcMain.on('window:set-compact', (_, enabled: boolean) => {
+    const win = getMainWindow()
+    if (!win) return
+    if (enabled) {
+      win.setSize(480, 420)
+      win.setMinimumSize(360, 320)
+      win.setAlwaysOnTop(true, 'floating')
+    } else {
+      win.setSize(1280, 800)
+      win.setMinimumSize(900, 600)
+    }
+  })
+  ipcMain.on('shell:open-external', (_, url: string) => {
+    if (!isHttpUrl(url)) {
+      logMain('WARN', `Blocked openExternal for invalid URL: ${url}`)
+      return
+    }
+    shell.openExternal(url)
+  })
+
+  // Hardware
+  ipcMain.handle('hardware:get-info', async () => {
+    return detectHardware()
+  })
+
+  // Backend
+  ipcMain.handle('backend:status', async () => {
+    return getBackendManager()?.getStatus() || { running: false, port: 9472, version: '1.0.0', uptime: 0, phase: 'idle' }
+  })
+  ipcMain.handle('backend:restart', async () => {
+    return getBackendManager()?.restart()
+  })
+
+  // Models
+  ipcMain.handle('model:list-installed', async () => {
+    const installed: any[] = []
+    if (!existsSync(MODELS_DIR)) return installed
+
+    const entries = readdirSync(MODELS_DIR)
+    for (const entry of entries) {
+      const modelPath = join(MODELS_DIR, entry)
+      const stat = statSync(modelPath)
+      if (stat.isDirectory()) {
+        installed.push({
+          id: entry,
+          name: entry,
+          version: '1.0.0',
+          size: getFolderSize(modelPath),
+          path: modelPath,
+          isLoaded: false
+        })
+      }
+    }
+    return installed
+  })
+
+  ipcMain.handle('model:download', async (_, modelId: string, variant?: string) => {
+    const window = getMainWindow()
+    if (!window) return false
+
+    const registry = loadModelRegistry()
+    const model = registry.find((m: any) => m.id === modelId)
+    if (!model) return false
+
+    const downloadUrl = variant && model.variants?.[variant]
+      ? model.variants[variant].url
+      : model.downloadUrl
+
+    const destination = join(MODELS_DIR, modelId, model.filename || 'model.bin')
+
+    // Download main model file
+    downloadModelWithProgress({
+      modelId,
+      url: downloadUrl,
+      destination,
+      checksum: model.checksum
+    }, window)
+
+    // Download config file if specified (e.g., Piper .json config)
+    if (model.configUrl) {
+      const configDest = join(MODELS_DIR, modelId, model.configFilename || 'config.json')
+      downloadModelWithProgress({
+        modelId: `${modelId}_config`,
+        url: model.configUrl,
+        destination: configDest,
+      }, window).catch(() => {
+        // Config download failure is non-fatal
+      })
+    }
+
+    return true
+  })
+
+  ipcMain.handle('model:uninstall', async (_, modelId: string) => {
+    try {
+      validateModelId(modelId)
+    } catch {
+      logMain('WARN', `Blocked uninstall for invalid modelId: ${modelId}`)
+      return false
+    }
+    const modelPath = join(MODELS_DIR, modelId)
+    if (existsSync(modelPath)) {
+      try {
+        deleteFolderRecursive(modelPath)
+        return true
+      } catch {
+        return false
+      }
+    }
+    return false
+  })
+
+  ipcMain.handle('model:cancel-download', async (_, modelId: string) => {
+    return cancelDownload(modelId)
+  })
+
+  ipcMain.handle('model:install-deps', async (_, modelId: string) => {
+    try {
+      const response = await fetch(`${getBackendUrl()}/models/install-deps`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ modelId })
+      })
+      return await response.json()
+    } catch (error) {
+      return { success: false, error: String(error) }
+    }
+  })
+
+  ipcMain.handle('model:deps-status', async (_, modelId: string) => {
+    try {
+      const response = await fetch(`${getBackendUrl()}/models/deps-status/${modelId}`)
+      return await response.json()
+    } catch {
+      return { installed: false }
+    }
+  })
+
+  ipcMain.handle('model:registry', async () => {
+    try {
+      const response = await fetch(`${getBackendUrl()}/models`)
+      return await response.json()
+    } catch {
+      return []
+    }
+  })
+
+  // TTS
+  ipcMain.handle('tts:synthesize', async (_, request) => {
+    try {
+      const response = await fetch(`${getBackendUrl()}/tts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(request)
+      })
+      return await response.json()
+    } catch (error) {
+      return { success: false, error: String(error) }
+    }
+  })
+
+  ipcMain.handle('tts:play', async (_, audioPath: string) => {
+    try {
+      await fetch(`${getBackendUrl()}/play`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ audioPath })
+      })
+      return true
+    } catch {
+      return false
+    }
+  })
+
+  ipcMain.handle('tts:stop', async () => {
+    try {
+      await fetch(`${getBackendUrl()}/stop`, { method: 'POST' })
+      return true
+    } catch {
+      return false
+    }
+  })
+
+  ipcMain.handle('tts:stream-start', async () => {
+    // WebSocket connection is managed by renderer directly
+    return true
+  })
+
+  ipcMain.handle('tts:stream-stop', async () => {
+    return true
+  })
+
+  // Voice cloning
+  ipcMain.handle('voice:clone', async (_, request) => {
+    try {
+      const response = await fetch(`${getBackendUrl()}/voice/clone`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(request)
+      })
+      return await response.json()
+    } catch (error) {
+      return { success: false, error: String(error) }
+    }
+  })
+
+  ipcMain.handle('voice:list', async () => {
+    try {
+      const response = await fetch(`${getBackendUrl()}/voice/list`)
+      return await response.json()
+    } catch {
+      return []
+    }
+  })
+
+  ipcMain.handle('voice:delete', async (_, voiceId: string) => {
+    try {
+      const response = await fetch(`${getBackendUrl()}/voice/delete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ voiceId })
+      })
+      return (await response.json()).success
+    } catch {
+      return false
+    }
+  })
+
+  // Virtual mic
+  ipcMain.handle('mic:route', async (_, enabled: boolean) => {
+    try {
+      const response = await fetch(`${getBackendUrl()}/mic/route`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled })
+      })
+      return (await response.json()).success
+    } catch {
+      return false
+    }
+  })
+
+  ipcMain.handle('mic:status', async () => {
+    try {
+      const response = await fetch(`${getBackendUrl()}/mic/status`)
+      return (await response.json()).enabled
+    } catch {
+      return false
+    }
+  })
+
+  ipcMain.handle('audio:devices', async () => {
+    try {
+      const response = await fetch(`${getBackendUrl()}/audio/devices`)
+      return await response.json()
+    } catch {
+      return []
+    }
+  })
+
+  ipcMain.handle('mic:install-vb-cable', async () => {
+    const installerPath = getBundledVBCableInstallerCandidates().find((candidate) => existsSync(candidate))
+    if (installerPath) {
+      logMain('INFO', `Launching VB-Cable installer: ${installerPath}`)
+      try {
+        spawn(installerPath, [], { detached: true, shell: true })
+        return { success: true, launched: true }
+      } catch (e) {
+        logMain('ERROR', `Failed to launch VB-Cable installer: ${e}`)
+        return { success: false, error: String(e) }
+      }
+    }
+    // Fallback: open official website
+    shell.openExternal('https://vb-audio.com/Cable/')
+    return {
+      success: true,
+      launched: false,
+      message: 'O instalador do pacote nao esta disponivel. O site oficial foi aberto para download manual.',
+    }
+  })
+
+  // Voice cloning: save audio blob to disk so Python backend can read it
+  ipcMain.handle('voice:save-audio', async (_, arrayBuffer: ArrayBuffer, ext: string) => {
+    let cleanExt: string
+    try {
+      cleanExt = validateAudioExtension(ext)
+    } catch {
+      logMain('WARN', `Blocked save-audio for invalid extension: ${ext}`)
+      throw new Error('Invalid file extension')
+    }
+    const tempDir = join(USER_DATA, 'temp')
+    if (!existsSync(tempDir)) mkdirSync(tempDir, { recursive: true })
+    const fileName = `clone_${Date.now()}.${cleanExt}`
+    const filePath = join(tempDir, fileName)
+    const resolvedPath = join(filePath) // normalize
+    if (!resolvedPath.startsWith(tempDir)) {
+      throw new Error('Path escape detected')
+    }
+    const buffer = Buffer.from(arrayBuffer)
+    writeFileSync(filePath, buffer)
+    return filePath
+  })
+
+  // Settings persistence
+  ipcMain.handle('settings:load', () => {
+    return loadSettings()
+  })
+
+  ipcMain.handle('settings:save', (_, settings) => {
+    saveSettings(settings)
+    return true
+  })
+
+  // Logs
+  ipcMain.handle('logs:get', () => {
+    return getLogs()
+  })
+
+  ipcMain.handle('logs:clear', () => {
+    clearLogs()
+    return true
+  })
+
+  // Desktop notifications
+  ipcMain.on('notification:show', (_, title: string, body: string) => {
+    const MAX_LEN = 200
+    const safeTitle = title.slice(0, MAX_LEN)
+    const safeBody = body.slice(0, MAX_LEN)
+    if (Notification.isSupported()) {
+      new Notification({
+        title: safeTitle,
+        body: safeBody,
+        icon: join(__dirname, '../../build/icon.png'),
+        silent: false,
+      }).show()
+    }
+  })
+
+  // Auto-updater
+  ipcMain.handle('updater:check', async () => {
+    if (!isAutoUpdateEnabled()) {
+      return { success: false, error: 'Auto-update disabled for this build.' }
+    }
+    try {
+      const result = await autoUpdater.checkForUpdates()
+      return { success: true, updateInfo: result?.updateInfo }
+    } catch (error) {
+      return { success: false, error: String(error) }
+    }
+  })
+
+  ipcMain.handle('updater:install', async () => {
+    if (!isAutoUpdateEnabled()) {
+      return false
+    }
+    autoUpdater.quitAndInstall()
+    return true
+  })
+
+  ipcMain.handle('updater:version', () => {
+    return app.getVersion()
+  })
+}
+
+function getFolderSize(dir: string): number {
+  let size = 0
+  const files = readdirSync(dir)
+  for (const file of files) {
+    const path = join(dir, file)
+    const stat = statSync(path)
+    if (stat.isDirectory()) {
+      size += getFolderSize(path)
+    } else {
+      size += stat.size
+    }
+  }
+  return size
+}
+
+function deleteFolderRecursive(dir: string): void {
+  if (!existsSync(dir)) return
+  const files = readdirSync(dir)
+  for (const file of files) {
+    const path = join(dir, file)
+    const stat = statSync(path)
+    if (stat.isDirectory()) {
+      deleteFolderRecursive(path)
+    } else {
+      unlinkSync(path)
+    }
+  }
+  rmdirSync(dir)
+}

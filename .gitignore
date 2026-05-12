@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+python_dist/
+
+# Build outputs
+out/
+dist/
+build-py/
+*.spec
+
+# Environment
+.env
+.env.local
+
+# Python cache
+__pycache__/
+*.pyc
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+.runtime/
+
+# Models (large files)
+models/
+*.onnx
+*.pt
+*.pth
+*.bin
+
+# User data
+user-data/
+voices/

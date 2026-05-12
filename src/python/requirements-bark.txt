@@ -1,0 +1,5 @@
+# Bark — expressivo, requer GPU
+torch>=2.0.0
+torchaudio>=2.0.0
+bark>=0.1.0
+scipy>=1.11.0

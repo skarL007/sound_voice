@@ -1,0 +1,4 @@
+# Kokoro — qualidade, eficiente
+kokoro>=0.8.0
+kokoro-onnx>=0.5.0
+onnxruntime>=1.16.0

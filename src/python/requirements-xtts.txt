@@ -1,0 +1,4 @@
+# XTTS v2 — clonagem, requer GPU (CUDA ou ROCm)
+torch>=2.0.0
+torchaudio>=2.0.0
+TTS>=0.22.0

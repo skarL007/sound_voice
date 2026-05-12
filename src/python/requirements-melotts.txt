@@ -1,0 +1,5 @@
+# MeloTTS — PT-BR nativo, CPU
+torch>=2.0.0
+torchaudio>=2.0.0
+melotts>=0.1.0
+phonemizer>=3.2.0

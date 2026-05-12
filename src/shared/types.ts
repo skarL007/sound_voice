@@ -1,0 +1,149 @@
+// Shared types between main, preload, and renderer
+
+export interface HardwareInfo {
+  cpu: string
+  cpuCores: number
+  cpuThreads: number
+  ramGB: number
+  gpu: string
+  gpuVRAM: number
+  gpuVendor: string
+  os: string
+  osVersion: string
+  isCudaAvailable: boolean
+  cudaVersion: string
+  isRocmAvailable: boolean
+  rocmVersion: string
+  isDirectMLAvailable: boolean
+  recommendedTier: string
+}
+
+export interface DownloadProgress {
+  modelId: string
+  percent: number
+  speed: string
+  eta: string
+}
+
+export interface DownloadComplete {
+  modelId: string
+  success: boolean
+  error?: string
+}
+
+export interface InstalledModel {
+  id: string
+  name: string
+  version: string
+  size: number
+  path: string
+  isLoaded: boolean
+}
+
+export interface TTSRequest {
+  text: string
+  modelId: string
+  voiceId?: string
+  speed?: number
+  language?: string
+  outputDevice?: string
+}
+
+export interface TTSResponse {
+  success: boolean
+  audioPath?: string
+  duration?: number
+  error?: string
+}
+
+export interface TTSHistoryItem {
+  id: string
+  text: string
+  modelId: string
+  voiceId?: string
+  timestamp: number
+  audioPath?: string
+}
+
+export interface CloneRequest {
+  audioPath: string
+  modelId: string
+  name: string
+  description?: string
+}
+
+export interface CloneResponse {
+  success: boolean
+  voiceId?: string
+  error?: string
+}
+
+export interface CloneProgress {
+  stage: string
+  percent: number
+  message: string
+}
+
+export interface ClonedVoice {
+  id: string
+  name: string
+  description: string
+  modelId: string
+  createdAt: string
+  samplePath: string
+}
+
+export interface AudioDevice {
+  id: string
+  name: string
+  isInput: boolean
+  isDefault: boolean
+}
+
+export interface BackendStatus {
+  running: boolean
+  port: number
+  version: string
+  uptime: number
+  phase?: 'idle' | 'starting' | 'running' | 'error'
+  lastError?: string
+}
+
+export interface ModelInfo {
+  id: string
+  name: string
+  description: string
+  languages: string[]
+  ptBr: boolean
+  mos: number
+  vramMinMB: number
+  cpuOk: boolean
+  cloning: boolean
+  license: string
+  sizeMB: number
+  downloadUrl: string
+  filename: string
+  configUrl?: string
+  configFilename?: string
+  tags: string[]
+  installed?: boolean
+  loaded?: boolean
+  depsInstalled?: boolean
+  variants?: Record<string, { url: string; filename?: string }>
+}
+
+export interface AppSettings {
+  alwaysOnTop?: boolean
+  highContrast?: boolean
+  largeFont?: boolean
+  compactMode?: boolean
+  virtualMicEnabled?: boolean
+  defaultModelId?: string
+  defaultSpeed?: number
+  tutorialSeen?: boolean
+  showExperimentalModels?: boolean
+  ttsDraft?: string
+  ttsHistory?: TTSHistoryItem[]
+  quickPhrases?: string[]
+  keepTextAfterSpeak?: boolean
+}
