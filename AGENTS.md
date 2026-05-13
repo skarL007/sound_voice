@@ -54,5 +54,5 @@ Para build standalone: `scripts/build-python.bat`
 
 - O backend Python roda em localhost:9472
 - O launcher gerencia o ciclo de vida do processo Python
-- Vozes clonadas ficam em `%APPDATA%\VoiceLaunch\voices\`
-- Modelos ficam em `%APPDATA%\VoiceLaunch\models\`
+- Vozes clonadas ficam em `%APPDATA%\voicelaunch-tts\voices\`
+- Modelos ficam em `%APPDATA%\voicelaunch-tts\models\`

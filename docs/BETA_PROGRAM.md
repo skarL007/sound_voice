@@ -96,7 +96,7 @@ Executar apenas em maquinas com NVIDIA/CUDA validado. Falhas aqui nao bloqueiam 
 
 ### Canal ativo hoje
 
-- GitHub Issues: https://github.com/voicelaunch/voicelaunch-tts/issues
+- GitHub Issues: https://github.com/skarL007/sound_voice/issues
 
 ### Gate operacional ainda pendente
 
@@ -134,9 +134,9 @@ Screenshots/logs (if applicable):
 ## Manifesto do pacote atual
 
 - **Arquivo canonico:** `dist/VoiceLaunch-TTS-Setup-1.0.0.exe`
-- **Tamanho:** `467474927` bytes
-- **SHA-256:** `51CBB05DAA17A4F1333AB8E798E5157A64369D49DB3B6E31E5938508E3D5C2B9`
-- **Gerado em:** `2026-05-12 03:16` (America/Sao_Paulo)
+- **Tamanho:** `467475211` bytes
+- **SHA-256:** `A944D5D0F1697F76B3E94624F5C561C7D15A5AF2F5E14E05ABC3EC4927D35DF8`
+- **Gerado em:** `2026-05-12 17:45` (America/Sao_Paulo)
 
 ## Proximo Gate de Produto
 
