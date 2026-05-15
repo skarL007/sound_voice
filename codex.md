@@ -8,13 +8,14 @@
 ## Estado Atual Para Retomada
 
 - **Fonte de verdade desta pasta:** este checkout voltou a ser um repositorio Git valido; a continuidade agora depende de `codex.md`, `README.md`, `CHANGELOG.md`, `docs/` e do remoto publicado.
+- **Estado atual de 2026-05-15:** use primeiro o `Snapshot de Continuidade - 2026-05-15` no fim deste arquivo; ele registra o closeout como `DONE_WITH_CONCERNS` e separa o que foi rerodado do que continuou pendente.
 - **Fluxo principal real do MVP local:** `Piper` primeiro, `Kokoro` como upgrade de qualidade, `XTTS v2` somente como trilha avancada em `NVIDIA/CUDA`.
 - **Fora do caminho principal:** `MeloTTS`, `Fish Speech` e `Bark` seguem experimentais e ocultos por padrao.
-- **Verificacao fresca desta rodada:** `npm test` = **21 testes passando**; `npm run build` = **build OK**.
-- **Verificacao de distribuicao desta rodada:** `npm run dist:win` = **installer NSIS atualizado gerado** com nome canonico alinhado ao `latest.yml`.
-- **Verificacao de runtime desta rodada:** `npm run dev` e `dist/win-unpacked/VoiceLaunch TTS.exe` subiram em execucao real.
-- **Validacao extra de runtime empacotado:** o backend standalone respondeu em `/health` e o fallback de porta foi exercitado com sucesso quando `9472` estava ocupado.
-- **Artefato canonico desta rodada:** `dist/VoiceLaunch-TTS-Setup-1.0.0.exe`, gerado em `2026-05-12 17:45`.
+- **Ultima verificacao empacotada confirmada (2026-05-12):** `npm test` = **21 testes passando**; `npm run build` = **build OK**.
+- **Ultima verificacao de distribuicao confirmada (2026-05-12):** `npm run dist:win` = **installer NSIS atualizado gerado** com nome canonico alinhado ao `latest.yml`.
+- **Ultima verificacao de runtime empacotado confirmada (2026-05-12):** `npm run dev` e `dist/win-unpacked/VoiceLaunch TTS.exe` subiram em execucao real.
+- **Ultima validacao extra de runtime empacotado confirmada (2026-05-12):** o backend standalone respondeu em `/health` e o fallback de porta foi exercitado com sucesso quando `9472` estava ocupado.
+- **Artefato canonico da rodada empacotada confirmada:** `dist/VoiceLaunch-TTS-Setup-1.0.0.exe`, gerado em `2026-05-12 17:45`.
 - **Repositorio publicado:** `https://github.com/skarL007/sound_voice` em `main`, com `origin/main` sincronizado no commit `0462a62` (`Polish repo docs and inclusive positioning`).
 
 ---
