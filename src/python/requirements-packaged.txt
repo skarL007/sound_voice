@@ -1,0 +1,3 @@
+-r requirements-core.txt
+-r requirements-piper.txt
+-r requirements-kokoro.txt

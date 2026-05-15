@@ -330,6 +330,15 @@ class ModelManager:
 
     def install_dependencies(self, model_id: str) -> dict:
         """Install Python dependencies for a specific model."""
+        if getattr(sys, "frozen", False):
+            return {
+                "success": False,
+                "error": (
+                    "Runtime dependency installation is disabled in the packaged beta backend. "
+                    "This build includes only Piper and Kokoro."
+                ),
+            }
+
         req_files = {
             "piper": "requirements-piper.txt",
             "kokoro": "requirements-kokoro.txt",

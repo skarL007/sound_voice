@@ -9,10 +9,23 @@ set PYTHON=python
 set SRC_DIR=%~dp0..\src\python
 set OUT_DIR=%~dp0..\python_dist
 set VENV_DIR=%~dp0..\build-py-venv
+set BUILD_DIR=%~dp0..\build-py
+set TMP_DIR=%~dp0..\build-py-tmp
+set REQUIREMENTS_FILE=%SRC_DIR%\requirements-packaged.txt
 
 if exist "%OUT_DIR%" (
     echo Cleaning previous build...
     rmdir /S /Q "%OUT_DIR%"
+)
+
+if exist "%BUILD_DIR%" (
+    echo Cleaning previous PyInstaller workdir...
+    rmdir /S /Q "%BUILD_DIR%"
+)
+
+if exist "%TMP_DIR%" (
+    echo Cleaning previous temp workdir...
+    rmdir /S /Q "%TMP_DIR%"
 )
 
 if exist "%VENV_DIR%" (
@@ -20,26 +33,40 @@ if exist "%VENV_DIR%" (
     rmdir /S /Q "%VENV_DIR%"
 )
 
+mkdir "%TMP_DIR%"
+if errorlevel 1 exit /b 1
+
+set TMP=%TMP_DIR%
+set TEMP=%TMP_DIR%
+
 echo Creating clean virtual environment...
 %PYTHON% -m venv "%VENV_DIR%"
+if errorlevel 1 exit /b 1
 
 echo Installing dependencies...
 "%VENV_DIR%\Scripts\pip.exe" install --upgrade pip --quiet
+if errorlevel 1 exit /b 1
 "%VENV_DIR%\Scripts\pip.exe" install pyinstaller --quiet
-"%VENV_DIR%\Scripts\pip.exe" install -r "%SRC_DIR%\requirements.txt" --quiet
+if errorlevel 1 exit /b 1
+"%VENV_DIR%\Scripts\pip.exe" install -r "%REQUIREMENTS_FILE%" --quiet
+if errorlevel 1 exit /b 1
 
 echo Building Python backend...
 "%VENV_DIR%\Scripts\pyinstaller.exe" ^
     --name voicelaunch-backend ^
     --onedir ^
     --distpath "%OUT_DIR%" ^
-    --workpath "%~dp0..\build-py" ^
-    --specpath "%~dp0..\build-py" ^
+    --workpath "%BUILD_DIR%" ^
+    --specpath "%BUILD_DIR%" ^
     --hidden-import fastapi ^
     --hidden-import uvicorn ^
     --hidden-import uvicorn.logging ^
+    --hidden-import uvicorn.loops ^
     --hidden-import uvicorn.loops.auto ^
+    --hidden-import uvicorn.protocols ^
+    --hidden-import uvicorn.protocols.http ^
     --hidden-import uvicorn.protocols.http.auto ^
+    --hidden-import uvicorn.lifespan ^
     --hidden-import uvicorn.lifespan.auto ^
     --hidden-import sounddevice ^
     --hidden-import soundfile ^
@@ -47,33 +74,49 @@ echo Building Python backend...
     --hidden-import psutil ^
     --hidden-import piper ^
     --hidden-import piper.voice ^
-    --hidden-import TTS ^
-    --hidden-import TTS.api ^
     --hidden-import kokoro ^
     --hidden-import kokoro.pipeline ^
-    --hidden-import melo ^
-    --hidden-import melo.api ^
-    --hidden-import bark ^
-    --hidden-import bark.generation ^
     --hidden-import websockets ^
     --hidden-import python_multipart ^
     --collect-all piper ^
-    --collect-all TTS ^
     --collect-all kokoro ^
-    --collect-all melo ^
-    --collect-all bark ^
+    --collect-all kokoro_onnx ^
     --collect-all sounddevice ^
     --collect-all soundfile ^
+    --collect-data piper ^
+    --exclude-module TTS ^
+    --exclude-module melo ^
+    --exclude-module bark ^
+    --exclude-module fish_speech ^
+    --exclude-module torch_directml ^
+    --exclude-module matplotlib ^
+    --exclude-module pygame ^
+    --exclude-module boto3 ^
+    --exclude-module botocore ^
+    --exclude-module sklearn ^
+    --exclude-module spacy ^
+    --exclude-module pandas ^
+    --exclude-module seaborn ^
+    --exclude-module plotly ^
+    --exclude-module dash ^
+    --exclude-module jupyter ^
+    --exclude-module IPython ^
+    --exclude-module tkinter ^
+    --exclude-module PIL.ImageQt ^
+    --exclude-module PIL.ImageTk ^
     "%SRC_DIR%\main.py"
+if errorlevel 1 exit /b 1
 
 echo.
 if exist "%OUT_DIR%\voicelaunch-backend\voicelaunch-backend.exe" (
     echo Build complete: %OUT_DIR%\voicelaunch-backend\voicelaunch-backend.exe
 ) else (
     echo Build may have failed. Check logs above.
+    exit /b 1
 )
 
 echo Cleaning venv...
 rmdir /S /Q "%VENV_DIR%"
-
-pause
+echo Cleaning temp workdir...
+rmdir /S /Q "%TMP_DIR%"
+exit /b 0
