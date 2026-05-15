@@ -1,6 +1,6 @@
 # VoiceLaunch TTS - Estado do Projeto
 
-> Atualizado em: 2026-05-12
+> Atualizado em: 2026-05-15
 > Status: **MVP LOCAL ESTABILIZADO - REPO PUBLICADO, README ALINHADO E BETA CORE PENDENTE**
 
 ---
