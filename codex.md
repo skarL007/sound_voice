@@ -9,14 +9,14 @@
 
 - **Fonte de verdade desta pasta:** este checkout voltou a ser um repositorio Git valido; a continuidade agora depende de `codex.md`, `README.md`, `CHANGELOG.md`, `docs/` e do remoto publicado.
 - **Estado atual de 2026-05-15:** use primeiro o `Snapshot de Continuidade - 2026-05-15` no fim deste arquivo; ele registra o closeout como `DONE_WITH_CONCERNS` e separa o que foi rerodado do que continuou pendente.
-- **Fluxo principal real do MVP local:** `Piper` primeiro, `Kokoro` como upgrade de qualidade, `XTTS v2` somente como trilha avancada em `NVIDIA/CUDA`.
+- **Fluxo principal real do beta core:** `Piper + Kokoro` formam a trilha obrigatoria; `Piper` continua sendo a entrada mais leve e `Kokoro` o segundo motor obrigatorio da validacao principal. `XTTS v2` segue apenas como trilha avancada em `NVIDIA/CUDA`.
 - **Fora do caminho principal:** `MeloTTS`, `Fish Speech` e `Bark` seguem experimentais e ocultos por padrao.
 - **Ultima verificacao empacotada confirmada (2026-05-12):** `npm test` = **21 testes passando**; `npm run build` = **build OK**.
 - **Ultima verificacao de distribuicao confirmada (2026-05-12):** `npm run dist:win` = **installer NSIS atualizado gerado** com nome canonico alinhado ao `latest.yml`.
 - **Ultima verificacao de runtime empacotado confirmada (2026-05-12):** `npm run dev` e `dist/win-unpacked/VoiceLaunch TTS.exe` subiram em execucao real.
 - **Ultima validacao extra de runtime empacotado confirmada (2026-05-12):** o backend standalone respondeu em `/health` e o fallback de porta foi exercitado com sucesso quando `9472` estava ocupado.
 - **Artefato canonico da rodada empacotada confirmada:** `dist/VoiceLaunch-TTS-Setup-1.0.0.exe`, gerado em `2026-05-12 17:45`.
-- **Repositorio publicado:** `https://github.com/skarL007/sound_voice` em `main`, com `origin/main` sincronizado no commit `0462a62` (`Polish repo docs and inclusive positioning`).
+- **Ultima referencia publicada confirmada:** `https://github.com/skarL007/sound_voice` em `main`, com snapshot publicado confirmado no commit `0462a62` (`Polish repo docs and inclusive positioning`).
 
 ---
 
@@ -184,7 +184,7 @@ dist/
   - `7fd6960` `build: harden backend smoke and cleanup`
   - `cf7daef` `fix: harden voice deletion and external links`
   - `3325ce4` `test: cover security validators`
-- A Task 2 ficou **aprovada no repo**, mas a prova ponta a ponta do backend empacotado apos essas mudancas continuou **bloqueada nesta maquina** por problema local de Python/venv/temporarios.
+- A Task 2 (`build Python deterministico para o beta core`) ficou **aprovada no repo**, mas a prova ponta a ponta do backend empacotado apos essas mudancas continuou **bloqueada nesta maquina** ao tentar rerodar `scripts/build-python.bat` / `scripts/build-python-venv.bat`, porque o Python local falhou na criacao do venv limpo (`ensurepip`) e em temporarios necessarios para gerar um artefato novo auditavel.
 - O projeto segue como **MVP local tecnicamente mais forte no codigo**, mas **ainda nao fechado** para beta externo mais amplo.
 - Os gates ainda abertos em `2026-05-15` sao:
   - revalidacao real do build empacotado apos o closeout;
@@ -199,7 +199,7 @@ dist/
 
 ### Proximo passo recomendado
 
-1. Resolver o problema local de Python/venv/temporarios ou mover a prova para uma maquina limpa controlada.
+1. Resolver o problema local ao rerodar `scripts/build-python.bat` / `scripts/build-python-venv.bat` nesta maquina, ou mover a prova para uma maquina limpa controlada.
 2. Reexecutar `npm run dist:win` somente quando isso produzir um artefato Python atual e auditavel.
 3. Validar novamente o backend empacotado (`/health` e `/models`) depois do build atualizado.
 4. Rodar a trilha beta core em maquina limpa com `Piper + Kokoro + VB-Cable + Discord/Zoom`.

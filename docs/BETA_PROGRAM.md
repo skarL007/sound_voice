@@ -25,8 +25,8 @@ Validar o fluxo real de comunicacao assistiva offline antes de qualquer abertura
 ### Estado real em 2026-05-15
 
 - As Tasks 1-3 do closeout foram aplicadas e aprovadas no codigo do repo em `2026-05-15`.
-- O caminho beta core continua sendo o pacote empacotado para `Piper + Kokoro`; engines avancados nao fazem parte da prova obrigatoria.
-- A revalidacao ponta a ponta do backend empacotado depois dessas mudancas ficou **bloqueada nesta maquina** por problema local envolvendo Python/venv/temporarios.
+- O caminho beta core continua sendo o pacote empacotado para `Piper + Kokoro`; os dois motores fazem parte da prova obrigatoria, e engines avancados nao entram nesse gate principal.
+- A revalidacao ponta a ponta do backend empacotado depois dessas mudancas ficou **bloqueada nesta maquina** ao tentar rerodar `scripts/build-python.bat` / `scripts/build-python-venv.bat`, porque o Python local falhou na criacao do venv limpo (`ensurepip`) e em temporarios necessarios para gerar um pacote novo auditavel.
 - Por isso, em `2026-05-15` o repo esta mais forte no codigo, mas o gate de build empacotado **nao foi reprovado nem revalidado** nesta maquina apos o closeout.
 
 ## Trilha 1 - Core Beta

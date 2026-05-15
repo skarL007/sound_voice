@@ -129,5 +129,5 @@ jobs:
 ## Operational Notes
 
 - Em `2026-05-15`, `cmd /c npm run test` e `cmd /c npm run build` seguem verdes no repo.
-- Em `2026-05-15`, a revalidacao ponta a ponta do backend empacotado apos o closeout ficou bloqueada nesta maquina por problema local de Python/venv/temporarios.
+- Em `2026-05-15`, a revalidacao ponta a ponta do backend empacotado apos o closeout ficou bloqueada nesta maquina ao tentar rerodar `scripts/build-python.bat` / `scripts/build-python-venv.bat`, porque o Python local falhou na criacao do venv limpo (`ensurepip`) e em temporarios necessarios para um artefato novo auditavel.
 - Isso significa que assinatura e auto-update continuam sendo gates de release, nao sinais de que o pacote atual ja esta pronto para abrir publico.
