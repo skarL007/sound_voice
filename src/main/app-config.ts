@@ -1,12 +1,19 @@
 import { app } from 'electron'
 import { join } from 'path'
 
+export const VOICELAUNCH_ENV = {
+  modelRegistryPath: 'VOICELAUNCH_MODEL_REGISTRY_PATH',
+  userData: 'VOICELAUNCH_USER_DATA',
+} as const
+
+const USER_DATA_DIRNAME = 'voicelaunch-tts'
+
 function getUserData(): string {
   try {
     return app.getPath('userData')
   } catch {
     // Fallback before app is ready
-    return join(process.env.APPDATA || process.env.HOME || '.', 'VoiceLaunch')
+    return join(process.env.APPDATA || process.env.HOME || '.', USER_DATA_DIRNAME)
   }
 }
 
@@ -31,12 +38,17 @@ export function isAutoUpdateEnabled(): boolean {
   return app.isPackaged && process.env.VOICELAUNCH_ENABLE_AUTO_UPDATE === 'true'
 }
 
+export function getModelRegistryPath(): string {
+  return join(getResourcesPath(), 'assets', 'model-registry.json')
+}
+
 export const APP_CONFIG = {
   name: 'VoiceLaunch TTS',
   version: '1.0.0',
   backendPort: 9472,
   backendHost: '127.0.0.1',
   get userDataPath() { return getUserData() },
+  get modelRegistryPath() { return getModelRegistryPath() },
   get modelsDir() { return join(getUserData(), 'models') },
   get voicesDir() { return join(getUserData(), 'voices') },
   get logsDir() { return join(getUserData(), 'logs') },

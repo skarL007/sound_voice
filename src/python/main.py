@@ -25,7 +25,7 @@ from pydantic import BaseModel, field_validator
 sys.path.insert(0, str(Path(__file__).parent))
 
 from hardware_probe import get_hardware_info
-from model_manager import ModelManager
+from model_manager import ModelManager, get_user_data_dir
 from virtual_mic import VirtualMicController
 from voice_cloner import VoiceCloner
 
@@ -41,14 +41,13 @@ app.add_middleware(
 )
 
 # Global state
+USER_DATA = get_user_data_dir()
+VOICES_DIR = USER_DATA / "voices"
+VOICES_DIR.mkdir(parents=True, exist_ok=True)
 model_manager = ModelManager()
 virtual_mic = VirtualMicController()
 voice_cloner = VoiceCloner()
 current_audio_task = None
-
-USER_DATA = Path(os.environ.get("APPDATA", Path.home() / "AppData/Roaming")) / "VoiceLaunch"
-VOICES_DIR = USER_DATA / "voices"
-VOICES_DIR.mkdir(parents=True, exist_ok=True)
 
 
 # ============== Security helpers ==============

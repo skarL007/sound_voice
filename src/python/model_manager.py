@@ -15,7 +15,18 @@ from typing import Optional, Dict, Any, List
 
 import requests
 
-USER_DATA = Path(os.environ.get("APPDATA", Path.home() / "AppData/Roaming")) / "VoiceLaunch"
+def get_user_data_dir() -> Path:
+    """Return the shared runtime user-data directory."""
+    configured = os.environ.get("VOICELAUNCH_USER_DATA")
+    if configured:
+        return Path(configured)
+    appdata = os.environ.get("APPDATA")
+    if appdata:
+        return Path(appdata) / "voicelaunch-tts"
+    return Path.home() / "AppData" / "Roaming" / "voicelaunch-tts"
+
+
+USER_DATA = get_user_data_dir()
 MODELS_DIR = USER_DATA / "models"
 MODELS_DIR.mkdir(parents=True, exist_ok=True)
 

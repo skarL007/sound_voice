@@ -55,8 +55,8 @@ win:
   # For testing/beta, this is acceptable. For public release, signing is REQUIRED.
 publish:
   provider: github
-  owner: voicelaunch
-  repo: voicelaunch-tts
+  owner: skarL007
+  repo: sound_voice
   channel: latest
   releaseType: release
 extraMetadata:

@@ -5,6 +5,7 @@ import { existsSync } from 'fs'
 import { logMain, logPython } from './logger'
 import { request } from 'http'
 import { createServer } from 'net'
+import { APP_CONFIG, VOICELAUNCH_ENV } from './app-config'
 
 const BACKEND_PORT = 9472
 const STARTUP_TIMEOUT_MS = 120000
@@ -61,9 +62,8 @@ export class PythonBackendManager {
       const env: NodeJS.ProcessEnv = { ...process.env }
       env.PYTHONIOENCODING = 'utf-8'
       if (pythonPath) env.PYTHONPATH = pythonPath
-      if (!mainScript) {
-        env.VOICELAUNCH_MODEL_REGISTRY_PATH = join(process.resourcesPath, 'assets', 'model-registry.json')
-      }
+      env[VOICELAUNCH_ENV.userData] = APP_CONFIG.userDataPath
+      env[VOICELAUNCH_ENV.modelRegistryPath] = APP_CONFIG.modelRegistryPath
 
       this.process = spawn(pythonExecutable, args, {
         cwd,
