@@ -70,6 +70,13 @@ def _sanitize_audio_path(audio_path: str) -> Path:
     raise ValueError(f"Audio path outside allowed directories: {audio_path}")
 
 
+def _validate_safe_identifier(value: str, field_name: str) -> str:
+    """Accept only simple alphanumeric identifiers plus underscore and dash."""
+    if not value or not value.replace("_", "").replace("-", "").isalnum():
+        raise ValueError(f"Invalid {field_name}")
+    return value
+
+
 # ============== Pydantic Models ==============
 
 class TTSRequest(BaseModel):
@@ -110,6 +117,11 @@ class MicRouteRequest(BaseModel):
 
 class DeleteVoiceRequest(BaseModel):
     voiceId: str
+
+    @field_validator('voiceId')
+    @classmethod
+    def validate_voice_id(cls, v: str) -> str:
+        return _validate_safe_identifier(v, 'voiceId')
 
 
 class InstallDepsRequest(BaseModel):

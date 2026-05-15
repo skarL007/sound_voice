@@ -7,6 +7,7 @@ import { registerIpcHandlers } from './ipc-handlers'
 import { PythonBackendManager } from './python-manager'
 import { logMain } from './logger'
 import { isAutoUpdateEnabled } from './app-config'
+import { isHttpUrl } from './security-utils'
 
 let mainWindow: BrowserWindow | null = null
 let backendManager: PythonBackendManager | null = null
@@ -33,7 +34,11 @@ function createWindow(): void {
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
-    shell.openExternal(details.url)
+    if (isHttpUrl(details.url)) {
+      void shell.openExternal(details.url)
+    } else {
+      logMain('WARN', `Blocked window open for invalid URL: ${details.url}`)
+    }
     return { action: 'deny' }
   })
 
