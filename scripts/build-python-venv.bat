@@ -5,13 +5,14 @@ echo ==========================================
 echo  VoiceLaunch TTS - Python Backend Build
 echo ==========================================
 
-set PYTHON=python
-set SRC_DIR=%~dp0..\src\python
-set OUT_DIR=%~dp0..\python_dist
-set VENV_DIR=%~dp0..\build-py-venv
-set BUILD_DIR=%~dp0..\build-py
-set TMP_DIR=%~dp0..\build-py-tmp
-set REQUIREMENTS_FILE=%SRC_DIR%\requirements-packaged.txt
+set "PYTHON=python"
+set "SRC_DIR=%~dp0..\src\python"
+set "OUT_DIR=%~dp0..\python_dist"
+set "VENV_DIR=%~dp0..\build-py-venv"
+set "BUILD_DIR=%~dp0..\build-py"
+set "TMP_DIR=%~dp0..\build-py-tmp"
+set "REQUIREMENTS_FILE=%SRC_DIR%\requirements-packaged.txt"
+set "EXIT_CODE=0"
 
 if exist "%OUT_DIR%" (
     echo Cleaning previous build...
@@ -34,22 +35,37 @@ if exist "%VENV_DIR%" (
 )
 
 mkdir "%TMP_DIR%"
-if errorlevel 1 exit /b 1
+if errorlevel 1 (
+    set "EXIT_CODE=1"
+    goto cleanup
+)
 
 set TMP=%TMP_DIR%
 set TEMP=%TMP_DIR%
 
 echo Creating clean virtual environment...
 %PYTHON% -m venv "%VENV_DIR%"
-if errorlevel 1 exit /b 1
+if errorlevel 1 (
+    set "EXIT_CODE=1"
+    goto cleanup
+)
 
 echo Installing dependencies...
 "%VENV_DIR%\Scripts\pip.exe" install --upgrade pip --quiet
-if errorlevel 1 exit /b 1
+if errorlevel 1 (
+    set "EXIT_CODE=1"
+    goto cleanup
+)
 "%VENV_DIR%\Scripts\pip.exe" install pyinstaller --quiet
-if errorlevel 1 exit /b 1
+if errorlevel 1 (
+    set "EXIT_CODE=1"
+    goto cleanup
+)
 "%VENV_DIR%\Scripts\pip.exe" install -r "%REQUIREMENTS_FILE%" --quiet
-if errorlevel 1 exit /b 1
+if errorlevel 1 (
+    set "EXIT_CODE=1"
+    goto cleanup
+)
 
 echo Building Python backend...
 "%VENV_DIR%\Scripts\pyinstaller.exe" ^
@@ -105,18 +121,22 @@ echo Building Python backend...
     --exclude-module PIL.ImageQt ^
     --exclude-module PIL.ImageTk ^
     "%SRC_DIR%\main.py"
-if errorlevel 1 exit /b 1
+if errorlevel 1 (
+    set "EXIT_CODE=1"
+    goto cleanup
+)
 
 echo.
 if exist "%OUT_DIR%\voicelaunch-backend\voicelaunch-backend.exe" (
     echo Build complete: %OUT_DIR%\voicelaunch-backend\voicelaunch-backend.exe
 ) else (
     echo Build may have failed. Check logs above.
-    exit /b 1
+    set "EXIT_CODE=1"
 )
 
+:cleanup
 echo Cleaning venv...
-rmdir /S /Q "%VENV_DIR%"
+if exist "%VENV_DIR%" rmdir /S /Q "%VENV_DIR%"
 echo Cleaning temp workdir...
-rmdir /S /Q "%TMP_DIR%"
-exit /b 0
+if exist "%TMP_DIR%" rmdir /S /Q "%TMP_DIR%"
+exit /b %EXIT_CODE%
