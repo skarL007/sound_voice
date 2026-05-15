@@ -14,10 +14,10 @@ Validar o fluxo real de comunicacao assistiva offline antes de qualquer abertura
 
 - [x] `cmd /c npm run test` verde em `2026-05-15` (`28/28` testes)
 - [x] `cmd /c npm run build` verde em `2026-05-15`
-- [x] `npm run dist:win` gerou instalador canonico consistente com `latest.yml` na ultima rodada empacotada validada de `2026-05-12`
-- [x] Runtime empacotado em `win-unpacked` foi validado na rodada de `2026-05-12`
-- [x] Fallback automatico de porta foi validado em runtime empacotado na rodada de `2026-05-12` quando `9472` estava ocupado
-- [ ] Revalidar o backend empacotado apos o closeout de `2026-05-15`
+- [x] Existe um artefato canonico previamente validado de `2026-05-12`, consistente com `latest.yml`, usado apenas como ultima referencia confirmada
+- [ ] Rerodar `npm run dist:win` apos o closeout de `2026-05-15` para gerar um pacote novo e auditavel
+- [ ] Revalidar o runtime empacotado em `win-unpacked` usando o pacote novo gerado apos o closeout
+- [ ] Revalidar o fallback automatico de porta no runtime empacotado novo quando `9472` estiver ocupado
 - [ ] Validar o instalador em maquina Windows limpa
 - [ ] Validar VB-Cable + Discord/Zoom em maquina limpa
 - [ ] Definir pelo menos um canal direto de suporte para testers nao tecnicos alem de GitHub Issues
