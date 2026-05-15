@@ -1,7 +1,12 @@
 import { readFileSync } from 'fs'
 import { join } from 'path'
 import { describe, it, expect } from 'vitest'
-import { validateModelId, validateAudioExtension, isHttpUrl } from '../security-utils'
+import {
+  validateModelId,
+  validateAudioExtension,
+  isHttpUrl,
+  shouldOpenExternalUrl,
+} from '../security-utils'
 
 describe('validateModelId', () => {
   it('accepts valid alphanumeric IDs', () => {
@@ -82,10 +87,10 @@ describe('main window security', () => {
     expect(source).not.toMatch(/sandbox:\s*false/)
   })
 
-  it('reuses isHttpUrl before opening external links from the renderer', () => {
-    const source = readFileSync(join(process.cwd(), 'src/main/index.ts'), 'utf-8')
-
-    expect(source).toMatch(/setWindowOpenHandler/)
-    expect(source).toMatch(/if \(isHttpUrl\(details\.url\)\)/)
+  it('allows external opening only for http and https URLs', () => {
+    expect(shouldOpenExternalUrl('https://example.com')).toBe(true)
+    expect(shouldOpenExternalUrl('http://localhost:5173')).toBe(true)
+    expect(shouldOpenExternalUrl('javascript:alert(1)')).toBe(false)
+    expect(shouldOpenExternalUrl('file:///etc/passwd')).toBe(false)
   })
 })

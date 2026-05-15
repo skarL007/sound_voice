@@ -26,6 +26,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from hardware_probe import get_hardware_info
 from model_manager import ModelManager, get_user_data_dir
+from security_validators import validate_voice_id
 from virtual_mic import VirtualMicController
 from voice_cloner import VoiceCloner
 
@@ -68,14 +69,6 @@ def _sanitize_audio_path(audio_path: str) -> Path:
         except ValueError:
             continue
     raise ValueError(f"Audio path outside allowed directories: {audio_path}")
-
-
-def _validate_safe_identifier(value: str, field_name: str) -> str:
-    """Accept only simple alphanumeric identifiers plus underscore and dash."""
-    if not value or not value.replace("_", "").replace("-", "").isalnum():
-        raise ValueError(f"Invalid {field_name}")
-    return value
-
 
 # ============== Pydantic Models ==============
 
@@ -121,7 +114,7 @@ class DeleteVoiceRequest(BaseModel):
     @field_validator('voiceId')
     @classmethod
     def validate_voice_id(cls, v: str) -> str:
-        return _validate_safe_identifier(v, 'voiceId')
+        return validate_voice_id(v)
 
 
 class InstallDepsRequest(BaseModel):
