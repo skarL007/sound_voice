@@ -50,3 +50,20 @@ describe('release metadata', () => {
     expect(publishConfig).toEqual(repository)
   })
 })
+
+describe('runtime path contract', () => {
+  it('declares the shared runtime env keys in the main process contract', () => {
+    const appConfigSource = readFileSync(join(process.cwd(), 'src/main/app-config.ts'), 'utf-8')
+
+    expect(appConfigSource).toMatch(/modelRegistryPath:\s*'VOICELAUNCH_MODEL_REGISTRY_PATH'/)
+    expect(appConfigSource).toMatch(/userData:\s*'VOICELAUNCH_USER_DATA'/)
+  })
+
+  it('uses the shared runtime env contract when starting the backend', () => {
+    const pythonManagerSource = readFileSync(join(process.cwd(), 'src/main/python-manager.ts'), 'utf-8')
+
+    expect(pythonManagerSource).toMatch(/import\s+\{\s*APP_CONFIG,\s*VOICELAUNCH_ENV\s*\}\s+from\s+'\.\/app-config'/)
+    expect(pythonManagerSource).toMatch(/env\[VOICELAUNCH_ENV\.userData\]\s*=\s*APP_CONFIG\.userDataPath/)
+    expect(pythonManagerSource).toMatch(/env\[VOICELAUNCH_ENV\.modelRegistryPath\]\s*=\s*APP_CONFIG\.modelRegistryPath/)
+  })
+})

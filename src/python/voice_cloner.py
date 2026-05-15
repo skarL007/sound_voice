@@ -12,8 +12,9 @@ from pathlib import Path
 
 import numpy as np
 import soundfile as sf
+from model_manager import get_user_data_dir
 
-USER_DATA = Path(os.environ.get("APPDATA", Path.home() / "AppData/Roaming")) / "VoiceLaunch"
+USER_DATA = get_user_data_dir()
 VOICES_DIR = USER_DATA / "voices"
 VOICES_DIR.mkdir(parents=True, exist_ok=True)
 
