@@ -33,7 +33,7 @@ Validar o fluxo real de comunicacao assistiva offline antes de qualquer abertura
 
 ### Instalacao
 
-- [ ] Usar o instalador canonico em `dist/VoiceLaunch-TTS-Setup-1.0.0.exe`
+- [ ] Usar o instalador canonico mais recente gerado apos rerodar `npm run dist:win`; enquanto isso, tratar `dist/VoiceLaunch-TTS-Setup-1.0.0.exe` apenas como ultima referencia confirmada de `2026-05-12`
 - [ ] Instalar em Windows 10/11 sem Python preinstalado
 - [ ] Confirmar que a UI abre imediatamente
 - [ ] Confirmar que o backend Python sobe corretamente
@@ -110,7 +110,7 @@ Executar apenas em maquinas com NVIDIA/CUDA validado. Falhas aqui nao bloqueiam 
 
 - Definir um canal direto real para testers nao tecnicos antes de abrir convites amplos.
 - Os placeholders antigos de email e Discord foram removidos de proposito para evitar falsa prontidao operacional.
-- Ignorar qualquer installer legado com espacos no nome que tenha sobrado localmente de builds anteriores; o pacote correto desta rodada e o arquivo hifenizado referenciado por `latest.yml`.
+- Ignorar qualquer installer legado com espacos no nome que tenha sobrado localmente de builds anteriores; depois do proximo `dist:win`, o pacote correto para validacao sera o artefato hifenizado mais recente referenciado por `latest.yml`.
 
 ### Informacoes obrigatorias
 
@@ -140,7 +140,7 @@ Screenshots/logs (if applicable):
 | Revalidacao do backend empacotado apos o closeout de 2026-05-15 bloqueada nesta maquina | Resolver o ambiente local ou usar maquina limpa antes de novo `dist:win` | Gate manual ainda aberto |
 | MeloTTS/Fish Speech/Bark fora do fluxo principal | Testar Piper e Kokoro | Intencional |
 
-## Manifesto do pacote atual
+## Manifesto da ultima referencia empacotada confirmada
 
 - **Arquivo canonico:** `dist/VoiceLaunch-TTS-Setup-1.0.0.exe`
 - **Tamanho:** `467475211` bytes

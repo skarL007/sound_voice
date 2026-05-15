@@ -45,7 +45,7 @@
 
 ---
 
-## Funcionalidades Hoje Validadas
+## Funcionalidades com validacao empacotada confirmada em 2026-05-12
 
 ### Core TTS
 
@@ -64,7 +64,7 @@
 - [x] Comunicador compacto com recentes e estado de mic virtual
 - [x] Alto contraste, fonte grande e foco visivel
 
-### Build e Distribuicao
+### Build e Distribuicao confirmados em 2026-05-12
 
 - [x] Installer NSIS em `dist/VoiceLaunch-TTS-Setup-1.0.0.exe`
 - [x] `win-unpacked` validado em runtime real
@@ -114,11 +114,13 @@ dist/
 
 ## Proximo Foco Recomendado
 
-1. Executar a trilha **Core** de `docs/BETA_PROGRAM.md` em maquina limpa.
-2. Validar VB-Cable + Discord/Zoom em maquina limpa.
-3. Definir um canal direto de suporte ao beta para testers nao tecnicos.
-4. So depois decidir sobre beta ampliado, XTTS no pacote final e assinatura de codigo.
-5. Na proxima retomada, usar `README.md` como entrada publica e `codex.md` como checkpoint operacional.
+1. Resolver o bloqueio local de Python/venv/temporarios ou mover a prova para uma maquina limpa controlada.
+2. Rerodar `npm run dist:win` para gerar um pacote novo e auditavel apos o closeout de `2026-05-15`.
+3. Revalidar o backend empacotado (`/health`, `/models` e fallback de porta) usando esse pacote novo.
+4. Executar a trilha **Core** de `docs/BETA_PROGRAM.md` em maquina limpa, incluindo VB-Cable + Discord/Zoom.
+5. Definir um canal direto de suporte ao beta para testers nao tecnicos.
+6. So depois decidir sobre beta ampliado, XTTS no pacote final e assinatura de codigo.
+7. Na proxima retomada, usar `README.md` como entrada publica e `codex.md` como checkpoint operacional.
 
 ---
 
