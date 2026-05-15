@@ -160,3 +160,44 @@ dist/
 
 - O worktree local ficou com mudancas de documentacao ainda nao commitadas em `AGENTS.md`, `README.md`, `codex.md`, `docs/BETA_PROGRAM.md` e `docs/HARNESS.md`.
 - A pasta `.superpowers/` apareceu apenas por causa do companion visual usado para brainstorming e deve ser tratada como artefato local, nao como estado funcional do produto.
+
+---
+
+## Snapshot de Continuidade - 2026-05-15
+
+### O que foi revalidado nesta auditoria
+
+- [x] `cmd /c npm run test` passou novamente em `2026-05-15` com **28/28** testes.
+- [x] `cmd /c npm run build` passou novamente em `2026-05-15`.
+- [ ] `npm run dist:win` nao foi reexecutado nesta task de fechamento.
+- [ ] O backend empacotado nao foi revalidado ponta a ponta nesta maquina apos as mudancas do closeout de `2026-05-15`.
+
+### Veredito real desta rodada
+
+- Status desta rodada: **DONE_WITH_CONCERNS**.
+- As Tasks 1-3 do plano de fechamento foram **resolvidas no codigo** e aprovadas em revisao no repo em `2026-05-15`:
+  - `93a6553` `fix: align voice clone runtime path contract`
+  - `52122b0` `build: stabilize packaged backend inputs`
+  - `7fd6960` `build: harden backend smoke and cleanup`
+  - `cf7daef` `fix: harden voice deletion and external links`
+  - `3325ce4` `test: cover security validators`
+- A Task 2 ficou **aprovada no repo**, mas a prova ponta a ponta do backend empacotado apos essas mudancas continuou **bloqueada nesta maquina** por problema local de Python/venv/temporarios.
+- O projeto segue como **MVP local tecnicamente mais forte no codigo**, mas **ainda nao fechado** para beta externo mais amplo.
+- Os gates ainda abertos em `2026-05-15` sao:
+  - revalidacao real do build empacotado apos o closeout;
+  - instalacao em maquina Windows limpa;
+  - VB-Cable + Discord/Zoom em maquina limpa;
+  - canal de suporte beta para testers nao tecnicos.
+
+### Artefato de fechamento criado
+
+- Plano novo salvo em `docs/superpowers/plans/2026-05-15-voicelaunch-closeout.md`.
+- O foco do plano foi reduzido para a reta final do **launcher-only beta core**, sem reabrir expansao de escopo.
+
+### Proximo passo recomendado
+
+1. Resolver o problema local de Python/venv/temporarios ou mover a prova para uma maquina limpa controlada.
+2. Reexecutar `npm run dist:win` somente quando isso produzir um artefato Python atual e auditavel.
+3. Validar novamente o backend empacotado (`/health` e `/models`) depois do build atualizado.
+4. Rodar a trilha beta core em maquina limpa com `Piper + Kokoro + VB-Cable + Discord/Zoom`.
+5. Definir o canal direto de suporte beta antes de convite externo mais amplo.

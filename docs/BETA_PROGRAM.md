@@ -6,20 +6,28 @@ Validar o fluxo real de comunicacao assistiva offline antes de qualquer abertura
 
 ## Escopo Atual do Beta
 
-- **Trilha Core (obrigatoria):** Piper, Kokoro, frases rapidas, historico e rascunho persistentes, comunicador compacto, VB-Cable, Discord/Zoom e acessibilidade.
+- **Trilha Core (obrigatoria):** pacote empacotado para `Piper + Kokoro`, frases rapidas, historico e rascunho persistentes, comunicador compacto, VB-Cable, Discord/Zoom e acessibilidade.
 - **Trilha Advanced (opcional):** XTTS v2 e clonagem de voz apenas em maquinas com NVIDIA/CUDA validado.
 - **Fora do beta principal:** MeloTTS, Fish Speech e Bark.
 
 ## Gates Antes de Convidar Testers Externos
 
-- [x] `npm test` verde
-- [x] `npm run build` verde
-- [x] `npm run dist:win` gerando instalador atualizado e consistente com `latest.yml`
-- [x] Runtime empacotado validado em `win-unpacked`
-- [x] Fallback automatico de porta validado em runtime empacotado quando `9472` estava ocupado
+- [x] `cmd /c npm run test` verde em `2026-05-15` (`28/28` testes)
+- [x] `cmd /c npm run build` verde em `2026-05-15`
+- [x] `npm run dist:win` gerou instalador canonico consistente com `latest.yml` na ultima rodada empacotada validada de `2026-05-12`
+- [x] Runtime empacotado em `win-unpacked` foi validado na rodada de `2026-05-12`
+- [x] Fallback automatico de porta foi validado em runtime empacotado na rodada de `2026-05-12` quando `9472` estava ocupado
+- [ ] Revalidar o backend empacotado apos o closeout de `2026-05-15`
 - [ ] Validar o instalador em maquina Windows limpa
 - [ ] Validar VB-Cable + Discord/Zoom em maquina limpa
 - [ ] Definir pelo menos um canal direto de suporte para testers nao tecnicos alem de GitHub Issues
+
+### Estado real em 2026-05-15
+
+- As Tasks 1-3 do closeout foram aplicadas e aprovadas no codigo do repo em `2026-05-15`.
+- O caminho beta core continua sendo o pacote empacotado para `Piper + Kokoro`; engines avancados nao fazem parte da prova obrigatoria.
+- A revalidacao ponta a ponta do backend empacotado depois dessas mudancas ficou **bloqueada nesta maquina** por problema local envolvendo Python/venv/temporarios.
+- Por isso, em `2026-05-15` o repo esta mais forte no codigo, mas o gate de build empacotado **nao foi reprovado nem revalidado** nesta maquina apos o closeout.
 
 ## Trilha 1 - Core Beta
 
@@ -129,6 +137,7 @@ Screenshots/logs (if applicable):
 | XTTS v2 exige download grande | Deixar para a trilha Advanced | Nao bloqueia o beta core |
 | Installer ainda nao assinado | Validar internamente antes de abrir publico amplo | Esperado no beta fechado |
 | Auto-update desativado neste build | Validar update manualmente fora do beta fechado | Intencional nesta fase |
+| Revalidacao do backend empacotado apos o closeout de 2026-05-15 bloqueada nesta maquina | Resolver o ambiente local ou usar maquina limpa antes de novo `dist:win` | Gate manual ainda aberto |
 | MeloTTS/Fish Speech/Bark fora do fluxo principal | Testar Piper e Kokoro | Intencional |
 
 ## Manifesto do pacote atual
@@ -142,7 +151,9 @@ Screenshots/logs (if applicable):
 
 Nao abrir timeline publica de release ainda. O proximo gate real e:
 
-1. Validar o instalador novo em maquina limpa.
-2. Rodar a trilha Core de ponta a ponta.
-3. Definir canal direto de suporte ao beta.
-4. So depois decidir sobre beta ampliado, XTTS no pacote e assinatura de codigo.
+1. Resolver o bloqueio local de Python/venv/temporarios ou mover a prova para uma maquina limpa.
+2. Revalidar `npm run dist:win` + backend empacotado apos as mudancas de `2026-05-15`.
+3. Validar o instalador novo em maquina limpa.
+4. Rodar a trilha Core de ponta a ponta com VB-Cable + Discord/Zoom.
+5. Definir canal direto de suporte ao beta.
+6. So depois decidir sobre beta ampliado, XTTS no pacote e assinatura de codigo.
