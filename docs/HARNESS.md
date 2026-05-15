@@ -236,7 +236,7 @@ sound_voice/
 ## 9. Segurança & Privacidade
 
 - **100% offline**: Nenhuma requisição para APIs externas além do download inicial de modelos.
-- **Dados locais**: Vozes clonadas, histórico, configurações ficam em `%APPDATA%\VoiceLaunch\`.
+- **Dados locais**: Vozes clonadas, histórico, configurações e logs ficam em `%APPDATA%\voicelaunch-tts\`.
 - **Sandbox**: Renderer Electron com `contextIsolation: true`, `nodeIntegration: false`.
 - **Assinatura**: Binários Python empacotados e verificados por hash.
 

@@ -6,26 +6,33 @@ Validar o fluxo real de comunicacao assistiva offline antes de qualquer abertura
 
 ## Escopo Atual do Beta
 
-- **Trilha Core (obrigatoria):** Piper, Kokoro, frases rapidas, historico e rascunho persistentes, comunicador compacto, VB-Cable, Discord/Zoom e acessibilidade.
+- **Trilha Core (obrigatoria):** pacote empacotado para `Piper + Kokoro`, frases rapidas, historico e rascunho persistentes, comunicador compacto, VB-Cable, Discord/Zoom e acessibilidade.
 - **Trilha Advanced (opcional):** XTTS v2 e clonagem de voz apenas em maquinas com NVIDIA/CUDA validado.
 - **Fora do beta principal:** MeloTTS, Fish Speech e Bark.
 
 ## Gates Antes de Convidar Testers Externos
 
-- [x] `npm test` verde
-- [x] `npm run build` verde
-- [x] `npm run dist:win` gerando instalador atualizado e consistente com `latest.yml`
-- [x] Runtime empacotado validado em `win-unpacked`
-- [x] Fallback automatico de porta validado em runtime empacotado quando `9472` estava ocupado
+- [x] `cmd /c npm run test` verde em `2026-05-15` (`28/28` testes)
+- [x] `cmd /c npm run build` verde em `2026-05-15`
+- [x] `npm run dist:win` rerodado com sucesso em `2026-05-15`, gerando instalador canonico consistente com `latest.yml`
+- [x] Runtime empacotado em `win-unpacked` revalidado em `2026-05-15`
+- [x] Fallback automatico de porta revalidado em `2026-05-15`, com `9472` ocupado e backend subindo em `9473`
 - [ ] Validar o instalador em maquina Windows limpa
 - [ ] Validar VB-Cable + Discord/Zoom em maquina limpa
 - [ ] Definir pelo menos um canal direto de suporte para testers nao tecnicos alem de GitHub Issues
+
+### Estado real em 2026-05-15
+
+- As Tasks 1-3 do closeout foram aplicadas e aprovadas no codigo do repo em `2026-05-15`, e a Task 2 foi revalidada nesta maquina no mesmo dia.
+- O caminho beta core continua sendo o pacote empacotado para `Piper + Kokoro`; os dois motores fazem parte da prova obrigatoria, e engines avancados nao entram nesse gate principal.
+- O bloqueio tecnico local do build Python foi contornado em `scripts/build-python-venv.bat` com um hook de build isolado para `ensurepip` / `pip`, e o pacote novo foi gerado e fumegado com sucesso nesta maquina.
+- Em `2026-05-15`, o backend empacotado respondeu novamente em `/health` e `/models`, e o fallback automatico de porta foi revalidado com `9472` ocupado e backend ativo em `9473`.
 
 ## Trilha 1 - Core Beta
 
 ### Instalacao
 
-- [ ] Usar o instalador canonico em `dist/VoiceLaunch-TTS-Setup-1.0.0.exe`
+- [ ] Usar o instalador canonico atual em `dist/VoiceLaunch-TTS-Setup-1.0.0.exe`
 - [ ] Instalar em Windows 10/11 sem Python preinstalado
 - [ ] Confirmar que a UI abre imediatamente
 - [ ] Confirmar que o backend Python sobe corretamente
@@ -96,13 +103,13 @@ Executar apenas em maquinas com NVIDIA/CUDA validado. Falhas aqui nao bloqueiam 
 
 ### Canal ativo hoje
 
-- GitHub Issues: https://github.com/voicelaunch/voicelaunch-tts/issues
+- GitHub Issues: https://github.com/skarL007/sound_voice/issues
 
 ### Gate operacional ainda pendente
 
 - Definir um canal direto real para testers nao tecnicos antes de abrir convites amplos.
 - Os placeholders antigos de email e Discord foram removidos de proposito para evitar falsa prontidao operacional.
-- Ignorar qualquer installer legado com espacos no nome que tenha sobrado localmente de builds anteriores; o pacote correto desta rodada e o arquivo hifenizado referenciado por `latest.yml`.
+- Ignorar qualquer installer legado com espacos no nome que tenha sobrado localmente de builds anteriores; o pacote correto para validacao continua sendo o artefato hifenizado referenciado por `latest.yml`.
 
 ### Informacoes obrigatorias
 
@@ -131,18 +138,18 @@ Screenshots/logs (if applicable):
 | Auto-update desativado neste build | Validar update manualmente fora do beta fechado | Intencional nesta fase |
 | MeloTTS/Fish Speech/Bark fora do fluxo principal | Testar Piper e Kokoro | Intencional |
 
-## Manifesto do pacote atual
+## Manifesto do pacote atual validado
 
 - **Arquivo canonico:** `dist/VoiceLaunch-TTS-Setup-1.0.0.exe`
-- **Tamanho:** `467474927` bytes
-- **SHA-256:** `51CBB05DAA17A4F1333AB8E798E5157A64369D49DB3B6E31E5938508E3D5C2B9`
-- **Gerado em:** `2026-05-12 03:16` (America/Sao_Paulo)
+- **Tamanho:** `303315706` bytes
+- **SHA-256:** `EC7AC076B55AC3089F87545B38AC1E255C92FE4B38FC433A32F5607AA84715B7`
+- **Gerado em:** `2026-05-15 04:17` (America/Sao_Paulo)
 
 ## Proximo Gate de Produto
 
 Nao abrir timeline publica de release ainda. O proximo gate real e:
 
 1. Validar o instalador novo em maquina limpa.
-2. Rodar a trilha Core de ponta a ponta.
+2. Rodar a trilha Core de ponta a ponta com VB-Cable + Discord/Zoom.
 3. Definir canal direto de suporte ao beta.
 4. So depois decidir sobre beta ampliado, XTTS no pacote e assinatura de codigo.

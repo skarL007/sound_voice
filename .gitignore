@@ -30,6 +30,7 @@ Thumbs.db
 *.log
 npm-debug.log*
 .runtime/
+.superpowers/
 
 # Models (large files)
 models/

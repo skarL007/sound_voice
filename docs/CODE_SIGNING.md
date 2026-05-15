@@ -1,6 +1,6 @@
-# Code Signing Guide — VoiceLaunch TTS
+# Code Signing Guide - VoiceLaunch TTS
 
-> Windows executables and installers should be signed to avoid SmartScreen warnings.
+> Windows executables and installers must be signed before any public release.
 
 ## Why Code Signing Matters
 
@@ -76,8 +76,8 @@ This blocks ~80% of non-technical users from installing.
 
 Add these secrets to your GitHub repository:
 
-- `WIN_CSC_LINK` — Base64-encoded PFX file contents
-- `WIN_CSC_KEY_PASSWORD` — Certificate password
+- `WIN_CSC_LINK` - Base64-encoded PFX file contents
+- `WIN_CSC_KEY_PASSWORD` - Certificate password
 
 Create `.github/workflows/release.yml`:
 
@@ -111,13 +111,23 @@ jobs:
 
 | Build | Signed | SmartScreen |
 |-------|--------|-------------|
-| `npm run dist:win` (no env vars) | ❌ No | ⚠️ Will warn |
-| With `WIN_CSC_LINK` set | ✅ Yes | ✅ Bypassed |
+| `npm run dist:win` sem credenciais de assinatura | No | Will warn |
+| Build assinado com `WIN_CSC_LINK` / `WIN_CSC_KEY_PASSWORD` | Yes | Reduced warning risk |
 
 ---
 
-## Recommendation for Release
+## Release Policy - 2026-05-15
 
-1. **Beta phase:** No signing needed (testers know how to bypass SmartScreen)
-2. **Public v1.0.0:** Use Standard Code Signing certificate
-3. **If budget allows:** Use EV certificate for immediate trust
+1. **Beta interno/controlado:** build nao assinado ainda pode circular internamente, desde que SmartScreen e suporte manual sejam tratados como risco conhecido.
+2. **Release publica:** assinatura continua obrigatoria. Nao publicar installer publicamente sem certificado configurado no pipeline ou no ambiente oficial de release.
+3. **Auto-update:** deve continuar desligado. Nao religar antes de validar, no minimo, estes tres gates:
+   - pipeline oficial de release reproduzivel;
+   - `publish`/release target alinhado ao repo real;
+   - instalacao e trilha core em maquina limpa.
+4. **Sequencia correta:** primeiro validar build empacotado real de `Piper + Kokoro`, depois maquina limpa e suporte beta, e so entao religar distribuicao automatica.
+
+## Operational Notes
+
+- Em `2026-05-15`, `cmd /c npm run test` e `cmd /c npm run build` seguem verdes no repo.
+- Em `2026-05-15`, `cmd /c npm run dist:win` foi rerodado com sucesso, o app empacotado voltou a responder em `/health` e `/models`, e o fallback automatico de porta foi revalidado com `9472` ocupado e backend ativo em `9473`.
+- Isso significa que o gate tecnico de empacotamento desta maquina voltou a ficar verde, mas assinatura e auto-update continuam sendo gates de release enquanto maquina limpa, VB-Cable/Discord/Zoom e suporte beta nao forem fechados.

@@ -1,7 +1,12 @@
 import { readFileSync } from 'fs'
 import { join } from 'path'
 import { describe, it, expect } from 'vitest'
-import { validateModelId, validateAudioExtension, isHttpUrl } from '../security-utils'
+import {
+  validateModelId,
+  validateAudioExtension,
+  isHttpUrl,
+  shouldOpenExternalUrl,
+} from '../security-utils'
 
 describe('validateModelId', () => {
   it('accepts valid alphanumeric IDs', () => {
@@ -47,14 +52,23 @@ describe('validateAudioExtension', () => {
 })
 
 describe('isHttpUrl', () => {
-  it('accepts HTTP and HTTPS URLs', () => {
+  it('accepts https URLs', () => {
     expect(isHttpUrl('https://example.com')).toBe(true)
+  })
+
+  it('accepts http URLs', () => {
     expect(isHttpUrl('http://localhost:5173')).toBe(true)
   })
 
-  it('rejects non-HTTP protocols', () => {
+  it('rejects file URLs', () => {
     expect(isHttpUrl('file:///etc/passwd')).toBe(false)
+  })
+
+  it('rejects javascript URLs', () => {
     expect(isHttpUrl('javascript:alert(1)')).toBe(false)
+  })
+
+  it('rejects other non-HTTP protocols', () => {
     expect(isHttpUrl('data:text/html,<script>alert(1)</script>')).toBe(false)
     expect(isHttpUrl('vbscript:msgbox(1)')).toBe(false)
   })
@@ -71,5 +85,12 @@ describe('main window security', () => {
 
     expect(source).toMatch(/sandbox:\s*true/)
     expect(source).not.toMatch(/sandbox:\s*false/)
+  })
+
+  it('allows external opening only for http and https URLs', () => {
+    expect(shouldOpenExternalUrl('https://example.com')).toBe(true)
+    expect(shouldOpenExternalUrl('http://localhost:5173')).toBe(true)
+    expect(shouldOpenExternalUrl('javascript:alert(1)')).toBe(false)
+    expect(shouldOpenExternalUrl('file:///etc/passwd')).toBe(false)
   })
 })

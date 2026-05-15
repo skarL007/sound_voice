@@ -126,9 +126,9 @@ codex.md      checkpoint operacional da ultima sessao
 
 ## Artefatos e logs
 
-- Logs: `%APPDATA%\\VoiceLaunch\\logs\\`
-- Modelos: `%APPDATA%\\VoiceLaunch\\models\\`
-- Vozes clonadas: `%APPDATA%\\VoiceLaunch\\voices\\`
+- Logs: `%APPDATA%\\voicelaunch-tts\\logs\\`
+- Modelos: `%APPDATA%\\voicelaunch-tts\\models\\`
+- Vozes clonadas: `%APPDATA%\\voicelaunch-tts\\voices\\`
 
 ## Licenca
 

@@ -15,7 +15,18 @@ from typing import Optional, Dict, Any, List
 
 import requests
 
-USER_DATA = Path(os.environ.get("APPDATA", Path.home() / "AppData/Roaming")) / "VoiceLaunch"
+def get_user_data_dir() -> Path:
+    """Return the shared runtime user-data directory."""
+    configured = os.environ.get("VOICELAUNCH_USER_DATA")
+    if configured:
+        return Path(configured)
+    appdata = os.environ.get("APPDATA")
+    if appdata:
+        return Path(appdata) / "voicelaunch-tts"
+    return Path.home() / "AppData" / "Roaming" / "voicelaunch-tts"
+
+
+USER_DATA = get_user_data_dir()
 MODELS_DIR = USER_DATA / "models"
 MODELS_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -319,6 +330,15 @@ class ModelManager:
 
     def install_dependencies(self, model_id: str) -> dict:
         """Install Python dependencies for a specific model."""
+        if getattr(sys, "frozen", False):
+            return {
+                "success": False,
+                "error": (
+                    "Runtime dependency installation is disabled in the packaged beta backend. "
+                    "This build includes only Piper and Kokoro."
+                ),
+            }
+
         req_files = {
             "piper": "requirements-piper.txt",
             "kokoro": "requirements-kokoro.txt",

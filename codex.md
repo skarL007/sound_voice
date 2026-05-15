@@ -1,6 +1,6 @@
 # VoiceLaunch TTS - Estado do Projeto
 
-> Atualizado em: 2026-05-12
+> Atualizado em: 2026-05-15
 > Status: **MVP LOCAL ESTABILIZADO - REPO PUBLICADO, README ALINHADO E BETA CORE PENDENTE**
 
 ---
@@ -8,14 +8,15 @@
 ## Estado Atual Para Retomada
 
 - **Fonte de verdade desta pasta:** este checkout voltou a ser um repositorio Git valido; a continuidade agora depende de `codex.md`, `README.md`, `CHANGELOG.md`, `docs/` e do remoto publicado.
-- **Fluxo principal real do MVP local:** `Piper` primeiro, `Kokoro` como upgrade de qualidade, `XTTS v2` somente como trilha avancada em `NVIDIA/CUDA`.
+- **Estado atual de 2026-05-15:** use primeiro o `Snapshot de Continuidade - 2026-05-15` no fim deste arquivo; ele registra o closeout como `DONE_WITH_CONCERNS` e separa o que foi rerodado do que continuou pendente.
+- **Fluxo principal real do beta core:** `Piper + Kokoro` formam a trilha obrigatoria; `Piper` continua sendo a entrada mais leve e `Kokoro` o segundo motor obrigatorio da validacao principal. `XTTS v2` segue apenas como trilha avancada em `NVIDIA/CUDA`.
 - **Fora do caminho principal:** `MeloTTS`, `Fish Speech` e `Bark` seguem experimentais e ocultos por padrao.
-- **Verificacao fresca desta rodada:** `npm test` = **21 testes passando**; `npm run build` = **build OK**.
-- **Verificacao de distribuicao desta rodada:** `npm run dist:win` = **installer NSIS atualizado gerado** com nome canonico alinhado ao `latest.yml`.
-- **Verificacao de runtime desta rodada:** `npm run dev` e `dist/win-unpacked/VoiceLaunch TTS.exe` subiram em execucao real.
-- **Validacao extra de runtime empacotado:** o backend standalone respondeu em `/health` e o fallback de porta foi exercitado com sucesso quando `9472` estava ocupado.
-- **Artefato canonico desta rodada:** `dist/VoiceLaunch-TTS-Setup-1.0.0.exe`, gerado em `2026-05-12 03:16`.
-- **Repositorio publicado:** `https://github.com/skarL007/sound_voice` em `main`, com `origin/main` sincronizado no commit `dbd9f6bb712c7beed3b249dae8930a98a874ec81`.
+- **Ultima verificacao empacotada confirmada (2026-05-12):** `npm test` = **21 testes passando**; `npm run build` = **build OK**.
+- **Ultima verificacao de distribuicao confirmada (2026-05-12):** `npm run dist:win` = **installer NSIS atualizado gerado** com nome canonico alinhado ao `latest.yml`.
+- **Ultima verificacao de runtime empacotado confirmada (2026-05-12):** `npm run dev` e `dist/win-unpacked/VoiceLaunch TTS.exe` subiram em execucao real.
+- **Ultima validacao extra de runtime empacotado confirmada (2026-05-12):** o backend standalone respondeu em `/health` e o fallback de porta foi exercitado com sucesso quando `9472` estava ocupado.
+- **Artefato canonico da rodada empacotada confirmada:** `dist/VoiceLaunch-TTS-Setup-1.0.0.exe`, gerado em `2026-05-12 17:45`.
+- **Ultima referencia publicada confirmada:** `https://github.com/skarL007/sound_voice` em `main`, com snapshot publicado confirmado no commit `0462a62` (`Polish repo docs and inclusive positioning`).
 
 ---
 
@@ -44,7 +45,7 @@
 
 ---
 
-## Funcionalidades Hoje Validadas
+## Funcionalidades com validacao empacotada confirmada em 2026-05-12
 
 ### Core TTS
 
@@ -63,7 +64,7 @@
 - [x] Comunicador compacto com recentes e estado de mic virtual
 - [x] Alto contraste, fonte grande e foco visivel
 
-### Build e Distribuicao
+### Build e Distribuicao confirmados em 2026-05-12
 
 - [x] Installer NSIS em `dist/VoiceLaunch-TTS-Setup-1.0.0.exe`
 - [x] `win-unpacked` validado em runtime real
@@ -76,7 +77,7 @@
 
 ```text
 dist/
-  VoiceLaunch-TTS-Setup-1.0.0.exe        <- 467,474,927 bytes
+  VoiceLaunch-TTS-Setup-1.0.0.exe        <- 467,475,211 bytes
   VoiceLaunch-TTS-Setup-1.0.0.exe.blockmap
   latest.yml
   win-unpacked/
@@ -84,8 +85,8 @@ dist/
 
 ### Integridade do pacote beta atual
 
-- **SHA-256:** `51CBB05DAA17A4F1333AB8E798E5157A64369D49DB3B6E31E5938508E3D5C2B9`
-- **SHA-512:** `A52382BBD4A568CBA4F9CE5357D17E8157ECC366FCC52A9CE17A7167AE14828A485CF15578091B5A0ED7C24B6E7626677E48686E69195E0F8FF02E2ED40E302B`
+- **SHA-256:** `A944D5D0F1697F76B3E94624F5C561C7D15A5AF2F5E14E05ABC3EC4927D35DF8`
+- **SHA-512:** `D34A67B260D5A9698A45EF5AA350BC25EF0D690AE6A277F1F7E538272D812582B815FBF704F1DDD76334ADACAE7FD9EA27E15F3A08EE4B5FB5D1AF15A03FF736`
 - **Auto-update metadata:** `dist/latest.yml` aponta para `VoiceLaunch-TTS-Setup-1.0.0.exe`
 - **Observacao operacional:** o diretorio `dist/` ainda pode conter um installer legado com espacos no nome de builds anteriores; o artefato canonico desta rodada e o arquivo hifenizado.
 
@@ -113,8 +114,92 @@ dist/
 
 ## Proximo Foco Recomendado
 
-1. Executar a trilha **Core** de `docs/BETA_PROGRAM.md` em maquina limpa.
-2. Validar VB-Cable + Discord/Zoom em maquina limpa.
-3. Definir um canal direto de suporte ao beta para testers nao tecnicos.
-4. So depois decidir sobre beta ampliado, XTTS no pacote final e assinatura de codigo.
-5. Na proxima retomada, usar `README.md` como entrada publica e `codex.md` como checkpoint operacional.
+1. Resolver o bloqueio local de Python/venv/temporarios ou mover a prova para uma maquina limpa controlada.
+2. Rerodar `npm run dist:win` para gerar um pacote novo e auditavel apos o closeout de `2026-05-15`.
+3. Revalidar o backend empacotado (`/health`, `/models` e fallback de porta) usando esse pacote novo.
+4. Executar a trilha **Core** de `docs/BETA_PROGRAM.md` em maquina limpa, incluindo VB-Cable + Discord/Zoom.
+5. Definir um canal direto de suporte ao beta para testers nao tecnicos.
+6. So depois decidir sobre beta ampliado, XTTS no pacote final e assinatura de codigo.
+7. Na proxima retomada, usar `README.md` como entrada publica e `codex.md` como checkpoint operacional.
+
+---
+
+## Snapshot de Continuidade - 2026-05-12
+
+### O que foi validado nesta retomada
+
+- [x] `npm test` continua verde com **21/21** testes passando.
+- [x] `npm run build` continua verde.
+- [x] `npm run dist:win` foi reexecutado com sucesso nesta maquina.
+- [x] O runtime empacotado em `dist/win-unpacked/VoiceLaunch TTS.exe` voltou a subir em execucao real.
+- [x] O backend standalone respondeu novamente em `/health` com `{"status":"ok","version":"1.0.0"}`.
+
+### O que foi corrigido nos checkpoints/docs
+
+- [x] `codex.md` e `docs/BETA_PROGRAM.md` foram alinhados ao artefato atual gerado em `2026-05-12 17:45`.
+- [x] O commit publicado correto em `origin/main` foi registrado como `0462a62`.
+- [x] A URL de `GitHub Issues` em `docs/BETA_PROGRAM.md` foi corrigida para `https://github.com/skarL007/sound_voice/issues`.
+- [x] `README.md`, `docs/HARNESS.md` e `AGENTS.md` foram alinhados ao path real de dados/logs do app empacotado: `%APPDATA%\\voicelaunch-tts\\`.
+
+### Onde paramos no produto
+
+- O escopo da proxima rodada foi restringido explicitamente para **manter o app como launcher/orquestrador**, sem virar uma UX separada por framework.
+- O problema levantado pelo usuario para a proxima implementacao continua aberto e cobre:
+  - catalogo real de vozes por framework, com idioma e genero quando o runtime souber informar;
+  - feedback visual de `modelo carregando` e `modelo carregado`;
+  - melhoria do layout da experiencia de fala;
+  - configuracao de tecla/atalho para frases rapidas;
+  - validacao mais forte do microfone virtual.
+- **Nenhuma implementacao dessas features novas foi iniciada ainda** nesta rodada; a conversa parou na definicao do comportamento de carregamento de modelo no launcher.
+
+### Decisao pendente para a proxima sessao
+
+- Fechar qual sera o comportamento de carregamento de modelo no launcher:
+  1. carregar automaticamente ao falar;
+  2. exigir botoes explicitos de `Carregar` / `Descarregar`;
+  3. suportar ambos.
+
+### Observacao operacional
+
+- O worktree local ficou com mudancas de documentacao ainda nao commitadas em `AGENTS.md`, `README.md`, `codex.md`, `docs/BETA_PROGRAM.md` e `docs/HARNESS.md`.
+- A pasta `.superpowers/` apareceu apenas por causa do companion visual usado para brainstorming e deve ser tratada como artefato local, nao como estado funcional do produto.
+
+---
+
+## Snapshot de Continuidade - 2026-05-15
+
+### O que foi revalidado nesta auditoria
+
+- [x] `cmd /c npm run test` passou novamente em `2026-05-15` com **28/28** testes.
+- [x] `cmd /c npm run build` passou novamente em `2026-05-15`.
+- [x] `cmd /c npm run dist:win` foi reexecutado com sucesso em `2026-05-15`.
+- [x] O backend empacotado foi revalidado nesta maquina em `2026-05-15` via `scripts/smoke-packaged-backend.ps1 -Port 9482`.
+- [x] O app empacotado em `dist/win-unpacked/VoiceLaunch TTS.exe` voltou a responder em `/health` e `/models` na porta `9472`.
+- [x] O fallback automatico de porta do app empacotado foi revalidado em `2026-05-15`, com `9472` ocupado e backend subindo em `9473`.
+
+### Veredito real desta rodada
+
+- Status desta rodada: **DONE_WITH_CONCERNS**.
+- As Tasks 1-3 do plano de fechamento foram **resolvidas no codigo** e aprovadas em revisao no repo em `2026-05-15`:
+  - `93a6553` `fix: align voice clone runtime path contract`
+  - `52122b0` `build: stabilize packaged backend inputs`
+  - `7fd6960` `build: harden backend smoke and cleanup`
+  - `cf7daef` `fix: harden voice deletion and external links`
+  - `3325ce4` `test: cover security validators`
+- A Task 2 (`build Python deterministico para o beta core`) foi **fechada nesta maquina** com um workaround de build isolado em `scripts/build-python-venv.bat` e `scripts/python-build-hooks/sitecustomize.py`, contornando o problema local de ACL em diretórios criados por `tempfile` no Windows durante `ensurepip` / `pip`.
+- O projeto segue como **MVP local tecnicamente forte e revalidado no empacotamento**, mas **ainda nao fechado** para beta externo mais amplo.
+- Os gates ainda abertos em `2026-05-15` sao:
+  - instalacao em maquina Windows limpa;
+  - VB-Cable + Discord/Zoom em maquina limpa;
+  - canal de suporte beta para testers nao tecnicos.
+
+### Artefato de fechamento criado
+
+- Plano novo salvo em `docs/superpowers/plans/2026-05-15-voicelaunch-closeout.md`.
+- O foco do plano foi reduzido para a reta final do **launcher-only beta core**, sem reabrir expansao de escopo.
+
+### Proximo passo recomendado
+
+1. Validar o instalador novo em maquina Windows limpa.
+2. Rodar a trilha beta core em maquina limpa com `Piper + Kokoro + VB-Cable + Discord/Zoom`.
+3. Definir o canal direto de suporte beta antes de convite externo mais amplo.

@@ -33,3 +33,7 @@ export function isHttpUrl(url: string): boolean {
     return false
   }
 }
+
+export function shouldOpenExternalUrl(url: string): boolean {
+  return isHttpUrl(url)
+}
