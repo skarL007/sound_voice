@@ -172,8 +172,10 @@ dist/
 
 - [x] `cmd /c npm run test` passou novamente em `2026-05-15` com **28/28** testes.
 - [x] `cmd /c npm run build` passou novamente em `2026-05-15`.
-- [ ] `npm run dist:win` nao foi reexecutado nesta task de fechamento.
-- [ ] O backend empacotado nao foi revalidado ponta a ponta nesta maquina apos as mudancas do closeout de `2026-05-15`.
+- [x] `cmd /c npm run dist:win` foi reexecutado com sucesso em `2026-05-15`.
+- [x] O backend empacotado foi revalidado nesta maquina em `2026-05-15` via `scripts/smoke-packaged-backend.ps1 -Port 9482`.
+- [x] O app empacotado em `dist/win-unpacked/VoiceLaunch TTS.exe` voltou a responder em `/health` e `/models` na porta `9472`.
+- [x] O fallback automatico de porta do app empacotado foi revalidado em `2026-05-15`, com `9472` ocupado e backend subindo em `9473`.
 
 ### Veredito real desta rodada
 
@@ -184,10 +186,9 @@ dist/
   - `7fd6960` `build: harden backend smoke and cleanup`
   - `cf7daef` `fix: harden voice deletion and external links`
   - `3325ce4` `test: cover security validators`
-- A Task 2 (`build Python deterministico para o beta core`) ficou **aprovada no repo**, mas a prova ponta a ponta do backend empacotado apos essas mudancas continuou **bloqueada nesta maquina** ao tentar rerodar `scripts/build-python.bat` / `scripts/build-python-venv.bat`, porque o Python local falhou na criacao do venv limpo (`ensurepip`) e em temporarios necessarios para gerar um artefato novo auditavel.
-- O projeto segue como **MVP local tecnicamente mais forte no codigo**, mas **ainda nao fechado** para beta externo mais amplo.
+- A Task 2 (`build Python deterministico para o beta core`) foi **fechada nesta maquina** com um workaround de build isolado em `scripts/build-python-venv.bat` e `scripts/python-build-hooks/sitecustomize.py`, contornando o problema local de ACL em diretórios criados por `tempfile` no Windows durante `ensurepip` / `pip`.
+- O projeto segue como **MVP local tecnicamente forte e revalidado no empacotamento**, mas **ainda nao fechado** para beta externo mais amplo.
 - Os gates ainda abertos em `2026-05-15` sao:
-  - revalidacao real do build empacotado apos o closeout;
   - instalacao em maquina Windows limpa;
   - VB-Cable + Discord/Zoom em maquina limpa;
   - canal de suporte beta para testers nao tecnicos.
@@ -199,8 +200,6 @@ dist/
 
 ### Proximo passo recomendado
 
-1. Resolver o problema local ao rerodar `scripts/build-python.bat` / `scripts/build-python-venv.bat` nesta maquina, ou mover a prova para uma maquina limpa controlada.
-2. Reexecutar `npm run dist:win` somente quando isso produzir um artefato Python atual e auditavel.
-3. Validar novamente o backend empacotado (`/health` e `/models`) depois do build atualizado.
-4. Rodar a trilha beta core em maquina limpa com `Piper + Kokoro + VB-Cable + Discord/Zoom`.
-5. Definir o canal direto de suporte beta antes de convite externo mais amplo.
+1. Validar o instalador novo em maquina Windows limpa.
+2. Rodar a trilha beta core em maquina limpa com `Piper + Kokoro + VB-Cable + Discord/Zoom`.
+3. Definir o canal direto de suporte beta antes de convite externo mais amplo.

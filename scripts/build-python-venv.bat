@@ -1,5 +1,6 @@
 @echo off
 REM Build Python backend into standalone executable using PyInstaller in a clean venv
+setlocal
 
 echo ==========================================
 echo  VoiceLaunch TTS - Python Backend Build
@@ -10,7 +11,9 @@ set "SRC_DIR=%~dp0..\src\python"
 set "OUT_DIR=%~dp0..\python_dist"
 set "VENV_DIR=%~dp0..\build-py-venv"
 set "BUILD_DIR=%~dp0..\build-py"
-set "TMP_DIR=%~dp0..\build-py-tmp"
+set "TMP_BASE=%~dp0..\build-py-temp"
+set "TMP_DIR=%TMP_BASE%\run-%RANDOM%-%RANDOM%"
+set "PYTHON_HOOKS_DIR=%~dp0python-build-hooks"
 set "REQUIREMENTS_FILE=%SRC_DIR%\requirements-packaged.txt"
 set "EXIT_CODE=0"
 
@@ -24,51 +27,54 @@ if exist "%BUILD_DIR%" (
     rmdir /S /Q "%BUILD_DIR%"
 )
 
-if exist "%TMP_DIR%" (
-    echo Cleaning previous temp workdir...
-    rmdir /S /Q "%TMP_DIR%"
-)
-
 if exist "%VENV_DIR%" (
     echo Cleaning previous venv...
     rmdir /S /Q "%VENV_DIR%"
 )
 
+if not exist "%TMP_BASE%" mkdir "%TMP_BASE%"
 mkdir "%TMP_DIR%"
 if errorlevel 1 (
     set "EXIT_CODE=1"
     goto cleanup
 )
 
-set TMP=%TMP_DIR%
-set TEMP=%TMP_DIR%
+set "TMP=%TMP_DIR%"
+set "TEMP=%TMP_DIR%"
+set "PYTHONPATH=%PYTHON_HOOKS_DIR%"
+set "PIP_NO_CACHE_DIR=1"
+set "PIP_DISABLE_PIP_VERSION_CHECK=1"
 
 echo Creating clean virtual environment...
-%PYTHON% -m venv "%VENV_DIR%"
+%PYTHON% -m venv "%VENV_DIR%" --without-pip
+if errorlevel 1 (
+    set "EXIT_CODE=1"
+    goto cleanup
+)
+
+echo Bootstrapping pip...
+"%VENV_DIR%\Scripts\python.exe" -m ensurepip --upgrade --default-pip
 if errorlevel 1 (
     set "EXIT_CODE=1"
     goto cleanup
 )
 
 echo Installing dependencies...
-"%VENV_DIR%\Scripts\pip.exe" install --upgrade pip --quiet
+"%VENV_DIR%\Scripts\python.exe" -m pip install pyinstaller --quiet --no-cache-dir
 if errorlevel 1 (
     set "EXIT_CODE=1"
     goto cleanup
 )
-"%VENV_DIR%\Scripts\pip.exe" install pyinstaller --quiet
-if errorlevel 1 (
-    set "EXIT_CODE=1"
-    goto cleanup
-)
-"%VENV_DIR%\Scripts\pip.exe" install -r "%REQUIREMENTS_FILE%" --quiet
+"%VENV_DIR%\Scripts\python.exe" -m pip install -r "%REQUIREMENTS_FILE%" --quiet --no-cache-dir
 if errorlevel 1 (
     set "EXIT_CODE=1"
     goto cleanup
 )
 
+set "PYTHONPATH="
+
 echo Building Python backend...
-"%VENV_DIR%\Scripts\pyinstaller.exe" ^
+"%VENV_DIR%\Scripts\python.exe" -m PyInstaller ^
     --name voicelaunch-backend ^
     --onedir ^
     --distpath "%OUT_DIR%" ^
@@ -136,7 +142,7 @@ if exist "%OUT_DIR%\voicelaunch-backend\voicelaunch-backend.exe" (
 
 :cleanup
 echo Cleaning venv...
-if exist "%VENV_DIR%" rmdir /S /Q "%VENV_DIR%"
+if exist "%VENV_DIR%" rmdir /S /Q "%VENV_DIR%" >nul 2>&1
 echo Cleaning temp workdir...
-if exist "%TMP_DIR%" rmdir /S /Q "%TMP_DIR%"
-exit /b %EXIT_CODE%
+if exist "%TMP_DIR%" rmdir /S /Q "%TMP_DIR%" >nul 2>&1
+endlocal & exit /b %EXIT_CODE%

@@ -129,5 +129,5 @@ jobs:
 ## Operational Notes
 
 - Em `2026-05-15`, `cmd /c npm run test` e `cmd /c npm run build` seguem verdes no repo.
-- Em `2026-05-15`, a revalidacao ponta a ponta do backend empacotado apos o closeout ficou bloqueada nesta maquina ao tentar rerodar `scripts/build-python.bat` / `scripts/build-python-venv.bat`, porque o Python local falhou na criacao do venv limpo (`ensurepip`) e em temporarios necessarios para um artefato novo auditavel.
-- Isso significa que assinatura e auto-update continuam sendo gates de release, nao sinais de que o pacote atual ja esta pronto para abrir publico.
+- Em `2026-05-15`, `cmd /c npm run dist:win` foi rerodado com sucesso, o app empacotado voltou a responder em `/health` e `/models`, e o fallback automatico de porta foi revalidado com `9472` ocupado e backend ativo em `9473`.
+- Isso significa que o gate tecnico de empacotamento desta maquina voltou a ficar verde, mas assinatura e auto-update continuam sendo gates de release enquanto maquina limpa, VB-Cable/Discord/Zoom e suporte beta nao forem fechados.

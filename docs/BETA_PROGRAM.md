@@ -14,26 +14,25 @@ Validar o fluxo real de comunicacao assistiva offline antes de qualquer abertura
 
 - [x] `cmd /c npm run test` verde em `2026-05-15` (`28/28` testes)
 - [x] `cmd /c npm run build` verde em `2026-05-15`
-- [x] Existe um artefato canonico previamente validado de `2026-05-12`, consistente com `latest.yml`, usado apenas como ultima referencia confirmada
-- [ ] Rerodar `npm run dist:win` apos o closeout de `2026-05-15` para gerar um pacote novo e auditavel
-- [ ] Revalidar o runtime empacotado em `win-unpacked` usando o pacote novo gerado apos o closeout
-- [ ] Revalidar o fallback automatico de porta no runtime empacotado novo quando `9472` estiver ocupado
+- [x] `npm run dist:win` rerodado com sucesso em `2026-05-15`, gerando instalador canonico consistente com `latest.yml`
+- [x] Runtime empacotado em `win-unpacked` revalidado em `2026-05-15`
+- [x] Fallback automatico de porta revalidado em `2026-05-15`, com `9472` ocupado e backend subindo em `9473`
 - [ ] Validar o instalador em maquina Windows limpa
 - [ ] Validar VB-Cable + Discord/Zoom em maquina limpa
 - [ ] Definir pelo menos um canal direto de suporte para testers nao tecnicos alem de GitHub Issues
 
 ### Estado real em 2026-05-15
 
-- As Tasks 1-3 do closeout foram aplicadas e aprovadas no codigo do repo em `2026-05-15`.
+- As Tasks 1-3 do closeout foram aplicadas e aprovadas no codigo do repo em `2026-05-15`, e a Task 2 foi revalidada nesta maquina no mesmo dia.
 - O caminho beta core continua sendo o pacote empacotado para `Piper + Kokoro`; os dois motores fazem parte da prova obrigatoria, e engines avancados nao entram nesse gate principal.
-- A revalidacao ponta a ponta do backend empacotado depois dessas mudancas ficou **bloqueada nesta maquina** ao tentar rerodar `scripts/build-python.bat` / `scripts/build-python-venv.bat`, porque o Python local falhou na criacao do venv limpo (`ensurepip`) e em temporarios necessarios para gerar um pacote novo auditavel.
-- Por isso, em `2026-05-15` o repo esta mais forte no codigo, mas o gate de build empacotado **nao foi reprovado nem revalidado** nesta maquina apos o closeout.
+- O bloqueio tecnico local do build Python foi contornado em `scripts/build-python-venv.bat` com um hook de build isolado para `ensurepip` / `pip`, e o pacote novo foi gerado e fumegado com sucesso nesta maquina.
+- Em `2026-05-15`, o backend empacotado respondeu novamente em `/health` e `/models`, e o fallback automatico de porta foi revalidado com `9472` ocupado e backend ativo em `9473`.
 
 ## Trilha 1 - Core Beta
 
 ### Instalacao
 
-- [ ] Usar o instalador canonico mais recente gerado apos rerodar `npm run dist:win`; enquanto isso, tratar `dist/VoiceLaunch-TTS-Setup-1.0.0.exe` apenas como ultima referencia confirmada de `2026-05-12`
+- [ ] Usar o instalador canonico atual em `dist/VoiceLaunch-TTS-Setup-1.0.0.exe`
 - [ ] Instalar em Windows 10/11 sem Python preinstalado
 - [ ] Confirmar que a UI abre imediatamente
 - [ ] Confirmar que o backend Python sobe corretamente
@@ -110,7 +109,7 @@ Executar apenas em maquinas com NVIDIA/CUDA validado. Falhas aqui nao bloqueiam 
 
 - Definir um canal direto real para testers nao tecnicos antes de abrir convites amplos.
 - Os placeholders antigos de email e Discord foram removidos de proposito para evitar falsa prontidao operacional.
-- Ignorar qualquer installer legado com espacos no nome que tenha sobrado localmente de builds anteriores; depois do proximo `dist:win`, o pacote correto para validacao sera o artefato hifenizado mais recente referenciado por `latest.yml`.
+- Ignorar qualquer installer legado com espacos no nome que tenha sobrado localmente de builds anteriores; o pacote correto para validacao continua sendo o artefato hifenizado referenciado por `latest.yml`.
 
 ### Informacoes obrigatorias
 
@@ -137,23 +136,20 @@ Screenshots/logs (if applicable):
 | XTTS v2 exige download grande | Deixar para a trilha Advanced | Nao bloqueia o beta core |
 | Installer ainda nao assinado | Validar internamente antes de abrir publico amplo | Esperado no beta fechado |
 | Auto-update desativado neste build | Validar update manualmente fora do beta fechado | Intencional nesta fase |
-| Revalidacao do backend empacotado apos o closeout de 2026-05-15 bloqueada nesta maquina | Resolver o ambiente local ou usar maquina limpa antes de novo `dist:win` | Gate manual ainda aberto |
 | MeloTTS/Fish Speech/Bark fora do fluxo principal | Testar Piper e Kokoro | Intencional |
 
-## Manifesto da ultima referencia empacotada confirmada
+## Manifesto do pacote atual validado
 
 - **Arquivo canonico:** `dist/VoiceLaunch-TTS-Setup-1.0.0.exe`
-- **Tamanho:** `467475211` bytes
-- **SHA-256:** `A944D5D0F1697F76B3E94624F5C561C7D15A5AF2F5E14E05ABC3EC4927D35DF8`
-- **Gerado em:** `2026-05-12 17:45` (America/Sao_Paulo)
+- **Tamanho:** `303315706` bytes
+- **SHA-256:** `EC7AC076B55AC3089F87545B38AC1E255C92FE4B38FC433A32F5607AA84715B7`
+- **Gerado em:** `2026-05-15 04:17` (America/Sao_Paulo)
 
 ## Proximo Gate de Produto
 
 Nao abrir timeline publica de release ainda. O proximo gate real e:
 
-1. Resolver o bloqueio local de Python/venv/temporarios ou mover a prova para uma maquina limpa.
-2. Revalidar `npm run dist:win` + backend empacotado apos as mudancas de `2026-05-15`.
-3. Validar o instalador novo em maquina limpa.
-4. Rodar a trilha Core de ponta a ponta com VB-Cable + Discord/Zoom.
-5. Definir canal direto de suporte ao beta.
-6. So depois decidir sobre beta ampliado, XTTS no pacote e assinatura de codigo.
+1. Validar o instalador novo em maquina limpa.
+2. Rodar a trilha Core de ponta a ponta com VB-Cable + Discord/Zoom.
+3. Definir canal direto de suporte ao beta.
+4. So depois decidir sobre beta ampliado, XTTS no pacote e assinatura de codigo.
