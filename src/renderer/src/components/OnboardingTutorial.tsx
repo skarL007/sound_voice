@@ -80,7 +80,8 @@ function buildSteps(hardware: HardwareInfo | null): Step[] {
 }
 
 export default function OnboardingTutorial() {
-  const { tutorialSeen, setTutorialSeen } = useAppStore()
+  const tutorialSeen = useAppStore((state) => state.tutorialSeen)
+  const setTutorialSeen = useAppStore((state) => state.setTutorialSeen)
   const [isOpen, setIsOpen] = useState(false)
   const [stepIndex, setStepIndex] = useState(0)
   const [hardware, setHardware] = useState<HardwareInfo | null>(null)

@@ -27,7 +27,7 @@ import ClonedVoicesTab from '../components/voices/ClonedVoicesTab'
 type VoicesTab = 'cloud' | 'local' | 'cloned'
 
 export default function ModelsPage() {
-  const { showExperimentalModels } = useAppStore()
+  const showExperimentalModels = useAppStore((state) => state.showExperimentalModels)
   const [activeTab, setActiveTab] = useState<VoicesTab>('cloud')
   const [models, setModels] = useState<ModelInfo[]>([])
   const [hardware, setHardware] = useState<HardwareInfo | null>(null)

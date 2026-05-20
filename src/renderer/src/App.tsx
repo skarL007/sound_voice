@@ -153,7 +153,10 @@ function BackendBanner({
 }
 
 function TitleBar() {
-  const { alwaysOnTop, setAlwaysOnTop, compactMode, setCompactMode } = useAppStore()
+  const alwaysOnTop = useAppStore((state) => state.alwaysOnTop)
+  const setAlwaysOnTop = useAppStore((state) => state.setAlwaysOnTop)
+  const compactMode = useAppStore((state) => state.compactMode)
+  const setCompactMode = useAppStore((state) => state.setCompactMode)
 
   return (
     <div
@@ -307,7 +310,7 @@ function HudStat({
 }
 
 function HomePage({ backendStatus }: { backendStatus: BackendStatus }) {
-  const { setCompactMode } = useAppStore()
+  const setCompactMode = useAppStore((state) => state.setCompactMode)
   const [installedModelCount, setInstalledModelCount] = useState(0)
   const [virtualMicEnabled, setVirtualMicEnabled] = useState(false)
   const [vbCableDetected, setVbCableDetected] = useState<boolean | null>(null)
@@ -430,7 +433,10 @@ function HomePage({ backendStatus }: { backendStatus: BackendStatus }) {
 }
 
 function CompactView({ backendStatus }: { backendStatus: BackendStatus }) {
-  const { defaultModelId, setDefaultModelId, defaultSpeed, setDefaultSpeed } = useAppStore()
+  const defaultModelId = useAppStore((state) => state.defaultModelId)
+  const setDefaultModelId = useAppStore((state) => state.setDefaultModelId)
+  const defaultSpeed = useAppStore((state) => state.defaultSpeed)
+  const setDefaultSpeed = useAppStore((state) => state.setDefaultSpeed)
   const { text, setText, history, quickPhrases, keepTextAfterSpeak, setKeepTextAfterSpeak, addHistoryItem } = useCommunicationSettings()
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [virtualMicEnabled, setVirtualMicEnabled] = useState(false)
@@ -675,7 +681,12 @@ function CompactView({ backendStatus }: { backendStatus: BackendStatus }) {
 }
 
 export default function App() {
-  const { alwaysOnTop, highContrast, largeFont, compactMode, setCompactMode, voiceSource } = useAppStore()
+  const alwaysOnTop = useAppStore((state) => state.alwaysOnTop)
+  const highContrast = useAppStore((state) => state.highContrast)
+  const largeFont = useAppStore((state) => state.largeFont)
+  const compactMode = useAppStore((state) => state.compactMode)
+  const setCompactMode = useAppStore((state) => state.setCompactMode)
+  const voiceSource = useAppStore((state) => state.voiceSource)
   const [backendStatus, setBackendStatus] = useState<BackendStatus>(INITIAL_BACKEND_STATUS)
   const [retryingBackend, setRetryingBackend] = useState(false)
 
