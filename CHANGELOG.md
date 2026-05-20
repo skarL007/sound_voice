@@ -1,5 +1,42 @@
 # Changelog
 
+## [1.0.0-rc.3] - 2026-05-20 (Cloud playback destravado)
+
+### Corrigido (BLOQUEADOR P0)
+
+- **Edge TTS cloud agora reproduz audio.** A trilha online estava silenciosamente quebrada por DUAS causas combinadas que foram corrigidas nesta rodada:
+  1. CSP em `index.html` faltava a diretiva `media-src`. Sem ela Chromium aplica `default-src 'self'` e bloqueia qualquer `blob:`/`data:` URL como source de `<audio>`. Adicionado `media-src 'self' blob: data:` + endpoints reais `wss://speech.platform.bing.com https://speech.platform.bing.com` em `connect-src`.
+  2. `outputFormat` MPEG-2 Layer III 24kHz era fragil no decoder do Chromium 127 (Electron 35). Trocado por `webm-24khz-16bit-mono-opus` — Opus em container WebM eh nativo Chromium.
+- `mimeType` propagado para `audio/webm` em todos os 6 callsites (handler IPC + cloudAudio util + TTSPage + App.tsx atalho/voice-shortcut + CloudVoicesTab + DiscordReadyBanner + VoiceShortcutsPage).
+- `cloudAudio.ts` reescrito com 3 fallbacks em cascata: `<audio>` + blob URL → `<audio>` + data URL → Web Audio API `decodeAudioData` + `MediaStreamDestination`. O terceiro caminho preserva `setSinkId` para o CABLE Input.
+- Token de playback impede race quando usuario clica duas vezes em prévias rápidas.
+
+### Segurança
+
+- `validateAudioExtension` ganhou whitelist estrita (`wav/mp3/ogg/oga/opus/webm/m4a/aac/flac`). Rejeita explicitamente `.exe/.bat/.cmd/.ps1/.js/.sh`.
+- `download-manager` agora limita redirects a 5 (anti-SSRF) e bloqueia `http://` externo (apenas `https`). Aceita 301/302/303/307/308.
+- `edge-tts-client`: bodies do tipo `response` que nao sao JSON parseavel agora logam `WARN` em vez de engolir silenciosamente.
+
+### Diagnostico
+
+- Novo `scripts/smoke-edge-tts.js`: roda fora do Electron (apenas node + ws), sintetiza voz fixada via WebSocket completo (Sec-MS-GEC + headers + SSML), salva o WebM resultante em disco e valida magic bytes `1a45dfa3` (EBML/Matroska). Util para confirmar que a cadeia de sintese funciona sem precisar abrir GUI.
+
+### UX
+
+- CompactView agora exibe **8 quick phrases** em vez de 4 (badges `1..8` visiveis na hora do jogo).
+
+### Testes
+
+- `security-utils.test.ts`: 17 testes cobrindo `validateModelId`, whitelist de extensoes de audio, `isHttpUrl`, `sanitizeFileName`.
+- `edge-tts-client.test.ts`: 8 testes cobrindo `generateSecMsGec` (formato hex SHA-256 64 chars, estabilidade na janela de 5 min, rotacao na proxima janela) e geracao de URLs (WSS + voices list).
+- **78/78 verde** (era 57/57).
+
+### Validacao end-to-end
+
+- Smoke `scripts/smoke-edge-tts.js` rodado com 3 vozes (pt-BR Francisca, en-US Aria, pt-BR Antonio): 239-298 frames `Path:audio`, 28-35 KB cada, magic byte `1a45dfa3` valido em todos.
+- `out/renderer/index.html` (que vai pro `.exe` empacotado) contem o CSP atualizado.
+- Build Windows: `npm run dist:win` gera `VoiceLaunch-TTS-Setup-1.0.0.exe` com backend Python bundled.
+
 ## [1.0.0-rc.2] - 2026-05-19 (Redesign + Cloud)
 
 ### Reescritas
