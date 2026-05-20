@@ -12,9 +12,9 @@ import {
   Trash2,
   Volume2,
   X,
-  Zap,
 } from 'lucide-react'
 import { useAppStore } from '../stores/appStore'
+import DiscordVRChatGuide from '../components/DiscordVRChatGuide'
 import { playCloudAudio, stopCloudAudio } from '../utils/cloudAudio'
 import { toast } from '../utils/toast'
 import {
@@ -216,19 +216,7 @@ export default function VoiceShortcutsPage() {
         </div>
       )}
 
-      <div className="hud-frame p-4 text-sm text-ink-soft space-y-2">
-        <div className="flex items-center gap-2">
-          <Zap className="h-4 w-4" style={{ color: 'var(--vl-state-live)' }} />
-          <span className="text-ink-strong font-medium">Como usar com Discord / VRChat</span>
-        </div>
-        <ol className="list-decimal list-inside leading-relaxed space-y-1">
-          <li>Instale o VB-Audio Virtual Cable (Ajustes &gt; Microfone Virtual).</li>
-          <li>Em Ajustes, escolha <strong>CABLE Input</strong> como saida de audio.</li>
-          <li>No Discord / VRChat / jogo, defina <strong>CABLE Output</strong> como microfone de entrada.</li>
-          <li>Ative o microfone virtual (botao no painel Falar) — atalhos passam a tocar pelo CABLE automaticamente.</li>
-          <li>Em VRChat, use a tecla padrao de mic (V) ou habilite mic auto.</li>
-        </ol>
-      </div>
+      <DiscordVRChatGuide defaultExpanded={false} />
 
       {editing && (
         <ShortcutEditor

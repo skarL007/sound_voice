@@ -1,21 +1,13 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Cloud, Globe, Loader2, Search, Volume2 } from 'lucide-react'
 import type { CloudVoice } from '../../../shared/types'
-
-const POPULAR_LOCALES = ['pt-BR', 'pt-PT', 'en-US', 'en-GB', 'es-ES', 'es-MX', 'fr-FR', 'de-DE', 'it-IT', 'ja-JP']
-
-function localeFlag(locale: string): string {
-  const region = locale.split('-')[1]
-  if (!region) return '🌐'
-  const codePoints = [...region.toUpperCase()].map((c) => 0x1f1a5 + c.charCodeAt(0))
-  return String.fromCodePoint(...codePoints)
-}
-
-function shortLabel(voice: CloudVoice): string {
-  const friendly = voice.FriendlyName?.replace(/^Microsoft\s+/i, '').replace(/\s+Online\s+\(Natural\).*$/i, '')
-  if (friendly && friendly.length > 0) return friendly
-  return voice.ShortName.split('-').slice(-1)[0].replace(/Neural$/, '')
-}
+import { useCloudVoices } from '../hooks/useCloudVoices'
+import {
+  filterCloudVoices,
+  localeFlag,
+  shortVoiceLabel,
+  sortAvailableLocales,
+} from '../utils/cloudVoiceFormatting'
 
 interface CloudVoicePickerProps {
   selectedVoice: string | null
@@ -23,60 +15,15 @@ interface CloudVoicePickerProps {
 }
 
 export default function CloudVoicePicker({ selectedVoice, onSelect }: CloudVoicePickerProps) {
-  const [voices, setVoices] = useState<CloudVoice[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { voices, loading, error } = useCloudVoices()
   const [search, setSearch] = useState('')
   const [localeFilter, setLocaleFilter] = useState<string>('pt-BR')
 
-  useEffect(() => {
-    let active = true
-    setLoading(true)
-    window.electronAPI
-      .listCloudVoices()
-      .then((response) => {
-        if (!active) return
-        if (response.success) {
-          setVoices(response.voices)
-          setError(null)
-        } else {
-          setError(response.error || 'Falha ao carregar vozes online.')
-        }
-      })
-      .catch((err) => {
-        if (active) setError(String(err))
-      })
-      .finally(() => {
-        if (active) setLoading(false)
-      })
-    return () => {
-      active = false
-    }
-  }, [])
-
-  const availableLocales = useMemo(() => {
-    const set = new Set<string>()
-    for (const voice of voices) set.add(voice.Locale)
-    const sorted = Array.from(set).sort()
-    const popular = POPULAR_LOCALES.filter((locale) => set.has(locale))
-    const rest = sorted.filter((locale) => !popular.includes(locale))
-    return [...popular, ...rest]
-  }, [voices])
-
-  const filteredVoices = useMemo(() => {
-    const query = search.trim().toLowerCase()
-    return voices
-      .filter((voice) => (localeFilter === 'all' ? true : voice.Locale === localeFilter))
-      .filter((voice) => {
-        if (!query) return true
-        return (
-          voice.ShortName.toLowerCase().includes(query) ||
-          voice.FriendlyName.toLowerCase().includes(query) ||
-          (voice.VoiceTag?.VoicePersonalities ?? []).some((tag) => tag.toLowerCase().includes(query))
-        )
-      })
-      .sort((a, b) => shortLabel(a).localeCompare(shortLabel(b)))
-  }, [voices, localeFilter, search])
+  const availableLocales = useMemo(() => sortAvailableLocales(voices), [voices])
+  const filteredVoices = useMemo(
+    () => filterCloudVoices(voices, { localeFilter, search }),
+    [voices, localeFilter, search],
+  )
 
   if (loading) {
     return (
@@ -168,7 +115,7 @@ export default function CloudVoicePicker({ selectedVoice, onSelect }: CloudVoice
               <span className="text-lg">{localeFlag(voice.Locale)}</span>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-medium text-ink-strong text-sm">{shortLabel(voice)}</span>
+                  <span className="font-medium text-ink-strong text-sm">{shortVoiceLabel(voice)}</span>
                   <span
                     className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded"
                     style={{

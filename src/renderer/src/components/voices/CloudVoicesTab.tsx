@@ -4,37 +4,17 @@ import type { CloudVoice } from '../../../../shared/types'
 import { useAppStore } from '../../stores/appStore'
 import { playCloudAudio, stopCloudAudio } from '../../utils/cloudAudio'
 import { toast } from '../../utils/toast'
-
-const POPULAR_LOCALES = ['pt-BR', 'pt-PT', 'en-US', 'en-GB', 'es-ES', 'es-MX', 'fr-FR', 'de-DE', 'it-IT', 'ja-JP']
-const SAMPLE_TEXT_BY_LOCALE: Record<string, string> = {
-  'pt-BR': 'Ola! Eu sou a voz que voce esta ouvindo.',
-  'pt-PT': 'Ola! Eu sou a voz que estas a ouvir.',
-  'en-US': "Hello! I'm the voice you're listening to.",
-  'en-GB': "Hello! I'm the voice you're listening to.",
-  'es-ES': 'Hola! Soy la voz que estas escuchando.',
-  'es-MX': 'Hola! Soy la voz que estas escuchando.',
-  'fr-FR': 'Bonjour! Je suis la voix que vous entendez.',
-  'de-DE': 'Hallo! Ich bin die Stimme, die du hoerst.',
-  'it-IT': 'Ciao! Sono la voce che stai ascoltando.',
-  'ja-JP': 'Konnichiwa.',
-}
-
-function localeFlag(locale: string): string {
-  const region = locale.split('-')[1]
-  if (!region) return '🌐'
-  const codePoints = [...region.toUpperCase()].map((c) => 0x1f1a5 + c.charCodeAt(0))
-  return String.fromCodePoint(...codePoints)
-}
-
-function shortLabel(voice: CloudVoice): string {
-  const friendly = voice.FriendlyName?.replace(/^Microsoft\s+/i, '').replace(/\s+Online\s+\(Natural\).*$/i, '')
-  return friendly || voice.ShortName.split('-').slice(-1)[0].replace(/Neural$/, '')
-}
+import { useCloudVoices } from '../../hooks/useCloudVoices'
+import {
+  SAMPLE_TEXT_BY_LOCALE,
+  filterCloudVoices,
+  localeFlag,
+  shortVoiceLabel,
+  sortAvailableLocales,
+} from '../../utils/cloudVoiceFormatting'
 
 export default function CloudVoicesTab() {
-  const [voices, setVoices] = useState<CloudVoice[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { voices, loading, error } = useCloudVoices()
   const [search, setSearch] = useState('')
   const [localeFilter, setLocaleFilter] = useState<string>('pt-BR')
   const [previewingId, setPreviewingId] = useState<string | null>(null)
@@ -44,54 +24,16 @@ export default function CloudVoicesTab() {
   const setVoiceSource = useAppStore((state) => state.setVoiceSource)
 
   useEffect(() => {
-    let active = true
-    setLoading(true)
-    window.electronAPI
-      .listCloudVoices()
-      .then((response) => {
-        if (!active) return
-        if (response.success) {
-          setVoices(response.voices)
-          setError(null)
-        } else {
-          setError(response.error || 'Falha ao carregar vozes online.')
-        }
-      })
-      .catch((err) => {
-        if (active) setError(String(err))
-      })
-      .finally(() => {
-        if (active) setLoading(false)
-      })
     return () => {
-      active = false
       stopCloudAudio()
     }
   }, [])
 
-  const availableLocales = useMemo(() => {
-    const set = new Set<string>()
-    for (const voice of voices) set.add(voice.Locale)
-    const sorted = Array.from(set).sort()
-    const popular = POPULAR_LOCALES.filter((locale) => set.has(locale))
-    const rest = sorted.filter((locale) => !popular.includes(locale))
-    return [...popular, ...rest]
-  }, [voices])
-
-  const filtered = useMemo(() => {
-    const query = search.trim().toLowerCase()
-    return voices
-      .filter((voice) => (localeFilter === 'all' ? true : voice.Locale === localeFilter))
-      .filter((voice) => {
-        if (!query) return true
-        return (
-          voice.ShortName.toLowerCase().includes(query) ||
-          voice.FriendlyName.toLowerCase().includes(query) ||
-          (voice.VoiceTag?.VoicePersonalities ?? []).some((tag) => tag.toLowerCase().includes(query))
-        )
-      })
-      .sort((a, b) => shortLabel(a).localeCompare(shortLabel(b)))
-  }, [voices, localeFilter, search])
+  const availableLocales = useMemo(() => sortAvailableLocales(voices), [voices])
+  const filtered = useMemo(
+    () => filterCloudVoices(voices, { localeFilter, search }),
+    [voices, localeFilter, search],
+  )
 
   const handlePreview = async (voice: CloudVoice) => {
     if (previewingId === voice.ShortName) {
@@ -100,7 +42,7 @@ export default function CloudVoicesTab() {
       return
     }
     setPreviewingId(voice.ShortName)
-    const sample = SAMPLE_TEXT_BY_LOCALE[voice.Locale] ?? `Hello, I'm ${shortLabel(voice)}.`
+    const sample = SAMPLE_TEXT_BY_LOCALE[voice.Locale] ?? `Hello, I'm ${shortVoiceLabel(voice)}.`
     try {
       const response = await window.electronAPI.synthesizeCloud({ text: sample, voice: voice.ShortName, speed: 1.0 })
       if (response.success && response.audioBase64) {
@@ -118,7 +60,7 @@ export default function CloudVoicesTab() {
   const handleSelectAsDefault = (voice: CloudVoice) => {
     setStoredCloudVoice(voice.ShortName)
     setVoiceSource('cloud')
-    toast('Voz padrao definida', `${shortLabel(voice)} sera usada em Falar.`, 'success')
+    toast('Voz padrao definida', `${shortVoiceLabel(voice)} sera usada em Falar.`, 'success')
   }
 
   if (loading) {
@@ -151,13 +93,13 @@ export default function CloudVoicesTab() {
         <div className="flex items-center gap-2">
           <Cloud className="h-5 w-5" style={{ color: 'var(--vl-state-live)' }} />
           <h2 className="text-lg font-semibold text-ink-strong">Catalogo online (Edge TTS)</h2>
-          <span className="ml-auto text-sm text-ink-soft">{voices.length} vozes em {availableLocales.length} idiomas</span>
+          <span className="ml-auto text-sm text-ink-soft">
+            {voices.length} vozes em {availableLocales.length} idiomas
+          </span>
         </div>
         <p className="text-sm text-ink-body">
           Vozes pre-treinadas da Microsoft, sem instalacao, sem GPU. Precisa apenas de internet.
-          {cableDeviceId && (
-            <span> Saida configurada para microfone virtual ja ativada.</span>
-          )}
+          {cableDeviceId && <span> Saida configurada para microfone virtual ja ativada.</span>}
         </p>
       </div>
 
@@ -200,7 +142,7 @@ export default function CloudVoicesTab() {
               <span className="text-2xl flex-shrink-0">{localeFlag(voice.Locale)}</span>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-medium text-ink-strong text-sm truncate">{shortLabel(voice)}</span>
+                  <span className="font-medium text-ink-strong text-sm truncate">{shortVoiceLabel(voice)}</span>
                   <span
                     className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded"
                     style={{
@@ -219,7 +161,7 @@ export default function CloudVoicesTab() {
               <button
                 onClick={() => void handlePreview(voice)}
                 className="btn-ghost text-xs"
-                aria-label={`Previa da voz ${shortLabel(voice)}`}
+                aria-label={`Previa da voz ${shortVoiceLabel(voice)}`}
                 title="Ouvir amostra"
               >
                 {isPreviewing ? <StopCircle className="h-4 w-4" /> : <PlayCircle className="h-4 w-4" />}
@@ -227,7 +169,7 @@ export default function CloudVoicesTab() {
               <button
                 onClick={() => handleSelectAsDefault(voice)}
                 className={`text-xs px-2.5 py-1 rounded-lg ${isSelected ? 'btn-secondary' : 'btn-primary'}`}
-                aria-label={`Definir ${shortLabel(voice)} como voz padrao`}
+                aria-label={`Definir ${shortVoiceLabel(voice)} como voz padrao`}
               >
                 {isSelected ? 'Padrao' : 'Usar'}
               </button>

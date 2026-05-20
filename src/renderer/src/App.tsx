@@ -37,6 +37,7 @@ import { useAppStore } from './stores/appStore'
 import OnboardingTutorial from './components/OnboardingTutorial'
 import ToastContainer from './components/ToastContainer'
 import LocalSetupCard from './components/LocalSetupCard'
+import DiscordVRChatGuide from './components/DiscordVRChatGuide'
 import ProfileSwitcher from './components/ProfileSwitcher'
 import { useCommunicationSettings } from './hooks/useCommunicationSettings'
 import { buildHistoryItem, pushHistoryItem, sanitizeCommunicationState, serializeCommunicationState } from './utils/communicationState'
@@ -420,6 +421,8 @@ function HomePage({ backendStatus }: { backendStatus: BackendStatus }) {
           hint="Foca o app de qualquer lugar"
         />
       </div>
+
+      <DiscordVRChatGuide />
 
       <LocalSetupCard />
     </div>
