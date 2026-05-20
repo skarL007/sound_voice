@@ -49,7 +49,7 @@ export default function DiscordReadyBanner({ visible, onClose, modelId, speed = 
         }
         await playCloudAudio(
           response.audioBase64,
-          response.mimeType ?? 'audio/mpeg',
+          response.mimeType ?? 'audio/webm',
           cableDeviceId ?? undefined,
         )
         return

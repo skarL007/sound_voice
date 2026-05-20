@@ -407,7 +407,7 @@ export function registerIpcHandlers(): void {
   ipcMain.handle('cloud:synthesize', async (_, payload: { text: string; voice: string; speed?: number; pitch?: number }) => {
     try {
       const buffer = await synthesizeEdgeTTS(payload)
-      return { success: true, audioBase64: buffer.toString('base64'), mimeType: 'audio/mpeg' }
+      return { success: true, audioBase64: buffer.toString('base64'), mimeType: 'audio/webm' }
     } catch (error) {
       logMain('WARN', `Edge TTS synthesize failed: ${error instanceof Error ? error.message : String(error)}`)
       return { success: false, error: error instanceof Error ? error.message : String(error) }

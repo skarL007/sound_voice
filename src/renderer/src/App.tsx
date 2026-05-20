@@ -616,7 +616,7 @@ function CompactView({ backendStatus }: { backendStatus: BackendStatus }) {
 
       <div className="space-y-2 overflow-auto">
         <div className="grid grid-cols-2 gap-2">
-          {quickPhrases.slice(0, 4).map((phrase, index) => (
+          {quickPhrases.slice(0, 8).map((phrase, index) => (
             <button
               key={phrase}
               onClick={() => {
@@ -624,10 +624,10 @@ function CompactView({ backendStatus }: { backendStatus: BackendStatus }) {
                 void speak(phrase)
               }}
               disabled={!canSpeak}
-              className="hud-frame relative px-3 py-2 text-left text-xs text-ink-body transition-colors hover:bg-brand-500/10 disabled:opacity-50"
+              className="hud-frame relative px-3 py-2 text-left text-[11px] text-ink-body transition-colors hover:bg-brand-500/10 disabled:opacity-50"
             >
-              <span className="badge-shortcut absolute top-1.5 right-1.5">{index + 1}</span>
-              <span className="block pr-7 line-clamp-2">{phrase}</span>
+              <span className="badge-shortcut absolute top-1 right-1">{index + 1}</span>
+              <span className="block pr-6 line-clamp-2">{phrase}</span>
             </button>
           ))}
         </div>
@@ -772,7 +772,7 @@ export default function App() {
           }
           await playCloudAudio(
             response.audioBase64,
-            response.mimeType ?? 'audio/mpeg',
+            response.mimeType ?? 'audio/webm',
             virtualMicOn && cableDeviceId ? cableDeviceId : undefined,
           )
           const nextCommunication = {
@@ -893,7 +893,7 @@ export default function App() {
           }
           await playCloudAudio(
             response.audioBase64,
-            response.mimeType ?? 'audio/mpeg',
+            response.mimeType ?? 'audio/webm',
             virtualMicOn && cableDeviceId ? cableDeviceId : undefined,
           )
           return

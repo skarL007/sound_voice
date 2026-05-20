@@ -3,19 +3,24 @@ import { createHash } from 'crypto'
 import { logMain } from './logger'
 
 const TRUSTED_CLIENT_TOKEN = '6A5AA1D4EAFF4E9FB37E23D68491D6F4'
-const SEC_MS_GEC_VERSION = '1-130.0.2849.68'
+// Constantes acompanham edge-tts upstream (verificadas em 2026-05-20). Microsoft rejeita
+// clientes que se identificam como Edge antigo; bumpamos quando o 403 voltar.
+const CHROMIUM_FULL_VERSION = '143.0.3650.75'
+const CHROMIUM_MAJOR_VERSION = '143'
+const SEC_MS_GEC_VERSION = `1-${CHROMIUM_FULL_VERSION}`
 const WIN_EPOCH_SECONDS = 11644473600n
 const TICKS_PER_SECOND = 10_000_000n
-const TICKS_ROUND = 3_000_000_000n
-const USER_AGENT =
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Edg/130.0.2849.68'
+const SEC_MS_GEC_WINDOW_SECONDS = 300n
+const USER_AGENT = `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${CHROMIUM_MAJOR_VERSION}.0.0.0 Safari/537.36 Edg/${CHROMIUM_MAJOR_VERSION}.0.0.0`
 const WSS_BASE = 'wss://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1'
 const VOICES_BASE = 'https://speech.platform.bing.com/consumer/speech/synthesize/readaloud/voices/list'
 
 function generateSecMsGec(): string {
-  const nowSeconds = BigInt(Math.floor(Date.now() / 1000))
-  let ticks = (nowSeconds + WIN_EPOCH_SECONDS) * TICKS_PER_SECOND
-  ticks -= ticks % TICKS_ROUND
+  // Algoritmo do edge-tts: arredondar segundos-desde-1601 para janela de 5 min,
+  // depois converter para Windows ticks (100ns). Inteiro precisa de BigInt em JS.
+  let seconds = BigInt(Math.floor(Date.now() / 1000)) + WIN_EPOCH_SECONDS
+  seconds -= seconds % SEC_MS_GEC_WINDOW_SECONDS
+  const ticks = seconds * TICKS_PER_SECOND
   const payload = `${ticks.toString()}${TRUSTED_CLIENT_TOKEN}`
   return createHash('sha256').update(payload, 'ascii').digest('hex').toUpperCase()
 }
@@ -97,6 +102,22 @@ export interface SynthesizeOptions {
   voice: string
   speed?: number
   pitch?: number
+  volume?: number
+}
+
+function parseTextHeaders(payload: string): Record<string, string> {
+  const headers: Record<string, string> = {}
+  const headerEnd = payload.indexOf('\r\n\r\n')
+  const headerBlock = headerEnd >= 0 ? payload.slice(0, headerEnd) : payload
+  for (const line of headerBlock.split('\r\n')) {
+    const idx = line.indexOf(':')
+    if (idx > 0) {
+      const key = line.slice(0, idx).trim()
+      const value = line.slice(idx + 1).trim()
+      headers[key] = value
+    }
+  }
+  return headers
 }
 
 export async function synthesizeEdgeTTS(options: SynthesizeOptions): Promise<Buffer> {
@@ -105,10 +126,10 @@ export async function synthesizeEdgeTTS(options: SynthesizeOptions): Promise<Buf
   }
   const speed = options.speed ?? 1.0
   const pitch = options.pitch ?? 0
+  const volume = options.volume ?? 0
   const voices = await listEdgeVoices()
   const voice = voices.find((v) => v.ShortName === options.voice)
   if (!voice) throw new Error(`Voz nao encontrada: ${options.voice}`)
-  const locale = voice.Locale
   const rawId = typeof crypto !== 'undefined' && crypto.randomUUID
     ? crypto.randomUUID()
     : `${Date.now()}-${Math.random().toString(36).slice(2)}`
@@ -116,6 +137,8 @@ export async function synthesizeEdgeTTS(options: SynthesizeOptions): Promise<Buf
   const connectionId = requestId
 
   const audioChunks: Buffer[] = []
+  let textMessages = 0
+  let binaryMessages = 0
 
   await new Promise<void>((resolve, reject) => {
     let settled = false
@@ -139,6 +162,9 @@ export async function synthesizeEdgeTTS(options: SynthesizeOptions): Promise<Buf
         'Cache-Control': 'no-cache',
         Pragma: 'no-cache',
         Origin: 'chrome-extension://jdiccldimpdaibmpdkjnbmckianbfold',
+        'Sec-Ch-Ua': `"Microsoft Edge";v="${CHROMIUM_MAJOR_VERSION}", "Chromium";v="${CHROMIUM_MAJOR_VERSION}", "Not_A Brand";v="24"`,
+        'Sec-Ch-Ua-Mobile': '?0',
+        'Sec-Ch-Ua-Platform': '"Windows"',
       },
     })
 
@@ -151,7 +177,9 @@ export async function synthesizeEdgeTTS(options: SynthesizeOptions): Promise<Buf
             synthesis: {
               audio: {
                 metadataoptions: { sentenceBoundaryEnabled: 'false', wordBoundaryEnabled: 'false' },
-                outputFormat: 'audio-24khz-48kbitrate-mono-mp3',
+                // WebM/Opus é decodificado nativamente por Chromium em qualquer Electron build.
+                // Trocamos do MPEG-2 Layer III 24kHz porque era frágil em Chromium 127 do Electron 35.
+                outputFormat: 'webm-24khz-16bit-mono-opus',
               },
             },
           },
@@ -167,12 +195,16 @@ export async function synthesizeEdgeTTS(options: SynthesizeOptions): Promise<Buf
           ),
         )
 
+        // SSML segue formato exato do edge-tts upstream:
+        // - xml:lang='en-US' eh hardcoded (a voz dirige o idioma real)
+        // - <prosody> tem ordem pitch, rate, volume e os tres campos sao obrigatorios
         const rateStr = ratePercent(speed)
         const pitchStr = (pitch >= 0 ? '+' : '') + pitch + 'Hz'
+        const volumeStr = (volume >= 0 ? '+' : '') + volume + '%'
         const ssml =
-          `<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='${locale}'>` +
+          `<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='en-US'>` +
           `<voice name='${options.voice}'>` +
-          `<prosody rate='${rateStr}' pitch='${pitchStr}'>${escapeXml(options.text)}</prosody>` +
+          `<prosody pitch='${pitchStr}' rate='${rateStr}' volume='${volumeStr}'>${escapeXml(options.text)}</prosody>` +
           `</voice></speak>`
         ws.send(
           buildMessage(
@@ -192,14 +224,44 @@ export async function synthesizeEdgeTTS(options: SynthesizeOptions): Promise<Buf
 
     ws.on('message', (data: Buffer, isBinary: boolean) => {
       if (!isBinary) {
+        textMessages += 1
         const text = data.toString('utf-8')
-        if (text.includes('Path:turn.end')) finish()
+        const headers = parseTextHeaders(text)
+        if (headers.Path === 'turn.end') {
+          finish()
+          return
+        }
+        if (headers.Path === 'response') {
+          // Edge TTS responde JSON apos receber SSML; geralmente status: Success
+          const bodyStart = text.indexOf('\r\n\r\n')
+          if (bodyStart > 0) {
+            const body = text.slice(bodyStart + 4).trim()
+            try {
+              const parsed = JSON.parse(body)
+              const ctx = parsed?.context
+              const ttsStatus = ctx?.serviceTag ? 'ok' : (parsed?.status || ctx?.status || '')
+              if (ttsStatus && /error|fail/i.test(String(ttsStatus))) {
+                finish(new Error(`Edge TTS rejeitou: ${body}`))
+                return
+              }
+            } catch (parseErr) {
+              // Body nao eh JSON; logamos pra ajudar diagnostico futuro.
+              logMain('WARN', `Edge TTS response sem JSON parseavel (len=${body.length}): ${parseErr instanceof Error ? parseErr.message : String(parseErr)}`)
+            }
+          }
+        }
         return
       }
+      binaryMessages += 1
       if (data.length < 2) return
       const headerLen = data.readUInt16BE(0)
       const audioStart = 2 + headerLen
       if (audioStart >= data.length) return
+      // Edge TTS manda binarios de tipo audio E de metadados (word boundaries,
+      // sentence boundaries). Sem filtrar por Path:audio o MP3 fica corrompido.
+      const headerBlock = data.subarray(2, 2 + headerLen).toString('utf-8')
+      const binHeaders = parseTextHeaders(headerBlock)
+      if (binHeaders.Path !== 'audio') return
       audioChunks.push(data.subarray(audioStart))
     })
 
@@ -210,10 +272,14 @@ export async function synthesizeEdgeTTS(options: SynthesizeOptions): Promise<Buf
     })
   })
 
-  if (audioChunks.length === 0) {
-    throw new Error('Nenhum audio recebido do Edge TTS')
+  const combined = Buffer.concat(audioChunks)
+  const totalBytes = combined.length
+  const head = combined.subarray(0, Math.min(32, combined.length)).toString('hex')
+  logMain('INFO', `Edge TTS synth ${options.voice}: ${textMessages} text msg + ${binaryMessages} binary msg = ${totalBytes} bytes audio; head=${head}`)
+  if (audioChunks.length === 0 || totalBytes < 200) {
+    throw new Error(`Nenhum audio valido recebido do Edge TTS (${totalBytes} bytes). Veja Logs.`)
   }
-  return Buffer.concat(audioChunks)
+  return combined
 }
 
 // Exposto apenas para testes unitarios. Permite garantir que o GEC mude conforme o tempo avanca.

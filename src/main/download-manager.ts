@@ -11,7 +11,10 @@ export interface ModelDownloadTask {
   destination: string
   checksum?: string
   size?: number
+  redirectDepth?: number
 }
+
+const MAX_REDIRECTS = 5
 
 interface DownloadState {
   controller: AbortController
@@ -44,15 +47,37 @@ export async function downloadModelWithProgress(
     totalSize: 0,
   })
 
+  const redirectDepth = task.redirectDepth ?? 0
+  if (redirectDepth > MAX_REDIRECTS) {
+    activeDownloads.delete(modelId)
+    const err = new Error(`Excedido limite de ${MAX_REDIRECTS} redirects (possivel SSRF)`)
+    window.webContents.send('model:download:complete', { modelId, success: false, error: err.message })
+    return false
+  }
+
   try {
+    // Apenas https eh aceito pra evitar SSRF/downgrade. http vira erro.
+    if (url.startsWith('http://')) {
+      const allowLocalhost = /^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?\//i.test(url)
+      if (!allowLocalhost) {
+        activeDownloads.delete(modelId)
+        const err = new Error('Apenas https eh permitido em downloads externos')
+        window.webContents.send('model:download:complete', { modelId, success: false, error: err.message })
+        return false
+      }
+    }
     const protocol = url.startsWith('https:') ? https : http
 
     await new Promise<boolean>((resolve, reject) => {
       const request = protocol.get(url, { signal: controller.signal as any }, (response) => {
-        if (response.statusCode === 301 || response.statusCode === 302) {
+        if (response.statusCode === 301 || response.statusCode === 302 || response.statusCode === 303 || response.statusCode === 307 || response.statusCode === 308) {
           if (response.headers.location) {
             activeDownloads.delete(modelId)
-            downloadModelWithProgress({ ...task, url: response.headers.location }, window)
+            // Mantemos o usuario no mesmo modelId mas incrementamos depth.
+            downloadModelWithProgress(
+              { ...task, url: response.headers.location, redirectDepth: redirectDepth + 1 },
+              window,
+            )
               .then(resolve)
               .catch(reject)
             return

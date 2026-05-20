@@ -104,7 +104,7 @@ export default function CloudVoicesTab() {
     try {
       const response = await window.electronAPI.synthesizeCloud({ text: sample, voice: voice.ShortName, speed: 1.0 })
       if (response.success && response.audioBase64) {
-        await playCloudAudio(response.audioBase64, response.mimeType ?? 'audio/mpeg')
+        await playCloudAudio(response.audioBase64, response.mimeType ?? 'audio/webm')
       } else {
         toast('Falha na previa', response.error || 'Nao foi possivel gerar.', 'error')
       }

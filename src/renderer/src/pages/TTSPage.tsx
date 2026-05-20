@@ -178,7 +178,7 @@ export default function TTSPage() {
         if (response.success && response.audioBase64) {
           await playCloudAudio(
             response.audioBase64,
-            response.mimeType ?? 'audio/mpeg',
+            response.mimeType ?? 'audio/webm',
             virtualMicEnabled && cableDeviceId ? cableDeviceId : undefined,
           )
           addHistoryItem(

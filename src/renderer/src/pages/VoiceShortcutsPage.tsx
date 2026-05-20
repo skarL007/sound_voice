@@ -133,7 +133,7 @@ export default function VoiceShortcutsPage() {
         }
         await playCloudAudio(
           response.audioBase64,
-          response.mimeType ?? 'audio/mpeg',
+          response.mimeType ?? 'audio/webm',
           cableDeviceId ?? undefined,
         )
       } else {
