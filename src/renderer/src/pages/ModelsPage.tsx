@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import {
   AlertCircle,
   CheckCircle2,
+  Cloud,
   Download,
   Globe,
   Gauge,
@@ -12,6 +13,7 @@ import {
   Sparkles,
   Star,
   Trash2,
+  UserCircle,
   Wrench,
 } from 'lucide-react'
 import type { HardwareInfo, ModelInfo } from '../../../shared/types'
@@ -19,9 +21,14 @@ import { useAppStore } from '../stores/appStore'
 import { notify } from '../utils/notify'
 import { toast } from '../utils/toast'
 import { getModelLevel, getRecommendedSetup, isModelVisibleInMvp } from '../utils/modelSupport'
+import CloudVoicesTab from '../components/voices/CloudVoicesTab'
+import ClonedVoicesTab from '../components/voices/ClonedVoicesTab'
+
+type VoicesTab = 'cloud' | 'local' | 'cloned'
 
 export default function ModelsPage() {
   const { showExperimentalModels } = useAppStore()
+  const [activeTab, setActiveTab] = useState<VoicesTab>('cloud')
   const [models, setModels] = useState<ModelInfo[]>([])
   const [hardware, setHardware] = useState<HardwareInfo | null>(null)
   const [installed, setInstalled] = useState<Set<string>>(new Set())
@@ -142,23 +149,23 @@ export default function ModelsPage() {
 
   const getGpuBadge = () => {
     if (hardware?.isCudaAvailable) {
-      return { text: 'NVIDIA CUDA', color: 'text-green-400', bg: 'bg-green-500/10', border: 'border-green-500/20' }
+      return { text: 'NVIDIA CUDA', className: 'status-pill status-pill--success' }
     }
     if (hardware?.gpuVendor === 'amd') {
-      return { text: 'AMD - Fluxo estavel', color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/20' }
+      return { text: 'AMD - Fluxo estavel', className: 'status-pill status-pill--error' }
     }
-    return { text: 'Local estavel', color: 'text-slate-300', bg: 'bg-slate-700/30', border: 'border-slate-600/30' }
+    return { text: 'Local estavel', className: 'status-pill status-pill--ready' }
   }
 
   const getLevelBadge = (modelId: string) => {
     const level = getModelLevel(modelId)
     if (level === 'stable') {
-      return { text: 'Estavel', className: 'bg-green-500/15 text-green-300 border-green-500/25' }
+      return { text: 'Estavel', tier: 'A' as const }
     }
     if (level === 'advanced') {
-      return { text: 'Avancado', className: 'bg-brand-500/15 text-brand-300 border-brand-500/25' }
+      return { text: 'Avancado', tier: 'S' as const }
     }
-    return { text: 'Experimental', className: 'bg-yellow-500/15 text-yellow-300 border-yellow-500/25' }
+    return { text: 'Experimental', tier: 'B' as const }
   }
 
   const getSupportNote = (modelId: string) => {
@@ -174,40 +181,67 @@ export default function ModelsPage() {
 
   const gpuBadge = getGpuBadge()
 
+  const tabs: { id: VoicesTab; label: string; icon: typeof Cloud }[] = [
+    { id: 'cloud', label: 'Online', icon: Cloud },
+    { id: 'local', label: 'Locais', icon: HardDrive },
+    { id: 'cloned', label: 'Clonadas', icon: UserCircle },
+  ]
+
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Download className="w-7 h-7 text-brand-400" />
-          <h1 className="text-2xl font-bold text-white">Modelos TTS</h1>
+          <Download className="w-7 h-7" style={{ color: 'var(--vl-state-ready)' }} />
+          <h1 className="text-2xl font-bold text-ink-strong">Vozes</h1>
         </div>
-        <span className={`text-xs px-3 py-1 rounded-full border ${gpuBadge.color} ${gpuBadge.bg} ${gpuBadge.border}`}>
-          {gpuBadge.text}
-        </span>
+        <span className={gpuBadge.className}>{gpuBadge.text}</span>
       </div>
 
-      <div className="glass-panel p-5 space-y-3">
-        <div className="flex items-center gap-2 text-white">
-          <Sparkles className="w-5 h-5 text-brand-400" />
+      <div className="hud-frame p-1.5 inline-flex items-center gap-1 self-start">
+        {tabs.map((tab) => {
+          const Icon = tab.icon
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                activeTab === tab.id ? 'btn-primary' : 'text-ink-soft hover:text-ink-strong'
+              }`}
+              aria-pressed={activeTab === tab.id}
+            >
+              <Icon className="h-4 w-4" />
+              {tab.label}
+            </button>
+          )
+        })}
+      </div>
+
+      {activeTab === 'cloud' && <CloudVoicesTab />}
+      {activeTab === 'cloned' && <ClonedVoicesTab />}
+      {activeTab === 'local' && (
+      <>
+      <div className="hud-frame hud-frame--hero scanline p-5 space-y-3">
+        <div className="flex items-center gap-2 text-ink-strong">
+          <Sparkles className="w-5 h-5" style={{ color: 'var(--vl-state-ready)' }} />
           <h2 className="text-lg font-semibold">Fluxo recomendado do MVP</h2>
         </div>
-        <p className="text-slate-300">{recommendation.summary}</p>
-        <p className="text-sm text-slate-400">{recommendation.gpuNote}</p>
+        <p className="text-ink-body">{recommendation.summary}</p>
+        <p className="text-sm text-ink-soft">{recommendation.gpuNote}</p>
         <div className="flex flex-wrap gap-2">
-          <span className="px-3 py-1 bg-green-500/20 text-green-300 rounded-full text-sm border border-green-500/30">Piper primeiro</span>
-          <span className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-sm border border-blue-500/30">Kokoro depois</span>
+          <span className="tier-badge tier-badge--A">Piper primeiro</span>
+          <span className="tier-badge tier-badge--S">Kokoro depois</span>
           {hardware?.isCudaAvailable && (
-            <span className="px-3 py-1 bg-brand-500/20 text-brand-300 rounded-full text-sm border border-brand-500/30">XTTS v2 so depois do basico</span>
+            <span className="tier-badge tier-badge--B">XTTS v2 (avancado)</span>
           )}
         </div>
       </div>
 
       {!showExperimentalModels && hiddenCount > 0 && (
-        <div className="flex items-start gap-3 p-4 bg-slate-800/50 border border-slate-700 rounded-lg">
-          <AlertCircle className="w-5 h-5 text-slate-300 flex-shrink-0 mt-0.5" />
+        <div className="hud-frame flex items-start gap-3 p-4">
+          <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5 text-ink-soft" />
           <div>
-            <p className="text-slate-200 text-sm font-medium">Recursos experimentais estao ocultos por padrao</p>
-            <p className="text-slate-400 text-sm mt-1">
+            <p className="text-ink-strong text-sm font-medium">Recursos experimentais estao ocultos por padrao</p>
+            <p className="text-ink-soft text-sm mt-1">
               {hiddenCount} modelo(s) ficaram fora desta lista porque ainda nao fazem parte do caminho principal do MVP. Ative a opcao correspondente em Configuracoes se quiser inspeciona-los.
             </p>
           </div>
@@ -215,11 +249,14 @@ export default function ModelsPage() {
       )}
 
       {hardware?.gpuVendor === 'amd' && (
-        <div className="flex items-start gap-3 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-          <AlertCircle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+        <div
+          className="flex items-start gap-3 p-4 rounded-2xl"
+          style={{ background: 'rgba(255,193,90,0.10)', border: '1px solid rgba(255,193,90,0.30)' }}
+        >
+          <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--vl-state-warn)' }} />
           <div>
-            <p className="text-yellow-200 text-sm font-medium">GPU AMD detectada</p>
-            <p className="text-yellow-200/70 text-sm mt-1">
+            <p className="text-sm font-medium" style={{ color: '#FFE2A8' }}>GPU AMD detectada</p>
+            <p className="text-sm mt-1 text-ink-body">
               O caminho garantido deste MVP local continua sendo Piper e Kokoro. Modelos pesados em PyTorch ficam fora do fluxo principal ate validacao pratica do runtime.
             </p>
           </div>
@@ -240,67 +277,77 @@ export default function ModelsPage() {
           return (
             <div
               key={model.id}
-              className={`glass-panel p-5 flex flex-col gap-3 transition-all ${runnable ? 'card-hover' : 'opacity-80'}`}
+              className={`hud-frame p-5 flex flex-col gap-3 transition-all ${runnable ? 'card-hover' : 'opacity-80'}`}
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="text-lg font-semibold text-white">{model.name}</h3>
+                  <h3 className="text-lg font-semibold text-ink-strong">{model.name}</h3>
                   {model.ptBr && (
                     <span title="Portugues Brasileiro suportado">
-                      <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                      <Star className="w-4 h-4" style={{ color: 'var(--vl-state-warn)', fill: 'var(--vl-state-warn)' }} />
                     </span>
                   )}
-                  <span className={`text-xs px-2 py-1 rounded-full border ${levelBadge.className}`}>
+                  <span className={`tier-badge tier-badge--${levelBadge.tier}`}>
                     {levelBadge.text}
                   </span>
                 </div>
-                <span className="text-xs px-2 py-1 bg-slate-800 rounded text-slate-400 border border-slate-700">
+                <span
+                  className="text-xs px-2 py-1 rounded text-ink-soft"
+                  style={{ background: 'rgba(19,9,43,0.7)', border: '1px solid var(--vl-hud-border)' }}
+                >
                   {model.license}
                 </span>
               </div>
 
-              <p className="text-sm text-slate-400 leading-relaxed">{model.description}</p>
-              <p className="text-xs text-slate-500">{getSupportNote(model.id)}</p>
+              <p className="text-sm text-ink-body leading-relaxed">{model.description}</p>
+              <p className="text-xs text-ink-soft">{getSupportNote(model.id)}</p>
 
               <div className="flex flex-wrap gap-2">
                 {model.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="text-xs px-2 py-0.5 bg-brand-500/10 text-brand-300 rounded border border-brand-500/20"
+                    className="text-xs px-2 py-0.5 rounded"
+                    style={{ background: 'rgba(139,92,246,0.10)', color: 'var(--vl-purple-300)', border: '1px solid rgba(139,92,246,0.28)' }}
                   >
                     {tag}
                   </span>
                 ))}
               </div>
 
-              <div className="grid grid-cols-2 gap-2 text-sm mt-1">
-                <div className="flex items-center gap-2 text-slate-400">
+              <div className="grid grid-cols-2 gap-2 text-sm mt-1 text-ink-soft">
+                <div className="flex items-center gap-2">
                   <Globe className="w-4 h-4" />
                   {model.languages.join(', ')}
                 </div>
-                <div className="flex items-center gap-2 text-slate-400">
+                <div className="flex items-center gap-2">
                   <Gauge className="w-4 h-4" />
                   MOS {model.mos}
                 </div>
-                <div className="flex items-center gap-2 text-slate-400">
+                <div className="flex items-center gap-2">
                   <HardDrive className="w-4 h-4" />
                   {model.sizeMB >= 1024 ? `${(model.sizeMB / 1024).toFixed(1)} GB` : `${model.sizeMB} MB`}
                 </div>
-                <div className="flex items-center gap-2 text-slate-400">
+                <div className="flex items-center gap-2">
                   <Mic className="w-4 h-4" />
                   {model.cloning ? 'Clonagem' : 'Sem clonagem'}
                 </div>
               </div>
 
               {!runnable && level === 'advanced' && (
-                <div className="flex items-center gap-2 text-xs text-red-300 bg-red-500/10 p-2 rounded border border-red-500/20">
+                <div
+                  className="flex items-center gap-2 text-xs p-2 rounded-xl"
+                  style={{ background: 'rgba(255,107,125,0.10)', border: '1px solid rgba(255,107,125,0.30)', color: '#FFC1CB' }}
+                >
                   <AlertCircle className="w-4 h-4" />
                   Este recurso avancado so entra no MVP com NVIDIA e CUDA validados.
                 </div>
               )}
 
               {!runnable && level === 'experimental' && (
-                <div className="flex items-center gap-2 text-xs text-yellow-300 bg-yellow-500/10 p-2 rounded border border-yellow-500/20">
+                <div
+                  className="flex items-center gap-2 text-xs p-2 rounded-xl"
+                  style={{ background: 'rgba(255,193,90,0.10)', border: '1px solid rgba(255,193,90,0.30)', color: '#FFE2A8' }}
+                >
                   <AlertCircle className="w-4 h-4" />
                   Este modelo aparece apenas como transparencia tecnica e nao faz parte do fluxo principal.
                 </div>
@@ -308,16 +355,27 @@ export default function ModelsPage() {
 
               {isDownloading && (
                 <div className="space-y-1">
-                  <div className="flex justify-between text-xs text-slate-400">
+                  <div className="flex justify-between text-xs text-ink-soft font-mono">
                     <span>Baixando... {speeds[model.id] || ''}</span>
-                    <span>{prog}% {etas[model.id] ? `(faltam ${etas[model.id]})` : ''}</span>
+                    <span>{prog}% {etas[model.id] ? `· ETA ${etas[model.id]}` : ''}</span>
                   </div>
-                  <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
-                    <div className="h-full bg-brand-500 transition-all duration-300" style={{ width: `${prog}%` }} />
+                  <div
+                    className="h-2 rounded-full overflow-hidden relative scanline"
+                    style={{ background: 'rgba(95,35,194,0.25)' }}
+                  >
+                    <div
+                      className="h-full rounded-full transition-all duration-300"
+                      style={{
+                        width: `${prog}%`,
+                        background: 'linear-gradient(90deg, #8B5CF6, #49E6FF)',
+                        boxShadow: '0 0 12px rgba(139,92,246,0.7)',
+                      }}
+                    />
                   </div>
                   <button
                     onClick={() => handleCancelDownload(model.id)}
-                    className="text-xs text-red-400 hover:text-red-300 underline"
+                    className="text-xs underline"
+                    style={{ color: 'var(--vl-state-error)' }}
                     aria-label="Cancelar download"
                   >
                     Cancelar download
@@ -330,13 +388,13 @@ export default function ModelsPage() {
                   <div className="flex items-center gap-2 text-xs">
                     {depsOk ? (
                       <>
-                        <CheckCircle2 className="w-3.5 h-3.5 text-green-400" />
-                        <span className="text-green-300">Engine pronto</span>
+                        <CheckCircle2 className="w-3.5 h-3.5" style={{ color: 'var(--vl-state-success)' }} />
+                        <span style={{ color: 'var(--vl-state-success)' }}>Engine pronto</span>
                       </>
                     ) : (
                       <>
-                        <Package className="w-3.5 h-3.5 text-yellow-400" />
-                        <span className="text-yellow-300">Dependencias pendentes</span>
+                        <Package className="w-3.5 h-3.5" style={{ color: 'var(--vl-state-warn)' }} />
+                        <span style={{ color: 'var(--vl-state-warn)' }}>Dependencias pendentes</span>
                       </>
                     )}
                   </div>
@@ -357,7 +415,8 @@ export default function ModelsPage() {
                     )}
                     <button
                       onClick={() => handleUninstall(model.id)}
-                      className="flex-1 btn-secondary flex items-center justify-center gap-2 text-red-300 hover:text-red-200 hover:bg-red-500/20 text-sm"
+                      className="flex-1 btn-secondary flex items-center justify-center gap-2 text-sm"
+                      style={{ color: 'var(--vl-state-error)' }}
                       aria-label={`Desinstalar modelo ${model.name}`}
                     >
                       <Trash2 className="w-4 h-4" />
@@ -389,6 +448,8 @@ export default function ModelsPage() {
           )
         })}
       </div>
+      </>
+      )}
     </div>
   )
 }

@@ -12,8 +12,12 @@ import type {
   ClonedVoice,
   AudioDevice,
   BackendStatus,
+  BackendDiagnostics,
   ModelInfo,
   AppSettings,
+  ModelRuntimeResponse,
+  CloudVoice,
+  VoiceShortcut,
 } from '../shared/types'
 
 export type {
@@ -29,8 +33,12 @@ export type {
   ClonedVoice,
   AudioDevice,
   BackendStatus,
+  BackendDiagnostics,
   ModelInfo,
   AppSettings,
+  ModelRuntimeResponse,
+  CloudVoice,
+  VoiceShortcut,
 }
 
 export interface Api {
@@ -44,6 +52,8 @@ export interface Api {
   installModelDeps: (modelId: string) => Promise<{ success: boolean; error?: string }>
   getModelDepsStatus: (modelId: string) => Promise<{ installed: boolean }>
   getModelRegistry: () => Promise<ModelInfo[]>
+  loadModel: (modelId: string) => Promise<ModelRuntimeResponse>
+  unloadModel: (modelId: string) => Promise<ModelRuntimeResponse>
   synthesize: (request: TTSRequest) => Promise<TTSResponse>
   playAudio: (audioPath: string) => Promise<void>
   stopAudio: () => Promise<void>
@@ -58,6 +68,8 @@ export interface Api {
   getVirtualMicStatus: () => Promise<boolean>
   listAudioDevices: () => Promise<AudioDevice[]>
   installVBCable: () => Promise<{ success: boolean; launched?: boolean; message?: string; error?: string }>
+  listCloudVoices: (forceRefresh?: boolean) => Promise<{ success: boolean; voices: CloudVoice[]; error?: string }>
+  synthesizeCloud: (payload: { text: string; voice: string; speed?: number; pitch?: number }) => Promise<{ success: boolean; audioBase64?: string; mimeType?: string; error?: string }>
   minimizeWindow: () => void
   maximizeWindow: () => void
   closeWindow: () => void
@@ -81,6 +93,9 @@ export interface Api {
   onGlobalOpenCompact: (callback: () => void) => () => void
   onGlobalSpeakQuickPhrase: (callback: (index: number) => void) => () => void
   onGlobalToggleVirtualMic: (callback: () => void) => () => void
+  onGlobalShortcutConflict: (callback: (conflicted: string[]) => void) => () => void
+  reregisterVoiceShortcuts: (shortcuts: VoiceShortcut[]) => Promise<{ ok: boolean; conflicted: string[] }>
+  onGlobalSpeakVoiceShortcut: (callback: (shortcutId: string) => void) => () => void
   loadSettings: () => Promise<AppSettings>
   saveSettings: (settings: Partial<AppSettings>) => Promise<boolean>
   getLogs: () => Promise<{ main: string; python: string }>
@@ -107,6 +122,8 @@ const api: Api = {
   installModelDeps: (modelId) => ipcRenderer.invoke('model:install-deps', modelId),
   getModelDepsStatus: (modelId) => ipcRenderer.invoke('model:deps-status', modelId),
   getModelRegistry: () => ipcRenderer.invoke('model:registry'),
+  loadModel: (modelId) => ipcRenderer.invoke('model:load', modelId),
+  unloadModel: (modelId) => ipcRenderer.invoke('model:unload', modelId),
 
   synthesize: (request) => ipcRenderer.invoke('tts:synthesize', request),
   playAudio: (audioPath) => ipcRenderer.invoke('tts:play', audioPath),
@@ -129,6 +146,8 @@ const api: Api = {
   getVirtualMicStatus: () => ipcRenderer.invoke('mic:status'),
   listAudioDevices: () => ipcRenderer.invoke('audio:devices'),
   installVBCable: () => ipcRenderer.invoke('mic:install-vb-cable'),
+  listCloudVoices: (forceRefresh) => ipcRenderer.invoke('cloud:list-voices', forceRefresh),
+  synthesizeCloud: (payload) => ipcRenderer.invoke('cloud:synthesize', payload),
 
   minimizeWindow: () => ipcRenderer.send('window:minimize'),
   maximizeWindow: () => ipcRenderer.send('window:maximize'),
@@ -197,6 +216,17 @@ const api: Api = {
     const handler = () => callback()
     ipcRenderer.on('global:toggle-virtual-mic', handler)
     return () => ipcRenderer.removeListener('global:toggle-virtual-mic', handler)
+  },
+  onGlobalShortcutConflict: (callback) => {
+    const handler = (_: unknown, conflicted: string[]) => callback(conflicted)
+    ipcRenderer.on('global:shortcut-conflict', handler)
+    return () => ipcRenderer.removeListener('global:shortcut-conflict', handler)
+  },
+  reregisterVoiceShortcuts: (shortcuts) => ipcRenderer.invoke('shortcuts:reregister', shortcuts),
+  onGlobalSpeakVoiceShortcut: (callback) => {
+    const handler = (_: unknown, shortcutId: string) => callback(shortcutId)
+    ipcRenderer.on('global:speak-voice-shortcut', handler)
+    return () => ipcRenderer.removeListener('global:speak-voice-shortcut', handler)
   },
   loadSettings: () => ipcRenderer.invoke('settings:load'),
   saveSettings: (settings) => ipcRenderer.invoke('settings:save', settings),

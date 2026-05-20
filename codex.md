@@ -203,3 +203,72 @@ dist/
 1. Validar o instalador novo em maquina Windows limpa.
 2. Rodar a trilha beta core em maquina limpa com `Piper + Kokoro + VB-Cable + Discord/Zoom`.
 3. Definir o canal direto de suporte beta antes de convite externo mais amplo.
+
+### Onde paramos nesta sessao
+
+- O merge local do trabalho foi concluido em `main` no commit `2059849` (`Merge branch 'codex/launcher-docs-cleanup'`).
+- O branch de trabalho `codex/launcher-docs-cleanup` continua existindo localmente em `f8dc556`, porque nao foi deletado com `-d` enquanto o upstream remoto dele nao contem os commits novos.
+- O estado local no fim desta sessao ficou `main...origin/main [ahead 16]`, sem `push`.
+- Os gates tecnicos desta maquina ficaram verdes na rodada de `2026-05-15`:
+  - `cmd /c npm run test`
+  - `cmd /c npm run build`
+  - `cmd /c npm run dist:win`
+  - `scripts/smoke-packaged-backend.ps1 -Port 9482`
+  - smoke do app empacotado em `dist/win-unpacked/VoiceLaunch TTS.exe` com `/health` e `/models`
+  - fallback automatico de porta validado com `9472` ocupado e backend subindo em `9473`
+- O pacote canonico validado nesta sessao foi `dist/VoiceLaunch-TTS-Setup-1.0.0.exe`, com `latest.yml` regenerado em `2026-05-15`.
+- O que continua pendente nao e mais bloqueio tecnico desta maquina:
+  - instalacao em maquina Windows limpa;
+  - VB-Cable + Discord/Zoom em maquina limpa;
+  - canal direto de suporte beta para tester nao tecnico.
+- O worktree ainda tem lixo local antigo que nao foi limpo por seguranca, principalmente `.tmp-manual/` e diretorios temporarios inacessiveis; nao tratar isso como estado funcional do produto.
+
+---
+
+## Snapshot de Continuidade - 2026-05-19
+
+### Rodada de redesign roxo/gamer + bugfix executada
+
+- **Brand color migrada para roxo neon** (`#8B5CF6` pivo). Cyan virou `secondary`, reservado para estados ao vivo (mic transmitindo, falando agora, info toast).
+- **Sistema de design ampliado** em `tailwind.config.js` e `src/renderer/src/index.css` com tokens semanticos (`surface-*`, `ink-*`, `state-*`, `hud-*`), classes utilitarias (`hud-frame`, `hud-frame--hero`, `scanline`, `neon-glow`, `badge-shortcut`, `tier-badge`, `terminal-textarea`, `btn-ghost`, `status-pill--{ready,live,warn,error,success}`), animacoes (`glow-pulse`, `text-shimmer`, `scanline-sweep`, `hud-flicker`) e respeito a `prefers-reduced-motion` + `high-contrast`.
+- **Bugfixes P0/P1 entregues:**
+  - `model:load`/`model:unload` agora validam `modelId` via `validateModelId` (paridade com `model:uninstall`).
+  - `buildHistoryItem` usa `crypto.randomUUID()` com fallback determinístico — sem colisao em rajada.
+  - `setupGlobalShortcuts` captura conflitos e envia `global:shortcut-conflict` ao renderer; App.tsx mostra toast.
+  - Foco do textarea no `TTSPage.speak()` finally — fluxo "digitar→Enter→falar→digitar" sem clique extra.
+  - Toast reposicionado em modo compacto (`top-2 left-2 right-2`, 1 toast no maximo) para nao cobrir o botao Falar em 480x420.
+- **Recursos novos gamer/Discord:**
+  - **Perfis** `padrao` e `jogo` com `setActiveProfile`, migration preservando `quickPhrases` legados; switch via `ProfileSwitcher` na sidebar; `AppSettings.schemaVersion = 1`.
+  - **`DiscordReadyBanner`** ativado em TTSPage apos ligar mic virtual, com botao **Testar agora** que dispara síntese curta para validar o pipeline Discord.
+  - **Badges de atalho 1..9** sobre as quick phrases (TTSPage + CompactView).
+  - **CompactView com mini-controles** (seletor de modelo + slider de speed colapsavel via "•••").
+  - **HomePage HUD 2x2** (Backend, Modelos prontos, Mic Virtual, Atalho aberto) + Quick Launch (Falar agora / Modo compacto / Configurar atalhos).
+  - **BackendBanner com diagnostics expansíveis** (Python path, executor, URL, detail) + atalho para `#/logs`.
+  - **LogsPage com syntax highlight roxo/cyan/amber/coral**, filtro por nivel, busca e truncamento defensivo em 2000 linhas.
+- **Cobertura de testes:** 38/38 passando. Novos: `buildHistoryItem` produz 1.000 IDs unicos sem colisao; `migrateSettings` cria perfis padrao, preserva `quickPhrases` legados, mantem perfis ja migrados, e cai para o primeiro perfil quando `activeProfileId` referencia ID inexistente.
+- **Gates desta maquina:** `npm test` verde, `npm run build` verde.
+
+### Decisao pendente fechada nesta sessao
+
+- A feature `model:load` / `model:unload` ficou exposta pelo IPC e usada pela `ModelsPage` (botoes "Carregar engine" / "Desinstalar" continuam coexistindo), mas o launcher continua a sintetizar carregando sob demanda. A decisao definitiva de auto/manual/ambos fica para uma rodada de UX dedicada — o codigo ja suporta os dois caminhos.
+
+### Pendencias que continuam abertas
+
+- Instalacao em maquina Windows limpa.
+- VB-Cable + Discord/Zoom em maquina limpa.
+- Canal direto de suporte beta para tester nao tecnico.
+- Atalhos globais customizaveis (so listagem readonly nesta rodada; edicao fica para v1.1).
+
+### Arquivos tocados nesta rodada
+
+- `tailwind.config.js`, `src/renderer/src/index.css` — tokens + classes HUD.
+- `src/main/ipc-handlers.ts`, `src/main/index.ts`, `src/main/python-manager.ts` — validacao, conflito de atalhos, diagnostics estendido.
+- `src/shared/types.ts` — `Profile`, `AppSettings.schemaVersion/profiles/activeProfileId`.
+- `src/preload/index.ts`, `src/renderer/src/types/electron.d.ts` — `onGlobalShortcutConflict`.
+- `src/renderer/src/utils/communicationState.ts` — UUID generator.
+- `src/renderer/src/stores/appStore.ts` — perfis + migration.
+- `src/renderer/src/hooks/useCommunicationSettings.ts` — sync parcial de eventos.
+- `src/renderer/src/App.tsx` — TitleBar, Sidebar, BackendBanner, HomePage, CompactView novos.
+- `src/renderer/src/pages/*` — DashboardPage, TTSPage, ModelsPage, SettingsPage, LogsPage, ClonePage atualizados.
+- `src/renderer/src/components/*` — ToastContainer, OnboardingTutorial, LocalSetupCard, **DiscordReadyBanner (novo)**, **ProfileSwitcher (novo)**.
+- Testes: `src/renderer/src/utils/communicationState.test.ts`, `src/renderer/src/stores/appStore.test.ts`.

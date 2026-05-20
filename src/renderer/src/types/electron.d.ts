@@ -13,6 +13,9 @@ import type {
   BackendStatus,
   ModelInfo,
   AppSettings,
+  ModelRuntimeResponse,
+  CloudVoice,
+  VoiceShortcut,
 } from '../../../shared/types'
 
 export interface Api {
@@ -26,6 +29,8 @@ export interface Api {
   installModelDeps: (modelId: string) => Promise<{ success: boolean; error?: string }>
   getModelDepsStatus: (modelId: string) => Promise<{ installed: boolean }>
   getModelRegistry: () => Promise<ModelInfo[]>
+  loadModel: (modelId: string) => Promise<ModelRuntimeResponse>
+  unloadModel: (modelId: string) => Promise<ModelRuntimeResponse>
   synthesize: (request: TTSRequest) => Promise<TTSResponse>
   playAudio: (audioPath: string) => Promise<void>
   stopAudio: () => Promise<void>
@@ -40,6 +45,8 @@ export interface Api {
   getVirtualMicStatus: () => Promise<boolean>
   listAudioDevices: () => Promise<AudioDevice[]>
   installVBCable: () => Promise<{ success: boolean; launched?: boolean; message?: string; error?: string }>
+  listCloudVoices: (forceRefresh?: boolean) => Promise<{ success: boolean; voices: CloudVoice[]; error?: string }>
+  synthesizeCloud: (payload: { text: string; voice: string; speed?: number; pitch?: number }) => Promise<{ success: boolean; audioBase64?: string; mimeType?: string; error?: string }>
   minimizeWindow: () => void
   maximizeWindow: () => void
   closeWindow: () => void
@@ -63,6 +70,9 @@ export interface Api {
   onGlobalOpenCompact: (callback: () => void) => () => void
   onGlobalSpeakQuickPhrase: (callback: (index: number) => void) => () => void
   onGlobalToggleVirtualMic: (callback: () => void) => () => void
+  onGlobalShortcutConflict: (callback: (conflicted: string[]) => void) => () => void
+  reregisterVoiceShortcuts: (shortcuts: VoiceShortcut[]) => Promise<{ ok: boolean; conflicted: string[] }>
+  onGlobalSpeakVoiceShortcut: (callback: (shortcutId: string) => void) => () => void
   loadSettings: () => Promise<AppSettings>
   saveSettings: (settings: Partial<AppSettings>) => Promise<boolean>
   getLogs: () => Promise<{ main: string; python: string }>

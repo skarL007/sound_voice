@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import {
   AlertCircle,
   BookmarkPlus,
+  Cloud,
+  HardDrive,
   History,
   Keyboard,
   Mic,
@@ -12,17 +14,31 @@ import {
   Trash2,
   Volume2,
 } from 'lucide-react'
-import type { HardwareInfo, ModelInfo } from '../../../shared/types'
+import type { CloudVoice, HardwareInfo, ModelInfo, VoiceSource } from '../../../shared/types'
 import VirtualKeyboard from '../components/VirtualKeyboard'
+import DiscordReadyBanner from '../components/DiscordReadyBanner'
+import CloudVoicePicker from '../components/CloudVoicePicker'
 import { useCommunicationSettings } from '../hooks/useCommunicationSettings'
 import { useAppStore } from '../stores/appStore'
 import { notify } from '../utils/notify'
 import { toast } from '../utils/toast'
 import { buildHistoryItem } from '../utils/communicationState'
 import { isModelVisibleInMvp } from '../utils/modelSupport'
+import { playCloudAudio, stopCloudAudio } from '../utils/cloudAudio'
 
 export default function TTSPage() {
-  const { defaultModelId, defaultSpeed, setDefaultModelId, setDefaultSpeed, showExperimentalModels } = useAppStore()
+  const {
+    defaultModelId,
+    defaultSpeed,
+    setDefaultModelId,
+    setDefaultSpeed,
+    showExperimentalModels,
+    voiceSource,
+    setVoiceSource,
+    cloudVoice: storedCloudVoiceShortName,
+    setCloudVoice: setStoredCloudVoice,
+    cableDeviceId,
+  } = useAppStore()
   const {
     text,
     setText,
@@ -42,6 +58,13 @@ export default function TTSPage() {
   const [availableModels, setAvailableModels] = useState<ModelInfo[]>([])
   const [hardware, setHardware] = useState<HardwareInfo | null>(null)
   const [showHistory, setShowHistory] = useState(false)
+  const [showDiscordBanner, setShowDiscordBanner] = useState(false)
+  const [cloudVoice, setLocalCloudVoice] = useState<CloudVoice | null>(null)
+
+  const handleCloudVoiceSelect = (voice: CloudVoice) => {
+    setLocalCloudVoice(voice)
+    setStoredCloudVoice(voice.ShortName)
+  }
   const textAreaRef = useRef<HTMLTextAreaElement>(null)
   const cancelRef = useRef(false)
   const isSpeakingRef = useRef(false)
@@ -58,6 +81,7 @@ export default function TTSPage() {
       if (isSpeakingRef.current) {
         cancelRef.current = true
         window.electronAPI.stopAudio()
+        stopCloudAudio()
         setIsSpeaking(false)
       }
     })
@@ -125,11 +149,17 @@ export default function TTSPage() {
   }
 
   const speak = async (textToSpeak: string) => {
-    if (!textToSpeak.trim() || !modelId) return
+    if (!textToSpeak.trim()) return
+    if (voiceSource === 'local' && !modelId) return
+    if (voiceSource === 'cloud' && !cloudVoice) {
+      toast('Escolha uma voz online', 'Selecione uma voz na lista de Edge TTS antes de falar.', 'warning')
+      return
+    }
 
     if (isSpeaking) {
       cancelRef.current = true
       await window.electronAPI.stopAudio()
+      stopCloudAudio()
       setIsSpeaking(false)
       return
     }
@@ -138,37 +168,57 @@ export default function TTSPage() {
     setIsSpeaking(true)
 
     try {
-      const response = await window.electronAPI.synthesize({
-        text: textToSpeak,
-        modelId,
-        voiceId: voiceId || undefined,
-        speed,
-      })
-
-      if (cancelRef.current) return
-
-      if (response.success && response.audioPath) {
-        await window.electronAPI.playAudio(response.audioPath)
+      if (voiceSource === 'cloud' && cloudVoice) {
+        const response = await window.electronAPI.synthesizeCloud({
+          text: textToSpeak,
+          voice: cloudVoice.ShortName,
+          speed,
+        })
         if (cancelRef.current) return
-
-        addHistoryItem(
-          buildHistoryItem({
-            text: textToSpeak,
-            modelId,
-            voiceId: voiceId || undefined,
-            audioPath: response.audioPath,
-          }),
-        )
-
-        if (keepTextAfterSpeak) {
-          setText(textToSpeak)
+        if (response.success && response.audioBase64) {
+          await playCloudAudio(
+            response.audioBase64,
+            response.mimeType ?? 'audio/mpeg',
+            virtualMicEnabled && cableDeviceId ? cableDeviceId : undefined,
+          )
+          addHistoryItem(
+            buildHistoryItem({
+              text: textToSpeak,
+              modelId: `cloud:${cloudVoice.ShortName}`,
+              voiceId: cloudVoice.ShortName,
+            }),
+          )
+          if (!keepTextAfterSpeak) setText('')
         } else {
-          setText('')
+          const msg = response.error || 'Nao foi possivel gerar a voz online.'
+          notify('Erro na voz online', msg)
+          toast('Erro na voz online', msg, 'error')
         }
       } else {
-        const msg = response.error || 'Nao foi possivel gerar o audio.'
-        notify('Erro na fala', msg)
-        toast('Erro na fala', msg, 'error')
+        const response = await window.electronAPI.synthesize({
+          text: textToSpeak,
+          modelId,
+          voiceId: voiceId || undefined,
+          speed,
+        })
+        if (cancelRef.current) return
+        if (response.success && response.audioPath) {
+          await window.electronAPI.playAudio(response.audioPath)
+          if (cancelRef.current) return
+          addHistoryItem(
+            buildHistoryItem({
+              text: textToSpeak,
+              modelId,
+              voiceId: voiceId || undefined,
+              audioPath: response.audioPath,
+            }),
+          )
+          if (!keepTextAfterSpeak) setText('')
+        } else {
+          const msg = response.error || 'Nao foi possivel gerar o audio.'
+          notify('Erro na fala', msg)
+          toast('Erro na fala', msg, 'error')
+        }
       }
     } catch (error) {
       if (cancelRef.current) return
@@ -177,6 +227,7 @@ export default function TTSPage() {
       toast('Erro na fala', msg, 'error')
     } finally {
       setIsSpeaking(false)
+      textAreaRef.current?.focus()
     }
   }
 
@@ -186,6 +237,7 @@ export default function TTSPage() {
     if (success) {
       setVirtualMicEnabled(newState)
       window.dispatchEvent(new CustomEvent('voicelaunch:virtual-mic-changed', { detail: newState }))
+      if (newState) setShowDiscordBanner(true)
     }
   }
 
@@ -198,18 +250,27 @@ export default function TTSPage() {
 
   const noReadyModel = availableModels.length === 0
   const activeModel = availableModels.find((model) => model.id === modelId)
+  const canSpeak = voiceSource === 'cloud' ? Boolean(cloudVoice) : !noReadyModel
+  const speakDisabled = !canSpeak || (voiceSource === 'local' && noReadyModel)
 
   return (
     <div className="mx-auto flex h-full max-w-7xl flex-col">
       <div className="mb-5 flex flex-col gap-4">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-start gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-brand-400/25 bg-brand-400/10 shadow-[0_0_0_1px_rgba(73,230,255,0.08)]">
-              <Volume2 className="h-5 w-5 text-brand-300" />
+            <div
+              className="flex h-11 w-11 items-center justify-center rounded-2xl"
+              style={{
+                border: '1px solid var(--vl-hud-border-strong)',
+                background: 'rgba(139,92,246,0.14)',
+                boxShadow: '0 0 24px rgba(139,92,246,0.25)',
+              }}
+            >
+              <Volume2 className="h-5 w-5 neon-glow" style={{ color: 'var(--vl-state-ready)' }} />
             </div>
             <div className="space-y-1">
-              <h1 className="text-3xl font-bold tracking-tight text-slate-50">Falar</h1>
-              <p className="max-w-2xl text-sm text-slate-400">
+              <h1 className="text-3xl font-bold tracking-tight text-ink-strong">Falar</h1>
+              <p className="max-w-2xl text-sm text-ink-soft">
                 Console principal para composicao, repeticao e disparo rapido de voz.
               </p>
             </div>
@@ -218,10 +279,8 @@ export default function TTSPage() {
           <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={toggleVirtualMic}
-              className={`inline-flex items-center gap-2 rounded-[14px] border px-4 py-2 text-sm font-medium transition-all ${
-                virtualMicEnabled
-                  ? 'border-green-400/40 bg-green-500/15 text-green-200 shadow-[0_10px_24px_rgba(34,197,94,0.14)]'
-                  : 'border-[rgba(51,80,107,0.65)] bg-[rgba(17,26,36,0.92)] text-slate-300 hover:border-brand-400/40 hover:text-slate-100'
+              className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-medium transition-all ${
+                virtualMicEnabled ? 'status-pill--live' : 'btn-secondary'
               }`}
               title="Envia a voz gerada como microfone virtual para outros aplicativos"
             >
@@ -231,7 +290,7 @@ export default function TTSPage() {
             <button
               onClick={() => setShowHistory(!showHistory)}
               className={`btn-secondary inline-flex items-center gap-2 text-sm ${
-                showHistory ? 'border-brand-400/50 text-brand-200' : ''
+                showHistory ? 'border-brand-400/60 text-brand-100' : ''
               }`}
               title="Historico de frases"
               aria-label="Historico de frases"
@@ -242,130 +301,182 @@ export default function TTSPage() {
           </div>
         </div>
 
-        <div className="panel-surface flex flex-wrap items-center gap-3 p-3">
-          <span className="status-pill border-brand-400/25 bg-brand-400/10 text-brand-100">
-            <Volume2 className="h-3.5 w-3.5 text-brand-300" />
-            Modelo: {activeModel?.name ?? 'Nenhum modelo pronto'}
+        <div className="hud-frame flex flex-wrap items-center gap-3 p-3">
+          <span className="status-pill status-pill--ready">
+            {voiceSource === 'cloud' ? <Cloud className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
+            {voiceSource === 'cloud'
+              ? `Voz online: ${cloudVoice ? cloudVoice.ShortName : 'nenhuma selecionada'}`
+              : `Modelo: ${activeModel?.name ?? 'Nenhum modelo pronto'}`}
           </span>
-          <span
-            className={`status-pill ${
-              virtualMicEnabled
-                ? 'border-green-400/30 bg-green-500/10 text-green-200'
-                : 'border-slate-700 bg-slate-900/60 text-slate-400'
-            }`}
-          >
+          <span className={`status-pill ${virtualMicEnabled ? 'status-pill--live' : 'status-pill--ready'}`}>
             <Mic className="h-3.5 w-3.5" />
             {virtualMicEnabled ? 'Mic virtual ligado' : 'Mic virtual desligado'}
           </span>
-          <span
-            className={`status-pill ${
-              isSpeaking
-                ? 'border-amber-400/30 bg-amber-500/10 text-amber-100'
-                : 'border-slate-700 bg-slate-900/60 text-slate-300'
-            }`}
-          >
+          <span className={`status-pill ${isSpeaking ? 'status-pill--warn' : 'status-pill--ready'}`}>
             <MonitorUp className="h-3.5 w-3.5" />
-            {isSpeaking ? 'Falando agora' : 'Pronto para falar'}
+            {isSpeaking ? 'Falando agora' : canSpeak ? 'Pronto para falar' : 'Aguardando voz'}
           </span>
-          <span
-            className={`status-pill ${
-              keepTextAfterSpeak
-                ? 'border-cyan-400/30 bg-cyan-500/10 text-cyan-100'
-                : 'border-slate-700 bg-slate-900/60 text-slate-400'
-            }`}
-          >
+          <span className={`status-pill ${keepTextAfterSpeak ? 'status-pill--live' : 'status-pill--ready'}`}>
             <Pin className="h-3.5 w-3.5" />
             {keepTextAfterSpeak ? 'Manter texto ligado' : 'Manter texto desligado'}
           </span>
         </div>
       </div>
 
-      {noReadyModel && (
-        <div className="mb-4 flex items-start gap-3 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-          <AlertCircle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+      <DiscordReadyBanner
+        visible={showDiscordBanner && virtualMicEnabled}
+        onClose={() => setShowDiscordBanner(false)}
+        modelId={modelId}
+        speed={speed}
+      />
+
+      <div className="hud-frame mb-4 p-1.5 inline-flex items-center gap-1 self-start">
+        <button
+          onClick={() => setVoiceSource('cloud')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+            voiceSource === 'cloud' ? 'btn-primary' : 'text-ink-soft hover:text-ink-strong'
+          }`}
+          aria-pressed={voiceSource === 'cloud'}
+        >
+          <Cloud className="h-4 w-4" />
+          Online (Edge TTS)
+        </button>
+        <button
+          onClick={() => setVoiceSource('local')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+            voiceSource === 'local' ? 'btn-primary' : 'text-ink-soft hover:text-ink-strong'
+          }`}
+          aria-pressed={voiceSource === 'local'}
+        >
+          <HardDrive className="h-4 w-4" />
+          Local (Piper/Kokoro)
+        </button>
+      </div>
+
+      {voiceSource === 'local' && noReadyModel && (
+        <div
+          className="mb-4 flex items-start gap-3 p-4 rounded-2xl"
+          style={{ background: 'rgba(255,193,90,0.10)', border: '1px solid rgba(255,193,90,0.30)' }}
+        >
+          <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--vl-state-warn)' }} />
           <div>
-            <p className="text-yellow-200 text-sm font-medium">Nenhum modelo estavel pronto para uso</p>
-            <p className="text-yellow-200/70 text-sm mt-1">
-              Prepare primeiro o Piper na aba Modelos. Esse e o caminho mais seguro para a primeira fala local.
+            <p className="text-sm font-medium" style={{ color: '#FFE2A8' }}>Nenhum modelo local pronto para uso</p>
+            <p className="text-sm mt-1 text-ink-body">
+              Instale o Piper na aba Modelos para o fluxo offline, ou volte para <strong>Online (Edge TTS)</strong> para falar agora sem instalacao.
             </p>
             {hardware?.gpuVendor?.trim().toLowerCase() === 'amd' && (
-              <p className="text-yellow-200/70 text-sm mt-2">
-                Para AMD, o fluxo principal do MVP continua em Piper e Kokoro.
+              <p className="text-sm mt-2 text-ink-body">
+                Em AMD a trilha local recomendada continua sendo Piper e Kokoro.
               </p>
             )}
           </div>
         </div>
       )}
 
-      <div className="panel-surface mb-4 flex flex-wrap items-center gap-4 p-4">
-        <div className="flex items-center gap-3">
-          <label className="text-xs uppercase tracking-[0.18em] text-slate-500">Modelo</label>
-          <select
-            value={modelId}
-            onChange={(e) => handleModelChange(e.target.value)}
-            className="input-field w-56 py-2 text-sm"
-            disabled={noReadyModel}
-          >
-            {noReadyModel && <option value="">Nenhum modelo pronto</option>}
-            {availableModels.map((model) => (
-              <option key={model.id} value={model.id}>
-                {model.name}
-              </option>
-            ))}
-          </select>
-        </div>
+      {voiceSource === 'local' ? (
+        <div className="hud-frame mb-4 flex flex-wrap items-center gap-4 p-4">
+          <div className="flex items-center gap-3">
+            <label className="text-xs uppercase tracking-[0.18em] text-ink-mute">Modelo</label>
+            <select
+              value={modelId}
+              onChange={(e) => handleModelChange(e.target.value)}
+              className="input-field w-56 py-2 text-sm"
+              disabled={noReadyModel}
+            >
+              {noReadyModel && <option value="">Nenhum modelo pronto</option>}
+              {availableModels.map((model) => (
+                <option key={model.id} value={model.id}>
+                  {model.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        <div className="flex items-center gap-3">
-          <label className="text-xs uppercase tracking-[0.18em] text-slate-500">Velocidade</label>
-          <input
-            type="range"
-            min={0.5}
-            max={2.0}
-            step={0.1}
-            value={speed}
-            onChange={(e) => handleSpeedChange(parseFloat(e.target.value))}
-            className="w-28 accent-brand-400"
-          />
-          <span className="w-10 text-sm text-slate-300">{speed.toFixed(1)}x</span>
-        </div>
+          <div className="flex items-center gap-3">
+            <label className="text-xs uppercase tracking-[0.18em] text-ink-mute">Velocidade</label>
+            <input
+              type="range"
+              min={0.5}
+              max={2.0}
+              step={0.1}
+              value={speed}
+              onChange={(e) => handleSpeedChange(parseFloat(e.target.value))}
+              className="w-28 accent-brand-400"
+            />
+            <span className="w-10 text-sm text-ink-body font-mono">{speed.toFixed(1)}x</span>
+          </div>
 
-        <div className="flex items-center gap-3">
-          <label className="text-xs uppercase tracking-[0.18em] text-slate-500">Voz</label>
-          <input
-            type="text"
-            value={voiceId}
-            onChange={(e) => setVoiceId(e.target.value)}
-            placeholder="Padrao"
-            className="input-field w-40 py-2 text-sm"
-            disabled={noReadyModel}
-          />
+          <div className="flex items-center gap-3">
+            <label className="text-xs uppercase tracking-[0.18em] text-ink-mute">Voz</label>
+            <input
+              type="text"
+              value={voiceId}
+              onChange={(e) => setVoiceId(e.target.value)}
+              placeholder="Padrao"
+              className="input-field w-40 py-2 text-sm"
+              disabled={noReadyModel}
+            />
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="mb-4 grid gap-4 lg:grid-cols-[1.6fr_1fr]">
+          <CloudVoicePicker
+            selectedVoice={cloudVoice?.ShortName ?? storedCloudVoiceShortName ?? null}
+            onSelect={handleCloudVoiceSelect}
+          />
+          <div className="hud-frame p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <Volume2 className="h-4 w-4" style={{ color: 'var(--vl-state-ready)' }} />
+              <h3 className="text-sm font-semibold text-ink-strong">Velocidade</h3>
+            </div>
+            <div className="flex items-center gap-3">
+              <input
+                type="range"
+                min={0.5}
+                max={2.0}
+                step={0.1}
+                value={speed}
+                onChange={(e) => handleSpeedChange(parseFloat(e.target.value))}
+                className="flex-1 accent-brand-400"
+              />
+              <span className="w-12 text-sm text-ink-body font-mono">{speed.toFixed(1)}x</span>
+            </div>
+            <p className="text-xs text-ink-soft">
+              Vozes online vem do Microsoft Edge TTS. Funcionam imediatamente, sem instalacao, mas precisam de internet.
+            </p>
+            {cloudVoice && (
+              <div className="panel-muted p-2.5 text-xs text-ink-body">
+                Voz selecionada: <span className="font-medium text-ink-strong">{cloudVoice.FriendlyName.replace(/^Microsoft\s+/i, '')}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="flex min-h-0 flex-1 flex-col gap-4 xl:flex-row xl:items-stretch">
         <div className="flex min-h-0 flex-1 flex-col gap-4">
-          <div className="panel-surface flex min-h-0 flex-1 flex-col p-5">
+          <div className="terminal-textarea flex min-h-0 flex-1 flex-col p-5">
             <textarea
               ref={textAreaRef}
               value={text}
               onChange={(e) => setText(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Digite uma frase e fale imediatamente. Enter envia. Shift+Enter quebra linha."
-              className="min-h-[280px] flex-1 resize-none bg-transparent text-xl leading-8 text-slate-50 outline-none placeholder:text-slate-500"
+              placeholder="> digite uma frase. Enter envia. Shift+Enter quebra linha."
+              className="min-h-[280px] flex-1 resize-none bg-transparent text-xl leading-8 text-ink-strong outline-none placeholder:text-ink-mute font-mono"
               autoFocus
-              disabled={noReadyModel}
+              disabled={voiceSource === 'local' && noReadyModel}
             />
 
             <div className="mt-4 flex flex-col gap-3 border-t border-chrome-600/70 pt-4 xl:flex-row xl:items-center xl:justify-between">
               <div className="flex flex-col gap-3">
                 <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                  <span className="rounded-full border border-slate-800 bg-slate-950/60 px-3 py-1">
+                  <span className="rounded-full border px-3 py-1 text-ink-soft" style={{ borderColor: 'var(--vl-hud-border)', background: 'rgba(6,3,15,0.6)' }}>
                     {text.length} caracteres
                   </span>
-                  <span className="rounded-full border border-slate-800 bg-slate-950/60 px-3 py-1">
+                  <span className="rounded-full border px-3 py-1 text-ink-soft" style={{ borderColor: 'var(--vl-hud-border)', background: 'rgba(6,3,15,0.6)' }}>
                     {availableModels.length} modelos prontos
                   </span>
-                  <span className="rounded-full border border-slate-800 bg-slate-950/60 px-3 py-1">
+                  <span className="rounded-full border px-3 py-1 text-ink-soft" style={{ borderColor: 'var(--vl-hud-border)', background: 'rgba(6,3,15,0.6)' }}>
                     {voiceId.trim() ? `Voz ${voiceId}` : 'Voz padrao'}
                   </span>
                 </div>
@@ -418,8 +529,8 @@ export default function TTSPage() {
                 </button>
                 <button
                   onClick={() => void speak(text)}
-                  disabled={(!isSpeaking && !text.trim()) || noReadyModel}
-                  className="btn-primary inline-flex min-w-[158px] items-center justify-center gap-2 px-5 py-3 text-sm"
+                  disabled={(!isSpeaking && !text.trim()) || speakDisabled}
+                  className={`btn-primary ${canSpeak && text.trim() ? 'btn-primary--armed' : ''} inline-flex min-w-[158px] items-center justify-center gap-2 px-5 py-3 text-sm`}
                   aria-label={isSpeaking ? 'Parar de falar' : 'Falar texto'}
                 >
                   {isSpeaking ? (
@@ -438,35 +549,41 @@ export default function TTSPage() {
             </div>
           </div>
 
-          <div className="panel-surface p-4">
+          <div className="hud-frame p-4">
             <div className="flex items-center gap-2 mb-3">
-              <Keyboard className="h-4 w-4 text-brand-300" />
-              <h3 className="text-sm font-semibold text-slate-200">Frases rapidas</h3>
+              <Keyboard className="h-4 w-4" style={{ color: 'var(--vl-state-ready)' }} />
+              <h3 className="text-sm font-semibold text-ink-strong">Frases rapidas</h3>
             </div>
-            <p className="mb-3 text-xs text-slate-500">
-              As 9 primeiras frases tambem podem ser usadas com os atalhos globais `Ctrl+Shift+1..9`.
+            <p className="mb-3 text-xs text-ink-soft">
+              As 9 primeiras tem atalho global <span className="font-mono">Ctrl+Shift+1..9</span>.
             </p>
             <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-              {quickPhrases.map((phrase) => (
+              {quickPhrases.map((phrase, index) => (
                 <div
                   key={phrase}
-                  className="group flex min-h-[88px] flex-col justify-between rounded-2xl border border-slate-800 bg-slate-950/50 p-3 transition-all hover:border-brand-400/35 hover:bg-slate-900/80"
+                  className="hud-frame group relative flex min-h-[88px] flex-col justify-between p-3 transition-all hover:bg-brand-500/8"
                 >
+                  {index < 9 && (
+                    <span className="badge-shortcut absolute top-2 right-2" aria-label={`Atalho ${index + 1}`}>
+                      {index + 1}
+                    </span>
+                  )}
                   <button
                     onClick={() => {
                       setText(phrase)
                       void speak(phrase)
                     }}
-                    disabled={noReadyModel}
-                    className="flex-1 text-left text-sm font-medium text-slate-200 transition-colors disabled:opacity-50 group-hover:text-slate-50"
+                    disabled={!canSpeak}
+                    className="flex-1 text-left text-sm font-medium text-ink-body transition-colors disabled:opacity-50 group-hover:text-ink-strong pr-7"
                   >
                     <span className="line-clamp-3">{phrase}</span>
                   </button>
-                  <div className="mt-3 flex items-center justify-between gap-2 border-t border-slate-800 pt-3">
-                    <span className="text-[11px] uppercase tracking-[0.18em] text-slate-500">Command pad</span>
+                  <div className="mt-3 flex items-center justify-between gap-2 pt-3" style={{ borderTop: '1px solid var(--vl-hud-border)' }}>
+                    <span className="text-[11px] uppercase tracking-[0.18em] text-ink-mute">Command pad</span>
                     <button
                       onClick={() => deleteQuickPhrase(phrase)}
-                      className="inline-flex items-center gap-1 rounded-full border border-slate-700 px-2.5 py-1 text-xs text-slate-400 transition-colors hover:border-red-400/40 hover:text-red-200"
+                      className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs text-ink-soft transition-colors hover:text-ink-strong"
+                      style={{ borderColor: 'var(--vl-hud-border)' }}
                       aria-label={`Remover frase rapida: ${phrase}`}
                       title="Remover frase rapida"
                     >
@@ -493,7 +610,8 @@ export default function TTSPage() {
                 {history.map((item) => (
                   <div
                     key={item.id}
-                    className="rounded-2xl border border-slate-800 bg-slate-950/55 p-3"
+                    className="rounded-2xl border p-3"
+                    style={{ borderColor: 'var(--vl-hud-border)', background: 'rgba(6,3,15,0.55)' }}
                   >
                     <button
                       onClick={() => {
@@ -506,7 +624,10 @@ export default function TTSPage() {
                     >
                       <p className="line-clamp-3 text-sm text-slate-200">{item.text}</p>
                       <div className="mt-2 flex flex-wrap items-center gap-2">
-                        <span className="rounded-full border border-slate-800 bg-slate-900/70 px-2 py-1 text-[11px] text-slate-400">
+                        <span
+                          className="rounded-full border px-2 py-1 text-[11px] text-ink-soft"
+                          style={{ borderColor: 'var(--vl-hud-border)', background: 'rgba(19,9,43,0.7)' }}
+                        >
                           {item.modelId}
                         </span>
                         <span className="text-xs text-slate-400">
@@ -545,7 +666,10 @@ export default function TTSPage() {
       </div>
 
       {virtualMicEnabled && (
-        <div className="mt-4 flex items-center gap-2 text-sm text-green-300 bg-green-500/10 p-3 rounded-lg border border-green-500/20">
+        <div
+          className="mt-4 flex items-center gap-2 text-sm p-3 rounded-2xl"
+          style={{ background: 'rgba(73,230,255,0.08)', border: '1px solid rgba(73,230,255,0.30)', color: '#A5F0FF' }}
+        >
           <MonitorUp className="w-4 h-4" />
           <span>
             O audio gerado sera enviado para o <strong>microfone virtual</strong>.

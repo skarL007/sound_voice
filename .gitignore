@@ -39,6 +39,16 @@ models/
 *.pth
 *.bin
 
-# User data
-user-data/
-voices/
+# User data (apenas na raiz do projeto)
+/user-data/
+/voices/
+
+# Python build temp scraps (leftover from venv build attempts)
+.tmp-*/
+build-py-temp/
+build-py-tmp/
+tmp*/
+
+# Companion workspaces (brainstorm only, nao sao parte do produto)
+.axon/
+.axon_builder/

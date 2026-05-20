@@ -20,23 +20,38 @@ export function useCommunicationSettings() {
   useEffect(() => {
     let active = true
 
-    window.electronAPI.loadSettings().then((settings) => {
-      if (!active) return
-      const state = sanitizeCommunicationState(settings)
-      setText(state.ttsDraft)
-      setHistory(state.ttsHistory)
-      setQuickPhrases(state.quickPhrases)
-      setKeepTextAfterSpeak(state.keepTextAfterSpeak)
-      setHydrated(true)
-    })
+    window.electronAPI
+      .loadSettings()
+      .then((settings) => {
+        if (!active) return
+        const state = sanitizeCommunicationState(settings)
+        setText(state.ttsDraft)
+        setHistory(state.ttsHistory)
+        setQuickPhrases(state.quickPhrases)
+        setKeepTextAfterSpeak(state.keepTextAfterSpeak)
+        setHydrated(true)
+      })
+      .catch((error) => {
+        console.error('Failed to load communication settings', error)
+        setHydrated(true)
+      })
 
     const syncFromWindowEvent = (event: Event) => {
-      const detail = (event as CustomEvent<Partial<AppSettings>>).detail
-      const state = sanitizeCommunicationState(detail)
-      setText(state.ttsDraft)
-      setHistory(state.ttsHistory)
-      setQuickPhrases(state.quickPhrases)
-      setKeepTextAfterSpeak(state.keepTextAfterSpeak)
+      const detail = (event as CustomEvent<Partial<AppSettings> | null>).detail
+      if (!detail) return
+      const sanitized = sanitizeCommunicationState(detail)
+      if (Object.prototype.hasOwnProperty.call(detail, 'ttsDraft')) {
+        setText(sanitized.ttsDraft)
+      }
+      if (Object.prototype.hasOwnProperty.call(detail, 'ttsHistory')) {
+        setHistory(sanitized.ttsHistory)
+      }
+      if (Object.prototype.hasOwnProperty.call(detail, 'quickPhrases')) {
+        setQuickPhrases(sanitized.quickPhrases)
+      }
+      if (Object.prototype.hasOwnProperty.call(detail, 'keepTextAfterSpeak')) {
+        setKeepTextAfterSpeak(sanitized.keepTextAfterSpeak)
+      }
     }
 
     window.addEventListener('voicelaunch:communication-updated', syncFromWindowEvent as EventListener)
@@ -55,14 +70,18 @@ export function useCommunicationSettings() {
     }
 
     saveTimeoutRef.current = setTimeout(() => {
-      window.electronAPI.saveSettings(
-        serializeCommunicationState({
-          ttsDraft: text,
-          ttsHistory: history,
-          quickPhrases,
-          keepTextAfterSpeak,
-        }),
-      )
+      void window.electronAPI
+        .saveSettings(
+          serializeCommunicationState({
+            ttsDraft: text,
+            ttsHistory: history,
+            quickPhrases,
+            keepTextAfterSpeak,
+          }),
+        )
+        .catch((error) => {
+          console.error('Failed to save communication settings', error)
+        })
     }, 250)
 
     return () => {

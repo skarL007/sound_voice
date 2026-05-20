@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, globalShortcut } from 'electron'
+import { app, shell, BrowserWindow, globalShortcut, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { autoUpdater } from 'electron-updater'
@@ -8,9 +8,12 @@ import { PythonBackendManager } from './python-manager'
 import { logMain } from './logger'
 import { isAutoUpdateEnabled } from './app-config'
 import { shouldOpenExternalUrl } from './security-utils'
+import { loadSettings } from './settings-store'
+import type { VoiceShortcut } from '../shared/types'
 
 let mainWindow: BrowserWindow | null = null
 let backendManager: PythonBackendManager | null = null
+const registeredVoiceShortcuts = new Set<string>()
 
 function createWindow(): void {
   mainWindow = new BrowserWindow({
@@ -20,7 +23,9 @@ function createWindow(): void {
     minHeight: 600,
     show: false,
     autoHideMenuBar: true,
-    titleBarStyle: 'hiddenInset',
+    frame: false,
+    titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'hidden',
+    backgroundColor: '#06030F',
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: true,
@@ -110,7 +115,22 @@ function setupAutoUpdater(): void {
   }, 10000)
 }
 
+const gotSingleInstanceLock = app.requestSingleInstanceLock()
+if (!gotSingleInstanceLock) {
+  logMain('INFO', 'Another VoiceLaunch instance is already running; quitting this one.')
+  app.exit(0)
+}
+
+app.on('second-instance', () => {
+  if (mainWindow) {
+    if (mainWindow.isMinimized()) mainWindow.restore()
+    if (!mainWindow.isVisible()) mainWindow.show()
+    mainWindow.focus()
+  }
+})
+
 app.whenReady().then(async () => {
+  if (!gotSingleInstanceLock) return
   electronApp.setAppUserModelId('com.voicelaunch.tts')
 
   app.on('browser-window-created', (_, window) => {
@@ -118,6 +138,7 @@ app.whenReady().then(async () => {
   })
 
   registerIpcHandlers()
+  setupShortcutsIpc()
 
   backendManager = new PythonBackendManager()
   createWindow()
@@ -128,6 +149,7 @@ app.whenReady().then(async () => {
   })
   setupAutoUpdater()
   setupGlobalShortcuts()
+  loadAndRegisterVoiceShortcuts()
 
   app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
@@ -157,21 +179,36 @@ function setupGlobalShortcuts(): void {
     mainWindow.focus()
   }
 
+  const conflicted: string[] = []
+
+  const tryRegister = (accelerator: string, handler: () => void): void => {
+    let ok = false
+    try {
+      ok = globalShortcut.register(accelerator, handler)
+    } catch (error) {
+      logMain('WARN', `Failed to register ${accelerator}: ${error instanceof Error ? error.message : String(error)}`)
+    }
+    if (!ok) {
+      conflicted.push(accelerator)
+      logMain('WARN', `Global shortcut not registered (likely in use by another app): ${accelerator}`)
+    }
+  }
+
   // Ctrl+Shift+F — Focus window and TTS input (accessibility shortcut)
   const focusShortcut = process.platform === 'darwin' ? 'Cmd+Shift+F' : 'Ctrl+Shift+F'
-  globalShortcut.register(focusShortcut, () => {
+  tryRegister(focusShortcut, () => {
     ensureWindowReady()
     mainWindow?.webContents.send('global:focus-tts')
   })
 
   // Ctrl+Shift+S — Stop audio immediately
   const stopShortcut = process.platform === 'darwin' ? 'Cmd+Shift+S' : 'Ctrl+Shift+S'
-  globalShortcut.register(stopShortcut, () => {
+  tryRegister(stopShortcut, () => {
     mainWindow?.webContents.send('global:stop-audio')
   })
 
   const openCompactShortcut = process.platform === 'darwin' ? 'Cmd+Shift+V' : 'Ctrl+Shift+V'
-  globalShortcut.register(openCompactShortcut, () => {
+  tryRegister(openCompactShortcut, () => {
     ensureWindowReady()
     mainWindow?.webContents.send('global:open-compact')
     setTimeout(() => {
@@ -180,18 +217,77 @@ function setupGlobalShortcuts(): void {
   })
 
   const toggleVirtualMicShortcut = process.platform === 'darwin' ? 'Cmd+Shift+M' : 'Ctrl+Shift+M'
-  globalShortcut.register(toggleVirtualMicShortcut, () => {
+  tryRegister(toggleVirtualMicShortcut, () => {
     mainWindow?.webContents.send('global:toggle-virtual-mic')
   })
 
   for (let index = 1; index <= 9; index += 1) {
     const quickPhraseShortcut = process.platform === 'darwin' ? `Cmd+Shift+${index}` : `Ctrl+Shift+${index}`
-    globalShortcut.register(quickPhraseShortcut, () => {
+    tryRegister(quickPhraseShortcut, () => {
       mainWindow?.webContents.send('global:speak-quick-phrase', index - 1)
     })
   }
 
-  logMain('INFO', 'Global shortcuts registered')
+  if (conflicted.length > 0) {
+    const notifyRenderer = () => {
+      mainWindow?.webContents.send('global:shortcut-conflict', conflicted)
+    }
+    if (mainWindow && !mainWindow.webContents.isLoading()) {
+      notifyRenderer()
+    } else {
+      mainWindow?.webContents.once('did-finish-load', notifyRenderer)
+    }
+  }
+
+  logMain('INFO', `Global shortcuts registered (${conflicted.length} conflicts)`)
+}
+
+export function registerVoiceShortcuts(shortcuts: VoiceShortcut[]): { ok: boolean; conflicted: string[] } {
+  for (const accelerator of registeredVoiceShortcuts) {
+    globalShortcut.unregister(accelerator)
+  }
+  registeredVoiceShortcuts.clear()
+
+  const conflicted: string[] = []
+  for (const shortcut of shortcuts) {
+    if (!shortcut.enabled || !shortcut.hotkey) continue
+    let ok = false
+    try {
+      ok = globalShortcut.register(shortcut.hotkey, () => {
+        if (!mainWindow) return
+        if (mainWindow.isMinimized()) mainWindow.restore()
+        mainWindow.webContents.send('global:speak-voice-shortcut', shortcut.id)
+      })
+    } catch (error) {
+      logMain('WARN', `Voice shortcut register failed for ${shortcut.hotkey}: ${error instanceof Error ? error.message : String(error)}`)
+    }
+    if (ok) {
+      registeredVoiceShortcuts.add(shortcut.hotkey)
+    } else {
+      conflicted.push(shortcut.hotkey)
+      logMain('WARN', `Voice shortcut hotkey not available: ${shortcut.hotkey} (${shortcut.name})`)
+    }
+  }
+  logMain('INFO', `Voice shortcuts registered (${registeredVoiceShortcuts.size} active, ${conflicted.length} conflicts)`)
+  return { ok: conflicted.length === 0, conflicted }
+}
+
+function setupShortcutsIpc(): void {
+  ipcMain.handle('shortcuts:reregister', (_, shortcuts: VoiceShortcut[]) => {
+    return registerVoiceShortcuts(Array.isArray(shortcuts) ? shortcuts : [])
+  })
+}
+
+function loadAndRegisterVoiceShortcuts(): void {
+  try {
+    const settings = loadSettings()
+    const shortcuts = Array.isArray(settings.voiceShortcuts) ? settings.voiceShortcuts : []
+    if (shortcuts.length > 0) {
+      registerVoiceShortcuts(shortcuts)
+    }
+  } catch (error) {
+    logMain('WARN', `Failed to load voice shortcuts on boot: ${error instanceof Error ? error.message : String(error)}`)
+  }
 }
 
 export function getMainWindow(): BrowserWindow | null {

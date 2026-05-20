@@ -16,6 +16,13 @@ const rows = [
   [',', '.', '!', '?', 'ã', 'õ', 'â', 'ê', 'ô', 'á', 'é', 'í', 'ó', 'ú'],
 ]
 
+const KEY_BASE_CLASS = 'min-w-[2rem] h-10 px-2 text-sm font-medium rounded-lg border transition-colors'
+const KEY_BASE_STYLE: React.CSSProperties = {
+  background: 'rgba(19,9,43,0.78)',
+  borderColor: 'var(--vl-hud-border)',
+  color: 'var(--vl-ink-strong)',
+}
+
 export function VirtualKeyboardButton({ onClick }: { onClick: () => void }) {
   return (
     <button
@@ -52,12 +59,12 @@ export default function VirtualKeyboard({ onKeyPress, onBackspace, onEnter, onSp
   }
 
   return (
-    <div className="glass-panel p-3 space-y-2 animate-in fade-in slide-in-from-bottom-2 duration-200">
+    <div className="hud-frame p-3 space-y-2 animate-lift-in">
       <div className="flex items-center justify-between mb-1">
-        <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Teclado Virtual</span>
+        <span className="text-xs font-medium text-ink-soft uppercase tracking-wider">Teclado Virtual</span>
         <button
           onClick={() => setIsOpen(false)}
-          className="p-1 hover:bg-slate-700 rounded text-slate-400 transition-colors"
+          className="p-1 rounded text-ink-soft hover:bg-brand-500/15 hover:text-ink-strong transition-colors"
           title="Fechar teclado"
         >
           <X className="w-4 h-4" />
@@ -71,7 +78,8 @@ export default function VirtualKeyboard({ onKeyPress, onBackspace, onEnter, onSp
               <button
                 key={key}
                 onClick={() => handleKey(key)}
-                className="min-w-[2rem] h-10 px-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium rounded-lg border border-slate-700 transition-colors active:bg-brand-600 active:border-brand-500 active:text-white"
+                className={KEY_BASE_CLASS}
+                style={KEY_BASE_STYLE}
               >
                 {isShift ? key.toUpperCase() : key}
               </button>
@@ -84,31 +92,35 @@ export default function VirtualKeyboard({ onKeyPress, onBackspace, onEnter, onSp
         <button
           onClick={() => setIsShift((s) => !s)}
           className={`h-10 px-4 rounded-lg font-medium text-sm border transition-colors ${
-            isShift
-              ? 'bg-brand-600 text-white border-brand-500'
-              : 'bg-slate-800 text-slate-200 border-slate-700 hover:bg-slate-700'
+            isShift ? 'btn-primary' : ''
           }`}
+          style={isShift ? undefined : KEY_BASE_STYLE}
         >
           Shift
         </button>
 
         <button
           onClick={onSpace}
-          className="h-10 px-8 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium rounded-lg border border-slate-700 transition-colors active:bg-brand-600 active:border-brand-500"
+          className="h-10 px-8 rounded-lg text-sm font-medium border transition-colors"
+          style={KEY_BASE_STYLE}
+          aria-label="Espaco"
         >
           <Space className="w-4 h-4" />
         </button>
 
         <button
           onClick={onBackspace}
-          className="h-10 px-4 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium rounded-lg border border-slate-700 transition-colors active:bg-red-600 active:border-red-500"
+          className="h-10 px-4 rounded-lg text-sm font-medium border transition-colors"
+          style={{ ...KEY_BASE_STYLE, color: 'var(--vl-state-error)' }}
+          aria-label="Apagar"
         >
           <Delete className="w-4 h-4" />
         </button>
 
         <button
           onClick={onEnter}
-          className="h-10 px-4 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-lg border border-brand-500 transition-colors"
+          className="btn-primary h-10 px-4 rounded-lg"
+          aria-label="Enviar"
         >
           <CornerDownLeft className="w-4 h-4" />
         </button>

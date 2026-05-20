@@ -1,4 +1,4 @@
-import { spawn, ChildProcess, execSync } from 'child_process'
+import { spawn, ChildProcess, execFileSync } from 'child_process'
 import { app } from 'electron'
 import { dirname, join } from 'path'
 import { existsSync } from 'fs'
@@ -6,10 +6,19 @@ import { logMain, logPython } from './logger'
 import { request } from 'http'
 import { createServer } from 'net'
 import { APP_CONFIG, VOICELAUNCH_ENV } from './app-config'
+import type { BackendDiagnostics } from '../shared/types'
 
 const BACKEND_PORT = 9472
 const STARTUP_TIMEOUT_MS = 120000
 const POLL_INTERVAL_MS = 2000
+
+interface BackendLaunchPlan {
+  executable: string
+  args: string[]
+  cwd: string
+  pythonPath?: string
+  executor: 'python-interpreter' | 'bundled-backend'
+}
 
 export class PythonBackendManager {
   private process: ChildProcess | null = null
@@ -19,6 +28,12 @@ export class PythonBackendManager {
   private phase: 'idle' | 'starting' | 'running' | 'error' = 'idle'
   private lastError: string | undefined
   private startPromise: Promise<boolean> | null = null
+  private diagnostics: BackendDiagnostics = this.createDiagnostics({
+    executable: 'python',
+    args: ['--port', String(BACKEND_PORT)],
+    cwd: process.cwd(),
+    executor: 'python-interpreter',
+  })
 
   async start(): Promise<boolean> {
     if (this.isRunning) return true
@@ -28,48 +43,69 @@ export class PythonBackendManager {
     this.lastError = undefined
 
     this.port = await this.resolvePort(BACKEND_PORT)
-    const pythonExecutable = this.findPythonExecutable()
-    const mainScript = this.findMainScript()
-    const usingBundledBackendExe = this.isBundledBackendExecutable(pythonExecutable)
+    const launchPlan = this.createLaunchPlan(this.port)
+    const usingBundledBackendExe = launchPlan.executor === 'bundled-backend'
+    this.diagnostics = this.createDiagnostics(launchPlan, {
+      cliAvailable: existsSync(launchPlan.executable) || !launchPlan.executable.includes('\\') && !launchPlan.executable.includes('/'),
+      runnable: false,
+      detail: 'Backend launch plan created; runnable probe pending.',
+    })
 
     // Verify Python works when we are using an interpreter. Standalone packaged backends
     // are regular executables and do not need a `--version` probe.
     if (!usingBundledBackendExe) {
       try {
-        execSync(`"${pythonExecutable}" --version`, { encoding: 'utf-8' })
-      } catch {
+        execFileSync(launchPlan.executable, ['--version'], { encoding: 'utf-8' })
+        this.diagnostics = this.createDiagnostics(launchPlan, {
+          cliAvailable: true,
+          runnable: true,
+          detail: 'Python interpreter responded to --version.',
+        })
+      } catch (error) {
         this.phase = 'error'
-        this.lastError = `Python executable not working: ${pythonExecutable}`
-        logMain('ERROR', this.lastError)
+        this.lastError = `Python executable not runnable: ${launchPlan.executable}`
+        this.diagnostics = this.createDiagnostics(launchPlan, {
+          cliAvailable: false,
+          runnable: false,
+          detail: error instanceof Error ? error.message : String(error),
+        })
+        logMain('ERROR', `${this.lastError}. Configure ${VOICELAUNCH_ENV.pythonPath} with a Python 3.10+ executable.`)
         return false
       }
+    } else {
+      this.diagnostics = this.createDiagnostics(launchPlan, {
+        cliAvailable: existsSync(launchPlan.executable),
+        runnable: existsSync(launchPlan.executable),
+        detail: 'Using bundled backend executable; Python interpreter auth/probe not required.',
+      })
     }
 
-    if (mainScript && !existsSync(mainScript)) {
+    if (!usingBundledBackendExe && launchPlan.args.length > 0 && !existsSync(launchPlan.args[0])) {
       this.phase = 'error'
-      this.lastError = `Python main script not found: ${mainScript}`
+      this.lastError = `Python main script not found: ${launchPlan.args[0]}`
+      this.diagnostics = this.createDiagnostics(launchPlan, {
+        cliAvailable: true,
+        runnable: false,
+        detail: this.lastError,
+      })
       logMain('ERROR', this.lastError)
       return false
     }
 
-    logMain('INFO', `Starting Python backend: ${pythonExecutable} ${mainScript}`)
+    logMain('INFO', `Starting Python backend via ${launchPlan.executor}: ${this.formatCommand(launchPlan)}`)
 
     this.startPromise = new Promise((resolve) => {
-      const args = mainScript ? [mainScript, '--port', String(this.port)] : ['--port', String(this.port)]
-      const cwd = mainScript ? join(__dirname, '../../src/python') : dirname(pythonExecutable)
-      const pythonPath = mainScript ? join(__dirname, '../../src/python') : ''
-
       const env: NodeJS.ProcessEnv = { ...process.env }
       env.PYTHONIOENCODING = 'utf-8'
-      if (pythonPath) env.PYTHONPATH = pythonPath
+      if (launchPlan.pythonPath) env.PYTHONPATH = launchPlan.pythonPath
       env[VOICELAUNCH_ENV.userData] = APP_CONFIG.userDataPath
       env[VOICELAUNCH_ENV.modelRegistryPath] = APP_CONFIG.modelRegistryPath
 
-      this.process = spawn(pythonExecutable, args, {
-        cwd,
+      this.process = spawn(launchPlan.executable, launchPlan.args, {
+        cwd: launchPlan.cwd,
         env,
         stdio: ['ignore', 'pipe', 'pipe'],
-        shell: process.platform === 'win32',
+        shell: false,
         windowsHide: true
       })
 
@@ -80,7 +116,6 @@ export class PythonBackendManager {
       this.process.stdout?.on('data', (data) => {
         const text = data.toString()
         stdoutBuffer += text
-        // Log line by line
         const lines = stdoutBuffer.split('\n')
         stdoutBuffer = lines.pop() || ''
         lines.forEach((line) => {
@@ -102,6 +137,11 @@ export class PythonBackendManager {
         logMain('ERROR', `Failed to start Python backend: ${err.message}`)
         this.phase = 'error'
         this.lastError = err.message
+        this.diagnostics = this.createDiagnostics(launchPlan, {
+          cliAvailable: existsSync(launchPlan.executable),
+          runnable: false,
+          detail: err.message,
+        })
         if (!resolved) {
           resolved = true
           this.startPromise = null
@@ -114,6 +154,11 @@ export class PythonBackendManager {
         this.isRunning = false
         this.phase = code === 0 || code === null ? 'idle' : 'error'
         this.lastError = code === 0 || code === null ? undefined : `Python backend exited with code ${code}`
+        this.diagnostics = this.createDiagnostics(launchPlan, {
+          cliAvailable: this.diagnostics.cliAvailable,
+          runnable: code === 0 || code === null,
+          detail: this.lastError,
+        })
         this.startPromise = null
         if (!resolved) {
           resolved = true
@@ -130,14 +175,19 @@ export class PythonBackendManager {
         }
 
         const req = request(
-          { hostname: '127.0.0.1', port: this.port, path: '/health', method: 'GET', timeout: 3000 },
+          { hostname: APP_CONFIG.backendHost, port: this.port, path: '/health', method: 'GET', timeout: 3000 },
           (res) => {
             if (!resolved && res.statusCode === 200) {
               this.isRunning = true
               this.startTime = Date.now()
               this.phase = 'running'
               this.lastError = undefined
-              logMain('INFO', 'Python backend started successfully (HTTP poll confirmed)')
+              this.diagnostics = this.createDiagnostics(launchPlan, {
+                cliAvailable: true,
+                runnable: true,
+                detail: 'HTTP /health returned 200.',
+              })
+              logMain('INFO', `Python backend started successfully at ${this.diagnostics.url}`)
               resolved = true
               clearInterval(pollInterval)
               clearTimeout(timeoutHandle)
@@ -154,18 +204,21 @@ export class PythonBackendManager {
         })
         req.end()
 
-        // Total timeout check
         if (Date.now() - startTime > STARTUP_TIMEOUT_MS) {
           clearInterval(pollInterval)
         }
       }, POLL_INTERVAL_MS)
 
-      // Hard timeout
       const timeoutHandle = setTimeout(() => {
         if (!resolved) {
           logMain('ERROR', 'Python backend startup timeout')
           this.phase = 'error'
           this.lastError = 'Python backend startup timeout'
+          this.diagnostics = this.createDiagnostics(launchPlan, {
+            cliAvailable: this.diagnostics.cliAvailable,
+            runnable: false,
+            detail: `Timed out waiting for ${this.diagnostics.url}/health`,
+          })
           resolved = true
           clearInterval(pollInterval)
           this.process?.kill()
@@ -220,6 +273,7 @@ export class PythonBackendManager {
       uptime: this.isRunning ? Math.floor((Date.now() - this.startTime) / 1000) : 0,
       phase: this.phase,
       lastError: this.lastError,
+      diagnostics: this.diagnostics,
     }
   }
 
@@ -227,50 +281,82 @@ export class PythonBackendManager {
     return !app.isPackaged
   }
 
-  private findPythonExecutable(): string {
-    if (this.isDev()) {
-      const realPython = 'C:\\Users\\zpka2\\AppData\\Local\\Microsoft\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\\python.exe'
-      if (existsSync(realPython)) return realPython
+  private createLaunchPlan(port: number): BackendLaunchPlan {
+    const executable = this.findPythonExecutable()
+    const bundledBackend = this.isBundledBackendExecutable(executable)
 
-      const stub = 'C:\\Users\\zpka2\\AppData\\Local\\Microsoft\\WindowsApps\\python.exe'
-      try {
-        execSync(`"${stub}" --version`, { encoding: 'utf-8' })
-        return stub
-      } catch {
-        // ignore
+    if (bundledBackend) {
+      return {
+        executable,
+        args: ['--port', String(port)],
+        cwd: dirname(executable),
+        executor: 'bundled-backend',
       }
-
-      return 'python.exe'
     }
 
-    const prodPath = join(process.resourcesPath, 'python_dist', 'voicelaunch-backend', 'voicelaunch-backend.exe')
-    if (existsSync(prodPath)) return prodPath
+    const mainScript = this.findMainScript()
+    return {
+      executable,
+      args: [mainScript, '--port', String(port)],
+      cwd: dirname(mainScript),
+      pythonPath: dirname(mainScript),
+      executor: 'python-interpreter',
+    }
+  }
 
-    return 'python'
+  private findPythonExecutable(): string {
+    const configuredPython = process.env[VOICELAUNCH_ENV.pythonPath] || process.env.PYTHON
+    if (configuredPython) return configuredPython
+
+    if (!this.isDev()) {
+      const prodPath = join(process.resourcesPath, 'python_dist', 'voicelaunch-backend', 'voicelaunch-backend.exe')
+      if (existsSync(prodPath)) return prodPath
+    }
+
+    return process.platform === 'win32' ? 'python.exe' : 'python3'
   }
 
   private findMainScript(): string {
-    if (this.isDev()) {
-      const paths = [
-        join(app.getAppPath(), 'src/python/main.py'),
-        join(__dirname, '../../src/python/main.py'),
-      ]
-      for (const p of paths) {
-        if (existsSync(p)) return p
-      }
-      return join(__dirname, '../../src/python/main.py')
+    const paths = [
+      join(app.getAppPath(), 'src/python/main.py'),
+      join(__dirname, '../../src/python/main.py'),
+      join(process.resourcesPath || '', 'src/python/main.py'),
+    ]
+
+    for (const p of paths) {
+      if (existsSync(p)) return p
     }
 
-    const backendExe = this.findPythonExecutable()
-    if (backendExe.endsWith('voicelaunch-backend.exe')) {
-      return ''
-    }
-
-    return ''
+    return join(__dirname, '../../src/python/main.py')
   }
 
   private isBundledBackendExecutable(pythonExecutable: string): boolean {
     return pythonExecutable.toLowerCase().endsWith('voicelaunch-backend.exe')
+  }
+
+  private createDiagnostics(
+    plan: BackendLaunchPlan,
+    overrides: Partial<Pick<BackendDiagnostics, 'cliAvailable' | 'runnable' | 'detail'>> = {}
+  ): BackendDiagnostics {
+    return {
+      authMode: 'none',
+      authenticated: null,
+      cliAvailable: overrides.cliAvailable ?? false,
+      runnable: overrides.runnable ?? false,
+      command: this.formatCommand(plan),
+      url: `http://${APP_CONFIG.backendHost}:${this.port}`,
+      executor: plan.executor,
+      detail: overrides.detail,
+    }
+  }
+
+  private formatCommand(plan: BackendLaunchPlan): string {
+    return [plan.executable, ...plan.args].map((part) => this.quoteForDisplay(part)).join(' ')
+  }
+
+  private quoteForDisplay(value: string): string {
+    if (!/[\s"]/u.test(value)) return value
+    return `"${value.replace(/"/g, '\\"')}"`
   }
 
   private async resolvePort(preferredPort: number): Promise<number> {
@@ -299,7 +385,7 @@ export class PythonBackendManager {
         server.close(() => resolve(true))
       })
 
-      server.listen(port, '127.0.0.1')
+      server.listen(port, APP_CONFIG.backendHost)
     })
   }
 }

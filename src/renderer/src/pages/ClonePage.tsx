@@ -194,44 +194,55 @@ export default function ClonePage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center gap-3">
-        <UserCircle className="w-7 h-7 text-brand-400" />
-        <h1 className="text-2xl font-bold text-white">Clonar Voz</h1>
+        <UserCircle className="w-7 h-7" style={{ color: 'var(--vl-state-ready)' }} />
+        <h1 className="text-2xl font-bold text-ink-strong">Clonar Voz</h1>
       </div>
 
-      <p className="text-slate-400">
+      <p className="text-ink-soft">
         A clonagem fica fora do caminho principal do MVP local. Ela entra como recurso avancado apenas quando o runtime CUDA ja esta validado.
       </p>
 
       {!cloneCapability.enabled && (
-        <div className="flex items-start gap-3 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-          <AlertCircle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+        <div
+          className="flex items-start gap-3 p-4 rounded-2xl"
+          style={{ background: 'rgba(255,193,90,0.10)', border: '1px solid rgba(255,193,90,0.30)' }}
+        >
+          <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--vl-state-warn)' }} />
           <div>
-            <p className="text-yellow-200 text-sm font-medium">Clonagem avancada indisponivel neste runtime</p>
-            <p className="text-yellow-200/70 text-sm mt-1">{cloneCapability.reason}</p>
-            <p className="text-yellow-200/70 text-sm mt-2">
+            <p className="text-sm font-medium" style={{ color: '#FFE2A8' }}>Clonagem avancada indisponivel neste runtime</p>
+            <p className="text-sm mt-1 text-ink-body">{cloneCapability.reason}</p>
+            <p className="text-sm mt-2 text-ink-body">
               Primeiro valide a fala local com Piper ou Kokoro. Se quiser clonagem, use uma maquina com NVIDIA/CUDA funcional.
             </p>
           </div>
         </div>
       )}
 
-      <div className="glass-panel p-6">
-        <div className="rounded-xl border border-brand-500/20 bg-brand-500/10 p-4 mb-6">
-          <p className="text-sm text-brand-200 font-medium">Motor desta tela</p>
-          <p className="text-sm text-brand-100 mt-1">XTTS v2 (avancado, recomendado apenas com NVIDIA/CUDA)</p>
+      <div className="hud-frame p-6">
+        <div
+          className="rounded-2xl p-4 mb-6"
+          style={{ background: 'rgba(139,92,246,0.10)', border: '1px solid rgba(139,92,246,0.30)' }}
+        >
+          <p className="text-sm font-medium" style={{ color: 'var(--vl-purple-200)' }}>Motor desta tela</p>
+          <p className="text-sm mt-1 text-ink-strong">XTTS v2 (avancado, recomendado apenas com NVIDIA/CUDA)</p>
         </div>
 
         <div className="flex items-center gap-2 mb-6">
           {[1, 2, 3, 4].map((step) => (
             <div key={step} className="flex items-center gap-2">
               <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                  wizard.step >= step ? 'bg-brand-600 text-white' : 'bg-slate-800 text-slate-500'
-                }`}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
+                style={{
+                  background: wizard.step >= step ? 'linear-gradient(135deg, #A06EFF, #7C3AED)' : 'rgba(19,9,43,0.7)',
+                  color: wizard.step >= step ? '#fff' : 'var(--vl-ink-mute)',
+                  boxShadow: wizard.step >= step ? '0 0 16px rgba(139,92,246,0.5)' : 'none',
+                }}
               >
                 {step}
               </div>
-              {step < 4 && <div className="w-8 h-0.5 bg-slate-800" />}
+              {step < 4 && (
+                <div className="w-8 h-0.5" style={{ background: 'var(--vl-hud-border)' }} />
+              )}
             </div>
           ))}
         </div>
@@ -251,7 +262,10 @@ export default function ClonePage() {
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
                 aria-label={wizard.isRecording ? 'Parar gravacao' : 'Gravar do microfone'}
               >
-                <Mic className={`w-8 h-8 ${wizard.isRecording ? 'text-red-400 animate-pulse' : 'text-slate-400'}`} />
+                <Mic
+                  className={`w-8 h-8 ${wizard.isRecording ? 'animate-pulse' : ''}`}
+                  style={{ color: wizard.isRecording ? 'var(--vl-state-error)' : 'var(--vl-ink-soft)' }}
+                />
                 <span className="text-white font-medium">
                   {wizard.isRecording ? 'Parar Gravacao' : 'Gravar do Microfone'}
                 </span>
@@ -281,8 +295,8 @@ export default function ClonePage() {
             />
 
             {audioUrl && (
-              <div className="mt-4 p-4 bg-slate-800/50 rounded-lg">
-                <p className="text-sm text-slate-300 mb-2">Preview do audio:</p>
+              <div className="panel-muted mt-4 p-4">
+                <p className="text-sm text-ink-body mb-2">Preview do audio:</p>
                 <audio src={audioUrl} controls className="w-full" />
               </div>
             )}
@@ -339,14 +353,21 @@ export default function ClonePage() {
 
         {wizard.step === 3 && wizard.isProcessing && (
           <div className="space-y-4 text-center py-8">
-            <Loader2 className="w-12 h-12 text-brand-400 animate-spin mx-auto" />
-            <h3 className="text-lg font-medium text-white">Processando...</h3>
-            <p className="text-slate-400">{wizard.progress.message || 'Extraindo caracteristicas da voz...'}</p>
+            <Loader2 className="w-12 h-12 animate-spin mx-auto" style={{ color: 'var(--vl-state-ready)' }} />
+            <h3 className="text-lg font-medium text-ink-strong">Processando...</h3>
+            <p className="text-ink-soft">{wizard.progress.message || 'Extraindo caracteristicas da voz...'}</p>
             <div className="max-w-xs mx-auto">
-              <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
-                <div className="h-full bg-brand-500 transition-all duration-500" style={{ width: `${wizard.progress.percent}%` }} />
+              <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(95,35,194,0.25)' }}>
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{
+                    width: `${wizard.progress.percent}%`,
+                    background: 'linear-gradient(90deg, #8B5CF6, #49E6FF)',
+                    boxShadow: '0 0 12px rgba(139,92,246,0.7)',
+                  }}
+                />
               </div>
-              <p className="text-sm text-slate-500 mt-2">{wizard.progress.percent}%</p>
+              <p className="text-sm text-ink-soft mt-2 font-mono">{wizard.progress.percent}%</p>
             </div>
           </div>
         )}
@@ -355,18 +376,18 @@ export default function ClonePage() {
           <div className="space-y-4 text-center py-6">
             {wizard.result.success ? (
               <>
-                <CheckCircle2 className="w-12 h-12 text-green-400 mx-auto" />
-                <h3 className="text-lg font-medium text-white">Clonagem concluida</h3>
-                <p className="text-slate-400">
+                <CheckCircle2 className="w-12 h-12 mx-auto" style={{ color: 'var(--vl-state-success)' }} />
+                <h3 className="text-lg font-medium text-ink-strong">Clonagem concluida</h3>
+                <p className="text-ink-soft">
                   A voz <strong>&quot;{wizard.name}&quot;</strong> esta pronta para uso na aba &quot;Falar&quot;.
                 </p>
                 <button onClick={resetWizard} className="btn-primary">Clonar outra voz</button>
               </>
             ) : (
               <>
-                <AlertCircle className="w-12 h-12 text-red-400 mx-auto" />
-                <h3 className="text-lg font-medium text-white">Falha na clonagem</h3>
-                <p className="text-slate-400">{wizard.result.error || 'Erro desconhecido'}</p>
+                <AlertCircle className="w-12 h-12 mx-auto" style={{ color: 'var(--vl-state-error)' }} />
+                <h3 className="text-lg font-medium text-ink-strong">Falha na clonagem</h3>
+                <p className="text-ink-soft">{wizard.result.error || 'Erro desconhecido'}</p>
                 <button onClick={resetWizard} className="btn-secondary">Tentar novamente</button>
               </>
             )}
@@ -374,7 +395,7 @@ export default function ClonePage() {
         )}
       </div>
 
-      <div className="glass-panel p-6">
+      <div className="hud-frame p-6">
         <h2 className="text-lg font-medium text-white mb-4">Vozes clonadas</h2>
 
         {clonedVoices.length === 0 ? (
@@ -382,7 +403,7 @@ export default function ClonePage() {
         ) : (
           <div className="space-y-3">
             {clonedVoices.map((voice) => (
-              <div key={voice.id} className="flex items-center justify-between gap-3 p-4 bg-slate-800/40 rounded-xl border border-slate-800">
+              <div key={voice.id} className="hud-frame flex items-center justify-between gap-3 p-4">
                 <div>
                   <p className="text-white font-medium">{voice.name}</p>
                   <p className="text-sm text-slate-500">{voice.description || 'Sem descricao'}</p>
@@ -399,7 +420,8 @@ export default function ClonePage() {
                   </button>
                   <button
                     onClick={() => deleteVoice(voice.id)}
-                    className="btn-secondary text-sm flex items-center gap-2 text-red-300 hover:text-red-200 hover:bg-red-500/20"
+                    className="btn-secondary text-sm flex items-center gap-2"
+                    style={{ color: 'var(--vl-state-error)' }}
                     aria-label={`Excluir voz ${voice.name}`}
                   >
                     <Trash2 className="w-4 h-4" />

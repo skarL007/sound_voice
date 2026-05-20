@@ -77,14 +77,12 @@ export default function LocalSetupCard() {
     <section className="panel-surface space-y-6 p-6 lg:p-7">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <div className="status-pill border-ember-500/30 bg-ember-500/10 text-ember-100">Launch Checklist</div>
-          <h2 className="mt-4 text-2xl font-semibold text-slate-50">Setup local recomendado</h2>
-          <p className="mt-2 text-slate-300">{recommendation.summary}</p>
-          <p className="mt-2 text-sm text-slate-400">{recommendation.gpuNote}</p>
+          <div className="status-pill status-pill--ready">Launch Checklist</div>
+          <h2 className="mt-4 text-2xl font-semibold text-ink-strong">Setup local recomendado</h2>
+          <p className="mt-2 text-ink-body">{recommendation.summary}</p>
+          <p className="mt-2 text-sm text-ink-soft">{recommendation.gpuNote}</p>
         </div>
-        <div className="panel-muted rounded-full px-4 py-2 text-xs uppercase tracking-[0.2em] text-brand-200">
-          MVP Local
-        </div>
+        <div className="tier-badge tier-badge--S">MVP Local</div>
       </div>
 
       <div className="space-y-3">
@@ -116,9 +114,9 @@ export default function LocalSetupCard() {
         ))}
       </div>
 
-      <div className="panel-muted p-4 text-sm text-slate-400">
-        <div className="flex items-center gap-2 text-slate-200">
-          <Zap className="h-4 w-4 text-amber-300" />
+      <div className="panel-muted p-4 text-sm text-ink-soft">
+        <div className="flex items-center gap-2 text-ink-strong">
+          <Zap className="h-4 w-4" style={{ color: 'var(--vl-state-warn)' }} />
           Modelos visiveis neste MVP
         </div>
         <p className="mt-2 leading-6">{catalogText}</p>

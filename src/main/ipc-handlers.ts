@@ -10,6 +10,7 @@ import { join } from 'path'
 import { existsSync, readdirSync, statSync, unlinkSync, rmdirSync, readFileSync, mkdirSync, writeFileSync } from 'fs'
 import { validateModelId, validateAudioExtension, isHttpUrl } from './security-utils'
 import { getBundledVBCableInstallerCandidates, isAutoUpdateEnabled } from './app-config'
+import { listEdgeVoices, synthesizeEdgeTTS } from './edge-tts-client'
 
 const USER_DATA = app.getPath('userData')
 const MODELS_DIR = join(USER_DATA, 'models')
@@ -144,6 +145,42 @@ export function registerIpcHandlers(): void {
     }
 
     return true
+  })
+
+  ipcMain.handle('model:load', async (_, modelId: string) => {
+    try {
+      validateModelId(modelId)
+    } catch {
+      logMain('WARN', `Blocked model:load for invalid modelId: ${modelId}`)
+      return { success: false, error: 'Invalid modelId' }
+    }
+    try {
+      const query = new URLSearchParams({ modelId })
+      const response = await fetch(`${getBackendUrl()}/models/load?${query.toString()}`, {
+        method: 'POST',
+      })
+      return await response.json()
+    } catch (error) {
+      return { success: false, error: String(error) }
+    }
+  })
+
+  ipcMain.handle('model:unload', async (_, modelId: string) => {
+    try {
+      validateModelId(modelId)
+    } catch {
+      logMain('WARN', `Blocked model:unload for invalid modelId: ${modelId}`)
+      return { success: false, error: 'Invalid modelId' }
+    }
+    try {
+      const query = new URLSearchParams({ modelId })
+      const response = await fetch(`${getBackendUrl()}/models/unload?${query.toString()}`, {
+        method: 'POST',
+      })
+      return await response.json()
+    } catch (error) {
+      return { success: false, error: String(error) }
+    }
   })
 
   ipcMain.handle('model:uninstall', async (_, modelId: string) => {
@@ -354,6 +391,27 @@ export function registerIpcHandlers(): void {
     const buffer = Buffer.from(arrayBuffer)
     writeFileSync(filePath, buffer)
     return filePath
+  })
+
+  // Cloud TTS (Edge TTS)
+  ipcMain.handle('cloud:list-voices', async (_, forceRefresh?: boolean) => {
+    try {
+      const voices = await listEdgeVoices(Boolean(forceRefresh))
+      return { success: true, voices }
+    } catch (error) {
+      logMain('WARN', `Edge TTS list-voices failed: ${error instanceof Error ? error.message : String(error)}`)
+      return { success: false, voices: [], error: error instanceof Error ? error.message : String(error) }
+    }
+  })
+
+  ipcMain.handle('cloud:synthesize', async (_, payload: { text: string; voice: string; speed?: number; pitch?: number }) => {
+    try {
+      const buffer = await synthesizeEdgeTTS(payload)
+      return { success: true, audioBase64: buffer.toString('base64'), mimeType: 'audio/mpeg' }
+    } catch (error) {
+      logMain('WARN', `Edge TTS synthesize failed: ${error instanceof Error ? error.message : String(error)}`)
+      return { success: false, error: error instanceof Error ? error.message : String(error) }
+    }
   })
 
   // Settings persistence

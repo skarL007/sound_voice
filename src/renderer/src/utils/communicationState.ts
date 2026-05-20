@@ -79,6 +79,13 @@ export function sanitizeCommunicationState(settings: Partial<AppSettings> | null
   }
 }
 
+function generateHistoryId(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID()
+  }
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+}
+
 export function buildHistoryItem(input: {
   text: string
   modelId: string
@@ -86,7 +93,7 @@ export function buildHistoryItem(input: {
   audioPath?: string
 }): TTSHistoryItem {
   return {
-    id: Date.now().toString(),
+    id: generateHistoryId(),
     text: normalizePhrase(input.text),
     modelId: input.modelId,
     voiceId: input.voiceId,

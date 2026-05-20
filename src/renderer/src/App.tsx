@@ -18,6 +18,12 @@ import {
   RefreshCw,
   Send,
   History,
+  ChevronDown,
+  Sparkles,
+  Activity,
+  Zap,
+  Keyboard,
+  PlayCircle,
 } from 'lucide-react'
 
 import DashboardPage from './pages/DashboardPage'
@@ -26,23 +32,26 @@ import TTSPage from './pages/TTSPage'
 import ClonePage from './pages/ClonePage'
 import SettingsPage from './pages/SettingsPage'
 import LogsPage from './pages/LogsPage'
+import VoiceShortcutsPage from './pages/VoiceShortcutsPage'
 import { useAppStore } from './stores/appStore'
 import OnboardingTutorial from './components/OnboardingTutorial'
 import ToastContainer from './components/ToastContainer'
 import LocalSetupCard from './components/LocalSetupCard'
+import ProfileSwitcher from './components/ProfileSwitcher'
 import { useCommunicationSettings } from './hooks/useCommunicationSettings'
 import { buildHistoryItem, pushHistoryItem, sanitizeCommunicationState, serializeCommunicationState } from './utils/communicationState'
 import { getVisibleInstalledModels, resolveActiveModelForMvp } from './utils/modelSupport'
 import { toast } from './utils/toast'
+import { playCloudAudio } from './utils/cloudAudio'
 import type { BackendStatus, ModelInfo } from '../../shared/types'
 
 const navItems = [
   { to: '/', icon: Home, label: 'Início' },
-  { to: '/dashboard', icon: Cpu, label: 'Hardware' },
-  { to: '/models', icon: Download, label: 'Modelos' },
   { to: '/tts', icon: Volume2, label: 'Falar' },
-  { to: '/clone', icon: UserCircle, label: 'Clonar Voz' },
-  { to: '/settings', icon: Settings, label: 'Configurações' },
+  { to: '/shortcuts', icon: Keyboard, label: 'Atalhos' },
+  { to: '/models', icon: Download, label: 'Vozes' },
+  { to: '/clone', icon: UserCircle, label: 'Clonar' },
+  { to: '/settings', icon: Settings, label: 'Ajustes' },
   { to: '/logs', icon: Terminal, label: 'Logs' },
 ]
 
@@ -58,41 +67,85 @@ function BackendBanner({
   status,
   retrying,
   onRetry,
+  voiceSource,
 }: {
   status: BackendStatus
   retrying: boolean
   onRetry: () => void
+  voiceSource: 'local' | 'cloud'
 }) {
   if (status.running) return null
 
   const isStarting = status.phase === 'starting'
-  const title = isStarting ? 'Iniciando backend local' : 'Backend local indisponivel'
+  const userOnCloud = voiceSource === 'cloud'
+
+  // Quando o usuario esta na trilha cloud e o backend nao subiu, o banner cheio assusta
+  // sem motivo. Mostramos um chip discreto e deixamos o detalhe nos logs/ajustes.
+  if (userOnCloud && !isStarting) {
+    return null
+  }
+
+  const title = isStarting ? 'Iniciando backend local' : 'Vozes locais indisponiveis'
   const description = isStarting
-    ? 'A interface ja esta pronta. A fala sera liberada assim que o backend terminar de subir.'
-    : status.lastError || 'Tente reiniciar o backend para liberar a sintese e o microfone virtual.'
+    ? 'A interface ja esta pronta. As vozes locais ficam disponiveis quando o backend terminar de subir. As vozes online (Edge TTS) ja podem ser usadas em "Falar".'
+    : (status.lastError ? `${status.lastError}. ` : '') +
+      'Voce ainda pode usar vozes online (Edge TTS) sem instalacao em "Falar". Para liberar Piper/Kokoro, tente reiniciar o backend ou veja os logs.'
+
+  const containerStyle = isStarting
+    ? { borderBottomColor: 'rgba(255,193,90,0.3)', background: 'rgba(255,193,90,0.10)' }
+    : { borderBottomColor: 'rgba(255,107,125,0.3)', background: 'rgba(255,107,125,0.10)' }
+
+  const accentColor = isStarting ? 'var(--vl-state-warn)' : 'var(--vl-state-error)'
+
+  const diagnostics = status.diagnostics
+  const hasDetails = Boolean(diagnostics && (diagnostics.command || diagnostics.detail || diagnostics.url))
 
   return (
-    <div className="border-b border-amber-500/20 bg-amber-500/10 px-4 py-3">
-      <div className="mx-auto flex max-w-6xl flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+    <div className="border-b px-4 py-3" style={containerStyle}>
+      <div className="mx-auto flex max-w-6xl flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex items-start gap-3">
           {isStarting ? (
-            <RefreshCw className="mt-0.5 h-4 w-4 animate-spin text-amber-300" />
+            <RefreshCw className="mt-0.5 h-4 w-4 animate-spin" style={{ color: accentColor }} />
           ) : (
-            <AlertTriangle className="mt-0.5 h-4 w-4 text-amber-300" />
+            <AlertTriangle className="mt-0.5 h-4 w-4" style={{ color: accentColor }} />
           )}
-          <div>
-            <p className="text-sm font-medium text-amber-100">{title}</p>
-            <p className="text-sm text-amber-200/80">{description}</p>
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-ink-strong">{title}</p>
+            <p className="text-sm text-ink-body">{description}</p>
+            {hasDetails && (
+              <details className="mt-2 text-xs text-ink-soft">
+                <summary className="cursor-pointer inline-flex items-center gap-1 select-none hover:text-ink-strong">
+                  <ChevronDown className="h-3 w-3" />
+                  Diagnostico
+                </summary>
+                <div className="mt-2 grid gap-1 font-mono text-[11px] leading-5">
+                  {diagnostics?.command && <div><span className="text-ink-mute">command:</span> {diagnostics.command}</div>}
+                  {diagnostics?.executor && <div><span className="text-ink-mute">executor:</span> {diagnostics.executor}</div>}
+                  {diagnostics?.url && <div><span className="text-ink-mute">url:</span> {diagnostics.url}</div>}
+                  {diagnostics?.detail && <div><span className="text-ink-mute">detail:</span> {diagnostics.detail}</div>}
+                </div>
+              </details>
+            )}
           </div>
         </div>
-        <button
-          onClick={onRetry}
-          disabled={retrying}
-          className="btn-secondary inline-flex items-center gap-2 self-start text-sm text-amber-100 disabled:opacity-60"
-        >
-          <RefreshCw className={`h-4 w-4 ${retrying ? 'animate-spin' : ''}`} />
-          Tentar novamente
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onRetry}
+            disabled={retrying}
+            className="btn-secondary inline-flex items-center gap-2 self-start text-sm disabled:opacity-60"
+          >
+            <RefreshCw className={`h-4 w-4 ${retrying ? 'animate-spin' : ''}`} />
+            Tentar novamente
+          </button>
+          <a
+            href="#/logs"
+            className="btn-ghost text-sm"
+            aria-label="Abrir logs do app"
+          >
+            <Terminal className="h-4 w-4" />
+            Abrir logs
+          </a>
+        </div>
       </div>
     </div>
   )
@@ -102,14 +155,28 @@ function TitleBar() {
   const { alwaysOnTop, setAlwaysOnTop, compactMode, setCompactMode } = useAppStore()
 
   return (
-    <div className="h-12 flex items-center justify-between border-b border-chrome-700/70 bg-chrome-950/80 px-2 select-none app-drag-region">
+    <div
+      className="h-12 flex items-center justify-between px-2 select-none app-drag-region relative"
+      style={{
+        borderBottom: '1px solid var(--vl-hud-border)',
+        background: 'linear-gradient(180deg, rgba(20, 10, 46, 0.95), rgba(6, 3, 15, 0.92))',
+        boxShadow: '0 1px 0 rgba(167, 139, 250, 0.10) inset, 0 8px 24px -12px rgba(0, 0, 0, 0.45)',
+      }}
+    >
       <div className="flex items-center gap-3 px-3">
-        <div className="flex h-8 w-8 items-center justify-center rounded-2xl border border-brand-400/30 bg-brand-400/10">
-          <Mic className="w-4 h-4 text-brand-300" />
+        <div
+          className="flex h-8 w-8 items-center justify-center rounded-xl relative"
+          style={{
+            border: '1px solid var(--vl-hud-border-strong)',
+            background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.22), rgba(95, 35, 194, 0.18))',
+            boxShadow: '0 0 16px rgba(139, 92, 246, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
+          }}
+        >
+          <Mic className="w-4 h-4 neon-glow" style={{ color: 'var(--vl-state-ready)' }} />
         </div>
         <div>
-          <span className="block text-sm font-semibold text-slate-100">VoiceLaunch TTS</span>
-          <span className="block text-[11px] uppercase tracking-[0.24em] text-slate-500">Local Voice Console</span>
+          <span className="block text-sm font-semibold text-ink-strong">VoiceLaunch TTS</span>
+          <span className="block text-[10px] uppercase tracking-[0.3em] text-ink-soft">Local Voice Console</span>
         </div>
       </div>
       <div className="flex items-center gap-1 no-drag-region">
@@ -157,7 +224,13 @@ function TitleBar() {
 
 function Sidebar() {
   return (
-    <nav className="flex h-full w-20 flex-col border-r border-chrome-700/70 bg-chrome-950/55 px-3 py-4 lg:w-64">
+    <nav
+      className="flex h-full w-20 flex-col px-3 py-4 lg:w-64"
+      style={{
+        borderRight: '1px solid var(--vl-hud-border)',
+        background: 'rgba(6, 3, 15, 0.6)',
+      }}
+    >
       {navItems.map((item) => (
         <NavLink
           key={item.to}
@@ -167,18 +240,28 @@ function Sidebar() {
             [
               'nav-link',
               isActive
-                ? 'border border-brand-400/25 bg-brand-400/10 text-brand-200 shadow-[inset_3px_0_0_0_rgba(73,230,255,0.9)]'
-                : 'text-slate-400 hover:border hover:border-chrome-600 hover:bg-chrome-900/80 hover:text-slate-200',
+                ? 'border border-brand-500/40 bg-brand-500/12 text-brand-100 shadow-[inset_3px_0_0_0_rgba(139,92,246,0.95)]'
+                : 'text-ink-soft hover:bg-brand-500/8 hover:text-brand-200',
             ].join(' ')
           }
         >
-          <item.icon className="w-5 h-5 flex-shrink-0" />
-          <span className="hidden lg:block text-sm font-medium">{item.label}</span>
+          {({ isActive }) => (
+            <>
+              <item.icon
+                className={`w-5 h-5 flex-shrink-0 ${isActive ? 'animate-glow-pulse' : ''}`}
+                style={isActive ? { color: 'var(--vl-state-ready)' } : undefined}
+              />
+              <span className="hidden lg:block text-sm font-medium">{item.label}</span>
+            </>
+          )}
         </NavLink>
       ))}
 
-      <div className="mt-auto px-4 py-3">
-        <div className="hidden lg:block text-xs text-slate-600">
+      <div className="mt-auto px-1 py-3 space-y-3">
+        <div className="hidden lg:block">
+          <ProfileSwitcher />
+        </div>
+        <div className="hidden lg:block text-xs text-ink-mute px-3">
           <p>VoiceLaunch TTS v1.0</p>
           <p>100% Offline · Open Source</p>
         </div>
@@ -187,49 +270,155 @@ function Sidebar() {
   )
 }
 
-function HomePage() {
+function HudStat({
+  icon: Icon,
+  label,
+  value,
+  tone,
+  hint,
+}: {
+  icon: typeof Mic
+  label: string
+  value: string
+  tone: 'ready' | 'live' | 'warn' | 'error'
+  hint?: string
+}) {
+  const toneVar = {
+    ready: 'var(--vl-state-ready)',
+    live: 'var(--vl-state-live)',
+    warn: 'var(--vl-state-warn)',
+    error: 'var(--vl-state-error)',
+  }[tone]
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-8">
-      <div className="grid gap-6 xl:grid-cols-[1.45fr_0.95fr]">
-        <section className="panel-surface animate-lift-in p-8 lg:p-10">
-          <div className="status-pill border-brand-400/30 bg-brand-400/10 text-brand-200">Modo local assistivo</div>
-          <h1 className="mt-6 text-4xl font-bold text-slate-50">Uma estacao de voz local para falar rapido, com clareza.</h1>
-          <p className="mt-4 max-w-2xl text-base leading-7 text-slate-300">
-            O fluxo principal continua focado em Piper e Kokoro, com microfone virtual, frases rapidas e comunicacao assistiva.
-          </p>
-          <div className="mt-8 flex flex-wrap gap-4">
-            <a href="#/tts" className="btn-primary inline-flex items-center gap-2 px-6 py-3 text-base">
-              <Volume2 className="h-5 w-5" />
-              Falar agora
-            </a>
-            <a href="#/models" className="btn-secondary inline-flex items-center gap-2 px-6 py-3 text-base">
-              <Download className="h-5 w-5" />
-              Preparar modelos
-            </a>
-          </div>
-        </section>
+    <div className="hud-frame card-hover p-5 flex flex-col gap-3 overflow-hidden relative">
+      <div
+        className="absolute -top-8 -right-8 w-24 h-24 rounded-full pointer-events-none"
+        style={{ background: `radial-gradient(circle, ${toneVar}33 0%, transparent 70%)` }}
+      />
+      <div className="flex items-center justify-between relative">
+        <span className="text-[11px] uppercase tracking-[0.22em] text-ink-soft">{label}</span>
+        <Icon className="h-5 w-5 neon-glow" style={{ color: toneVar }} />
+      </div>
+      <div className="text-2xl font-bold text-ink-strong leading-tight relative">{value}</div>
+      {hint && <p className="text-xs text-ink-soft leading-relaxed relative">{hint}</p>}
+    </div>
+  )
+}
 
-        <aside className="panel-surface p-6">
-          <div className="status-pill border-chrome-600 bg-chrome-900/80 text-slate-300">Fluxo principal</div>
-          <div className="mt-4 grid gap-3">
-            <div className="panel-muted flex items-center justify-between p-3">
-              <span className="text-sm text-slate-300">Backend</span>
-              <span className="text-xs font-medium text-brand-200">Local</span>
-            </div>
-            <div className="panel-muted flex items-center justify-between p-3">
-              <span className="text-sm text-slate-300">Modelos principais</span>
-              <span className="text-xs font-medium text-slate-100">Piper e Kokoro</span>
-            </div>
-            <div className="panel-muted flex items-center justify-between p-3">
-              <span className="text-sm text-slate-300">Microfone virtual</span>
-              <span className="text-xs font-medium text-slate-100">Disponivel quando ativado</span>
-            </div>
-            <div className="panel-muted flex items-center justify-between p-3">
-              <span className="text-sm text-slate-300">Modo compacto</span>
-              <span className="text-xs font-medium text-slate-100">Atalho Ctrl+Shift+V</span>
-            </div>
-          </div>
-        </aside>
+function HomePage({ backendStatus }: { backendStatus: BackendStatus }) {
+  const { setCompactMode } = useAppStore()
+  const [installedModelCount, setInstalledModelCount] = useState(0)
+  const [virtualMicEnabled, setVirtualMicEnabled] = useState(false)
+  const [vbCableDetected, setVbCableDetected] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    const loadCounts = async () => {
+      try {
+        const [registry, micStatus, audioDevices] = await Promise.all([
+          window.electronAPI.getModelRegistry(),
+          window.electronAPI.getVirtualMicStatus(),
+          window.electronAPI.listAudioDevices(),
+        ])
+        setInstalledModelCount(registry.filter((model) => model.installed).length)
+        setVirtualMicEnabled(micStatus)
+        setVbCableDetected(audioDevices.some((device) => device.name.toLowerCase().includes('cable')))
+      } catch {
+        // Backend pode estar offline; mantemos valores defaults.
+      }
+    }
+    void loadCounts()
+    const syncMic = (event: Event) => {
+      setVirtualMicEnabled((event as CustomEvent<boolean>).detail)
+    }
+    window.addEventListener('voicelaunch:virtual-mic-changed', syncMic as EventListener)
+    return () => window.removeEventListener('voicelaunch:virtual-mic-changed', syncMic as EventListener)
+  }, [backendStatus.running])
+
+  const backendTone: 'ready' | 'live' | 'warn' | 'error' = backendStatus.running
+    ? 'live'
+    : backendStatus.phase === 'error'
+      ? 'error'
+      : 'warn'
+  const backendValue = backendStatus.running
+    ? 'Online'
+    : backendStatus.phase === 'starting'
+      ? 'Iniciando'
+      : backendStatus.phase === 'error'
+        ? 'Falha'
+        : 'Offline'
+
+  const micTone: 'ready' | 'live' | 'warn' | 'error' = virtualMicEnabled
+    ? 'live'
+    : vbCableDetected === false
+      ? 'warn'
+      : 'ready'
+  const micValue = virtualMicEnabled
+    ? 'Transmitindo'
+    : vbCableDetected === false
+      ? 'VB-Cable ausente'
+      : 'Pronto'
+
+  return (
+    <div className="mx-auto flex max-w-6xl flex-col gap-6">
+      <section className="hud-frame hud-frame--hero scanline animate-lift-in p-8 lg:p-10">
+        <div className="status-pill status-pill--ready w-fit">
+          <Sparkles className="h-3.5 w-3.5" />
+          Modo local assistivo
+        </div>
+        <h1 className="mt-6 text-4xl lg:text-5xl font-bold tracking-tight text-display-gradient">
+          Uma estacao de voz local para falar rapido, com clareza.
+        </h1>
+        <p className="mt-4 max-w-2xl text-base lg:text-lg leading-7 text-ink-body">
+          Trilha principal em Piper + Kokoro, microfone virtual para Discord/jogos, frases rapidas com atalhos globais 1..9 e modo compacto sempre no topo.
+        </p>
+        <div className="mt-8 flex flex-wrap gap-3">
+          <a href="#/tts" className="btn-primary btn-primary--armed inline-flex items-center gap-2 px-6 py-3 text-base">
+            <Volume2 className="h-5 w-5" />
+            Falar agora
+          </a>
+          <button
+            onClick={() => setCompactMode(true)}
+            className="btn-secondary inline-flex items-center gap-2 px-5 py-3 text-base"
+          >
+            <PictureInPicture className="h-5 w-5" />
+            Modo compacto
+          </button>
+          <a href="#/settings" className="btn-ghost text-base">
+            <Keyboard className="h-5 w-5" />
+            Configurar atalhos
+          </a>
+        </div>
+      </section>
+
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <HudStat
+          icon={Activity}
+          label="Backend"
+          value={backendValue}
+          tone={backendTone}
+          hint={`Porta ${backendStatus.port}`}
+        />
+        <HudStat
+          icon={Download}
+          label="Modelos prontos"
+          value={String(installedModelCount)}
+          tone={installedModelCount > 0 ? 'live' : 'warn'}
+          hint={installedModelCount > 0 ? 'Piper/Kokoro disponiveis' : 'Instale Piper para comecar'}
+        />
+        <HudStat
+          icon={Mic}
+          label="Microfone virtual"
+          value={micValue}
+          tone={micTone}
+          hint={virtualMicEnabled ? 'CABLE Output ativo' : 'Selecione CABLE Output no Discord'}
+        />
+        <HudStat
+          icon={Keyboard}
+          label="Atalho aberto"
+          value="Ctrl+Shift+F"
+          tone="ready"
+          hint="Foca o app de qualquer lugar"
+        />
       </div>
 
       <LocalSetupCard />
@@ -238,11 +427,12 @@ function HomePage() {
 }
 
 function CompactView({ backendStatus }: { backendStatus: BackendStatus }) {
-  const { defaultModelId, defaultSpeed } = useAppStore()
+  const { defaultModelId, setDefaultModelId, defaultSpeed, setDefaultSpeed } = useAppStore()
   const { text, setText, history, quickPhrases, keepTextAfterSpeak, setKeepTextAfterSpeak, addHistoryItem } = useCommunicationSettings()
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [virtualMicEnabled, setVirtualMicEnabled] = useState(false)
   const [availableModels, setAvailableModels] = useState<ModelInfo[]>([])
+  const [showAdvanced, setShowAdvanced] = useState(false)
   const cancelRef = useRef(false)
 
   useEffect(() => {
@@ -279,8 +469,13 @@ function CompactView({ backendStatus }: { backendStatus: BackendStatus }) {
       ? 'Backend local indisponivel. Use o retry para restaurar a fala.'
       : 'Iniciando backend local...'
     : activeModel
-      ? `${activeModel.name} disponivel`
+      ? `${activeModel.name} pronto`
       : 'Instale um modelo em Modelos para usar o compacto'
+  const statusColor = !backendStatus.running
+    ? 'var(--vl-state-warn)'
+    : activeModel
+      ? 'var(--vl-state-ready)'
+      : 'var(--vl-state-warn)'
 
   const speak = async (textToSpeak: string) => {
     if (!backendStatus.running) {
@@ -349,42 +544,79 @@ function CompactView({ backendStatus }: { backendStatus: BackendStatus }) {
 
   return (
     <div className="h-full flex flex-col gap-3 overflow-hidden p-3">
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center gap-2">
         <button
           onClick={toggleVirtualMic}
-          className={`status-pill transition-colors ${
-            virtualMicEnabled
-              ? 'border-green-500/30 bg-green-500/10 text-green-200'
-              : 'border-chrome-600 bg-chrome-900 text-slate-300'
-          }`}
+          className={`status-pill transition-colors ${virtualMicEnabled ? 'status-pill--live' : 'status-pill--ready'}`}
+          aria-pressed={virtualMicEnabled}
         >
-          {virtualMicEnabled ? 'Mic ativo' : 'Mic desligado'}
+          <Mic className="h-3.5 w-3.5" />
+          {virtualMicEnabled ? 'Mic ON' : 'Mic OFF'}
         </button>
-        <label className="flex items-center gap-2 text-xs text-slate-300">
-          <input
-            type="checkbox"
-            checked={keepTextAfterSpeak}
-            onChange={(event) => setKeepTextAfterSpeak(event.target.checked)}
-            className="accent-brand-400"
-          />
-          Manter texto
-        </label>
+        <select
+          value={activeModel?.id ?? ''}
+          onChange={(e) => setDefaultModelId(e.target.value)}
+          disabled={availableModels.length === 0}
+          className="input-field flex-1 min-w-0 py-1.5 text-xs"
+          aria-label="Modelo de voz"
+        >
+          {availableModels.length === 0 && <option value="">Sem modelo</option>}
+          {availableModels.map((model) => (
+            <option key={model.id} value={model.id}>
+              {model.name}
+            </option>
+          ))}
+        </select>
+        <button
+          onClick={() => setShowAdvanced((value) => !value)}
+          className="btn-ghost px-2 py-1.5 text-xs"
+          aria-expanded={showAdvanced}
+          aria-label="Mais opcoes"
+          title="Velocidade e ajustes"
+        >
+          •••
+        </button>
       </div>
 
-      <p className={`text-xs ${canSpeak ? 'text-slate-400' : 'text-amber-300'}`}>{compactStatusText}</p>
+      {showAdvanced && (
+        <div className="hud-frame flex items-center gap-3 p-3 text-xs">
+          <span className="text-ink-soft">Vel</span>
+          <input
+            type="range"
+            min={0.5}
+            max={2.0}
+            step={0.1}
+            value={defaultSpeed}
+            onChange={(e) => setDefaultSpeed(parseFloat(e.target.value))}
+            className="flex-1 accent-brand-400"
+          />
+          <span className="w-8 text-right font-mono text-ink-body">{defaultSpeed.toFixed(1)}x</span>
+          <label className="flex items-center gap-1 text-ink-body">
+            <input
+              type="checkbox"
+              checked={keepTextAfterSpeak}
+              onChange={(event) => setKeepTextAfterSpeak(event.target.checked)}
+              className="accent-brand-500"
+            />
+            Manter
+          </label>
+        </div>
+      )}
+
+      <p className="text-xs" style={{ color: statusColor }}>{compactStatusText}</p>
 
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder="Digite uma frase e aperte Enter para falar"
-        className="panel-muted min-h-[180px] flex-1 resize-none p-4 text-base leading-6 text-slate-50 outline-none placeholder:text-slate-500"
+        placeholder="> digite e aperte Enter"
+        className="terminal-textarea min-h-[150px] flex-1 resize-none p-3 text-base leading-6 outline-none placeholder:text-ink-mute"
         autoFocus
       />
 
-      <div className="space-y-3 overflow-auto">
+      <div className="space-y-2 overflow-auto">
         <div className="grid grid-cols-2 gap-2">
-          {quickPhrases.slice(0, 4).map((phrase) => (
+          {quickPhrases.slice(0, 4).map((phrase, index) => (
             <button
               key={phrase}
               onClick={() => {
@@ -392,21 +624,23 @@ function CompactView({ backendStatus }: { backendStatus: BackendStatus }) {
                 void speak(phrase)
               }}
               disabled={!canSpeak}
-              className="panel-muted px-3 py-2 text-left text-xs text-slate-200 transition-colors hover:border-brand-400/35 hover:bg-brand-400/10"
+              className="hud-frame relative px-3 py-2 text-left text-xs text-ink-body transition-colors hover:bg-brand-500/10 disabled:opacity-50"
             >
-              {phrase}
+              <span className="badge-shortcut absolute top-1.5 right-1.5">{index + 1}</span>
+              <span className="block pr-7 line-clamp-2">{phrase}</span>
             </button>
           ))}
         </div>
 
         {history.length > 0 && (
           <div className="flex items-center gap-2 overflow-auto pb-1">
-            <History className="h-3.5 w-3.5 flex-shrink-0 text-slate-500" />
+            <History className="h-3.5 w-3.5 flex-shrink-0 text-ink-mute" />
             {history.slice(0, 3).map((item) => (
               <button
                 key={item.id}
                 onClick={() => setText(item.text)}
-                className="whitespace-nowrap rounded-xl border border-chrome-700/80 bg-chrome-900/90 px-3 py-2 text-xs text-slate-300 transition-colors hover:border-brand-400/30 hover:text-slate-100"
+                className="whitespace-nowrap rounded-xl border px-3 py-1.5 text-xs text-ink-body transition-colors hover:text-ink-strong"
+                style={{ borderColor: 'var(--vl-hud-border)', background: 'rgba(19,9,43,0.7)' }}
               >
                 {item.text}
               </button>
@@ -418,7 +652,7 @@ function CompactView({ backendStatus }: { backendStatus: BackendStatus }) {
       <button
         onClick={() => void speak(text)}
         disabled={isSpeaking ? false : !text.trim() || !canSpeak}
-        className="btn-primary flex items-center justify-center gap-2 py-3 text-sm font-semibold"
+        className={`btn-primary ${canSpeak && text.trim() ? 'btn-primary--armed' : ''} flex items-center justify-center gap-2 py-3 text-sm font-semibold`}
         aria-label={isSpeaking ? 'Parar' : 'Falar'}
       >
         {isSpeaking ? (
@@ -438,7 +672,7 @@ function CompactView({ backendStatus }: { backendStatus: BackendStatus }) {
 }
 
 export default function App() {
-  const { alwaysOnTop, highContrast, largeFont, compactMode, setCompactMode } = useAppStore()
+  const { alwaysOnTop, highContrast, largeFont, compactMode, setCompactMode, voiceSource } = useAppStore()
   const [backendStatus, setBackendStatus] = useState<BackendStatus>(INITIAL_BACKEND_STATUS)
   const [retryingBackend, setRetryingBackend] = useState(false)
 
@@ -502,62 +736,89 @@ export default function App() {
 
   useEffect(() => {
     const speakQuickPhrase = async (index: number) => {
-      const [settings, runtimeStatus, detectedHardware, registry] = await Promise.all([
+      const [settings, runtimeStatus, detectedHardware, registry, virtualMicOn] = await Promise.all([
         window.electronAPI.loadSettings(),
         window.electronAPI.getBackendStatus(),
         window.electronAPI.getHardwareInfo(),
         window.electronAPI.getModelRegistry(),
+        window.electronAPI.getVirtualMicStatus(),
       ])
       const communication = sanitizeCommunicationState(settings)
       const phrase = communication.quickPhrases[index]
+      const source = settings.voiceSource ?? 'cloud'
+      const cableDeviceId = settings.cableDeviceId ?? null
+      const speed = settings.defaultSpeed || 1
 
       if (!phrase) {
         toast('Atalho sem frase', 'Configure as frases rapidas na aba Falar.', 'warning')
         return
       }
 
-      if (!runtimeStatus.running) {
-        toast('Backend iniciando', 'Os atalhos de fala serao liberados quando o backend local terminar de subir.', 'info')
-        return
-      }
-
-      const activeModel = resolveActiveModelForMvp(
-        registry,
-        detectedHardware,
-        settings.defaultModelId,
-        settings.showExperimentalModels ?? false,
-      )
-
-      if (!activeModel) {
-        toast('Sem modelo pronto', 'Instale Piper ou Kokoro na aba Modelos antes de usar atalhos globais.', 'warning')
-        return
-      }
-
-      const speed = settings.defaultSpeed || 1
-
       try {
+        if (source === 'cloud') {
+          const cloudVoice = settings.cloudVoice
+          if (!cloudVoice) {
+            toast('Sem voz online', 'Escolha uma voz online na aba Falar antes de usar atalhos.', 'warning')
+            return
+          }
+          const response = await window.electronAPI.synthesizeCloud({
+            text: phrase,
+            voice: cloudVoice,
+            speed,
+          })
+          if (!response.success || !response.audioBase64) {
+            toast('Erro na voz online', response.error || 'Nao foi possivel gerar a voz.', 'error')
+            return
+          }
+          await playCloudAudio(
+            response.audioBase64,
+            response.mimeType ?? 'audio/mpeg',
+            virtualMicOn && cableDeviceId ? cableDeviceId : undefined,
+          )
+          const nextCommunication = {
+            ...communication,
+            ttsDraft: communication.keepTextAfterSpeak ? phrase : '',
+            ttsHistory: pushHistoryItem(
+              communication.ttsHistory,
+              buildHistoryItem({ text: phrase, modelId: `cloud:${cloudVoice}`, voiceId: cloudVoice }),
+            ),
+          }
+          const serialized = serializeCommunicationState(nextCommunication)
+          await window.electronAPI.saveSettings(serialized)
+          window.dispatchEvent(new CustomEvent('voicelaunch:communication-updated', { detail: serialized }))
+          return
+        }
+
+        if (!runtimeStatus.running) {
+          toast('Backend offline', 'Vozes locais indisponiveis. Troque para Online na aba Falar.', 'info')
+          return
+        }
+        const activeModel = resolveActiveModelForMvp(
+          registry,
+          detectedHardware,
+          settings.defaultModelId,
+          settings.showExperimentalModels ?? false,
+        )
+        if (!activeModel) {
+          toast('Sem modelo pronto', 'Instale Piper ou Kokoro em Vozes antes de usar atalhos locais.', 'warning')
+          return
+        }
         const response = await window.electronAPI.synthesize({
           text: phrase,
           modelId: activeModel.id,
           speed,
         })
-
         if (!response.success || !response.audioPath) {
           toast('Erro na fala', response.error || 'Nao foi possivel gerar o audio.', 'error')
           return
         }
-
         await window.electronAPI.playAudio(response.audioPath)
         const nextCommunication = {
           ...communication,
           ttsDraft: communication.keepTextAfterSpeak ? phrase : '',
           ttsHistory: pushHistoryItem(
             communication.ttsHistory,
-            buildHistoryItem({
-              text: phrase,
-              modelId: activeModel.id,
-              audioPath: response.audioPath,
-            }),
+            buildHistoryItem({ text: phrase, modelId: activeModel.id, audioPath: response.audioPath }),
           ),
         }
         const serialized = serializeCommunicationState(nextCommunication)
@@ -597,11 +858,75 @@ export default function App() {
     const unsubToggleVirtualMic = window.electronAPI.onGlobalToggleVirtualMic(() => {
       void toggleVirtualMic()
     })
+    const unsubShortcutConflict = window.electronAPI.onGlobalShortcutConflict((conflicted) => {
+      if (!conflicted || conflicted.length === 0) return
+      const conflictList = conflicted.slice(0, 3).join(', ') + (conflicted.length > 3 ? '...' : '')
+      toast(
+        `${conflicted.length} atalho(s) bloqueado(s)`,
+        `Outro app ja usa: ${conflictList}. Tente combinacoes Ctrl+Alt ou F-keys em "Atalhos".`,
+        'warning',
+      )
+    })
+
+    const speakVoiceShortcut = async (shortcutId: string) => {
+      const [settings, runtimeStatus, virtualMicOn] = await Promise.all([
+        window.electronAPI.loadSettings(),
+        window.electronAPI.getBackendStatus(),
+        window.electronAPI.getVirtualMicStatus(),
+      ])
+      const shortcuts = Array.isArray(settings.voiceShortcuts) ? settings.voiceShortcuts : []
+      const shortcut = shortcuts.find((entry) => entry.id === shortcutId)
+      if (!shortcut || !shortcut.enabled) return
+      const cableDeviceId = settings.cableDeviceId ?? null
+
+      try {
+        if (shortcut.voiceSource === 'cloud') {
+          const response = await window.electronAPI.synthesizeCloud({
+            text: shortcut.text,
+            voice: shortcut.voice,
+            speed: shortcut.speed,
+            pitch: shortcut.pitch,
+          })
+          if (!response.success || !response.audioBase64) {
+            toast('Falha no atalho', response.error || 'Nao foi possivel gerar a voz.', 'error')
+            return
+          }
+          await playCloudAudio(
+            response.audioBase64,
+            response.mimeType ?? 'audio/mpeg',
+            virtualMicOn && cableDeviceId ? cableDeviceId : undefined,
+          )
+          return
+        }
+        if (!runtimeStatus.running) {
+          toast('Backend offline', 'O atalho local precisa do backend Python ativo.', 'warning')
+          return
+        }
+        const response = await window.electronAPI.synthesize({
+          text: shortcut.text,
+          modelId: shortcut.voice,
+          speed: shortcut.speed,
+        })
+        if (!response.success || !response.audioPath) {
+          toast('Falha no atalho', response.error || 'Nao foi possivel gerar o audio local.', 'error')
+          return
+        }
+        await window.electronAPI.playAudio(response.audioPath)
+      } catch (error) {
+        toast('Falha no atalho', String(error), 'error')
+      }
+    }
+
+    const unsubVoiceShortcut = window.electronAPI.onGlobalSpeakVoiceShortcut((shortcutId) => {
+      void speakVoiceShortcut(shortcutId)
+    })
 
     return () => {
       unsubQuickPhrase()
       unsubOpenCompact()
       unsubToggleVirtualMic()
+      unsubShortcutConflict()
+      unsubVoiceShortcut()
     }
   }, [setCompactMode])
 
@@ -615,7 +940,7 @@ export default function App() {
     return (
       <div className={rootClass}>
         <TitleBar />
-        <BackendBanner status={backendStatus} retrying={retryingBackend} onRetry={() => void retryBackend()} />
+        <BackendBanner status={backendStatus} retrying={retryingBackend} onRetry={() => void retryBackend()} voiceSource={voiceSource} />
         <CompactView backendStatus={backendStatus} />
         <ToastContainer />
       </div>
@@ -626,15 +951,16 @@ export default function App() {
     <HashRouter>
       <div className={rootClass}>
         <TitleBar />
-        <BackendBanner status={backendStatus} retrying={retryingBackend} onRetry={() => void retryBackend()} />
+        <BackendBanner status={backendStatus} retrying={retryingBackend} onRetry={() => void retryBackend()} voiceSource={voiceSource} />
         <div className="flex-1 flex overflow-hidden">
           <Sidebar />
           <main className="flex-1 overflow-auto px-4 py-4 lg:px-6 lg:py-5">
             <Routes>
-              <Route path="/" element={<HomePage />} />
+              <Route path="/" element={<HomePage backendStatus={backendStatus} />} />
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/models" element={<ModelsPage />} />
               <Route path="/tts" element={<TTSPage />} />
+              <Route path="/shortcuts" element={<VoiceShortcutsPage />} />
               <Route path="/clone" element={<ClonePage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/logs" element={<LogsPage />} />
