@@ -1,5 +1,67 @@
 # Changelog
 
+## [1.0.0-rc.2] - 2026-05-19 (Redesign + Cloud)
+
+### Reescritas
+
+- **Sistema de design roxo/gamer**: brand passou a ser roxo neon (#8B5CF6 pivo), cyan virou secondary reservado pra estado "ao vivo".
+- **HUD components**: hud-frame, hud-frame--hero com scanline, neon-glow, badge-shortcut 1..9, tier-badge S/A/B/C, terminal-textarea.
+- **TitleBar custom** (`frame: false`) com drag region — sem mais barra dupla no Windows.
+- **HomePage** com hero + grid HUD 2x2 (Backend, Modelos, Mic, Atalho) + Quick Launch.
+
+### Adicionado
+
+- **Edge TTS cloud** (sem Python, sem GPU): ~400 vozes Microsoft Edge TTS via WebSocket nativo no main process; Sec-MS-GEC anti-bot token (SHA-256 com Windows-ticks via BigInt).
+- **CloudVoicePicker / CloudVoicesTab** com filtro por idioma, busca e previa por voz.
+- **AudioOutputPicker** em Ajustes para rotear voz online ao CABLE Input via `setSinkId`.
+- **Voice Shortcuts soundboard**: pagina `/shortcuts` com CRUD; cada atalho guarda voz + texto + tecla + velocidade. 31 slots de hotkey (Ctrl+Shift+1..0, Ctrl+Alt+1..0, Ctrl+Shift+F1..F12). Main process registra dinamicamente via IPC.
+- **Perfis Padrao/Jogo** com ProfileSwitcher na sidebar; troca de perfil aplica modelo, velocidade e quick phrases imediatamente.
+- **DiscordReadyBanner** com botao "Testar agora" roteado pra CABLE Input.
+- **HardwarePlaybook** vendor-aware: trilhas distintas pra NVIDIA+CUDA, NVIDIA sem CUDA, AMD, Intel iGPU, CPU-only.
+- **Onboarding hardware-aware**: passos mudam pelo `gpuVendor` + `isCudaAvailable`; ultimo passo faz polling real do mic virtual.
+- **DashboardPage com playbook**: cards numerados clicaveis com a trilha concreta pra cada vendor.
+- **Vozes page com abas**: Online (Edge TTS) / Locais (Piper/Kokoro) / Clonadas (XTTS).
+- **LogsPage**: syntax highlight INFO/WARN/ERROR coloridos, filtro por nivel, busca, truncamento 2000 linhas.
+- **Single-instance lock**: `app.requestSingleInstanceLock` + `app.exit(0)` impede zumbis.
+
+### Corrigido
+
+- **`model:load`/`model:unload`** agora validam `modelId` (paridade com `model:uninstall`) — fecha vetor de injecao.
+- **`buildHistoryItem`** usa `crypto.randomUUID()` — sem colisao em rajadas rapidas.
+- **Conflito de atalhos globais** capturado e exibido em toast com instrucao util.
+- **Foco do textarea** retorna em `finally` apos `speak()` — fluxo digitar->Enter->digitar sem clique extra.
+- **Toast em modo compacto** posiciona no topo (`top-2`) — nao cobre o botao Falar em 480x420.
+- **BackendBanner** discreto quando `voiceSource === 'cloud'` (some na trilha cloud, fica visivel na trilha local).
+- **`python-manager`** mantem referencia do `launchPlan` no construtor — diagnostics nao ficam stale em falha pre-start.
+
+### Migracoes (`schemaVersion`)
+
+- **v1**: estrutura inicial com `profiles[]` e `activeProfileId`.
+- **v2**: + `voiceSource`, `cloudVoice`, `cableDeviceId`, `cableDeviceLabel`.
+- **v3**: + `voiceShortcuts[]` com 31 slots de hotkey.
+- Migration preserva `quickPhrases` legados no perfil `padrao`; cobre cenarios de fresh install, upgrade, e fallback de `activeProfileId` invalido.
+
+### Compat Discord / VRChat
+
+- Voz online roteada pro CABLE Input via `HTMLMediaElement.setSinkId(deviceId)`.
+- Documentado em-app: instalar VB-Cable, escolher CABLE Input na saida, definir CABLE Output como microfone no Discord/VRChat.
+- VRChat: voice activation funciona out-of-box; PTT exige interacao manual (sem simulacao de tecla nativa nesta versao).
+
+### Cobertura
+
+- **57/57 testes** verde (vitest): HardwarePlaybook por vendor, VoiceShortcuts (conflito/reserva/sugestao), migracoes v1-v3, `crypto.randomUUID` em rajada, sanitizacao de comunicacao.
+
+### Plano
+
+- `docs/MVP_CLOSEOUT_PLAN.md` documenta o caminho completo ate v1.0 final, incluindo as fases K (download URLs com mirrors + checksum + resume), L (install-deps XTTS endurecido pra NVIDIA), M (smoke em 3 maquinas reais), N (assinatura + release).
+
+### Conhecidas / fora desta rodada
+
+- Backend Python local exige `voicelaunch-backend.exe` empacotado (em `npm run dist:win`); em dev sem venv Python configurado, o backend nao sobe — vozes locais nao funcionam mas as online sim.
+- Clonagem XTTS exige NVIDIA + CUDA + install-deps via backend.
+- PTT do VRChat: voice activation funciona automaticamente; simulacao de tecla PTT fica para v1.1 (requer biblioteca nativa tipo robotjs).
+- Instalador continua sem assinatura de codigo — SmartScreen vai exibir warning na primeira execucao.
+
 ## [1.0.0] - 2026-05-12
 
 ### Adicionado
