@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.0.0-rc.4] - 2026-05-20 (Polimento + dedup + perf)
+
+### Adicionado
+
+- **Guia "Como usar como microfone no Discord, VRChat e jogos"** colapsavel na HomePage e na pagina de Atalhos. Quatro passos numerados (instalar VB-Cable, selecionar CABLE Input, configurar CABLE Output no Discord/VRChat, ativar mic virtual) + dica especifica de VRChat. Antes a documentacao estava enterrada em VoiceShortcutsPage.
+
+### Refatorado (sem mudanca de comportamento)
+
+- Hook `useCloudVoices()` extraido com cache em memoria (24h) — evita dois fetches quando o usuario abre TTSPage e Vozes > Online em sequencia.
+- Utilitarios `localeFlag`, `shortVoiceLabel`, `sortAvailableLocales`, `filterCloudVoices` centralizados em `utils/cloudVoiceFormatting.ts`.
+- `CloudVoicePicker` e `CloudVoicesTab` agora compartilham toda a logica de fetch/filter/locale (eliminou ~80 linhas duplicadas).
+
+### Performance
+
+- Selectors do Zustand reescritos em 6 callsites (`TitleBar`, `HomePage`, `CompactView`, `App` root, `ModelsPage`, `OnboardingTutorial`). Antes o padrao `const { x } = useAppStore()` retornava o store inteiro e causava re-render a cada mudanca de qualquer field. Agora cada componente subscreve apenas aos fields que usa.
+
+### Testes
+
+- `cloudVoiceFormatting.test.ts` (11 testes): localeFlag, shortVoiceLabel com/sem padrao Microsoft, sortAvailableLocales prioriza populares, filterCloudVoices por locale/busca/personalidade.
+- `download-manager.test.ts` (5 testes): rejeicao de http externo (gate de https), aceite de localhost para backend, limite de 5 redirects (anti-SSRF), `cancelDownload` com modelId desconhecido.
+- **95/95 verde** (era 78/78).
+
+### Mantido sem mudanca
+
+- Cadeia Edge TTS continua funcionando com `webm-24khz-16bit-mono-opus` (validado novamente via `scripts/smoke-edge-tts.js`).
+- CSP + media-src.
+- Whitelist de extensoes de audio.
+
 ## [1.0.0-rc.3] - 2026-05-20 (Cloud playback destravado)
 
 ### Corrigido (BLOQUEADOR P0)
