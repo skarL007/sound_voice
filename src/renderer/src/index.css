@@ -466,6 +466,12 @@
 }
 
 @layer utilities {
+  /* Skeleton shimmer — fallback estático para prefers-reduced-motion */
+  .skeleton-pulse {
+    @apply rounded-xl;
+    background: rgba(95, 35, 194, 0.12);
+  }
+
   .card-hover {
     @apply transition-all duration-200;
   }
@@ -614,6 +620,24 @@
   width: 22px;
   height: 22px;
   font-size: 13px !important;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes skeleton-sweep {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  .skeleton-pulse {
+    background: linear-gradient(
+      90deg,
+      rgba(95, 35, 194, 0.12) 25%,
+      rgba(139, 92, 246, 0.20) 50%,
+      rgba(95, 35, 194, 0.12) 75%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-sweep 1.4s ease infinite;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

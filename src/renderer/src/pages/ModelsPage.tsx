@@ -264,6 +264,31 @@ export default function ModelsPage() {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {visibleModels.length === 0 && models.length === 0 && (
+          <div className="col-span-full hud-frame flex flex-col items-center gap-4 py-16 text-center">
+            <div
+              className="w-16 h-16 rounded-2xl flex items-center justify-center"
+              style={{ background: 'rgba(139,92,246,0.10)', border: '1px solid var(--vl-hud-border)' }}
+            >
+              <Download className="w-8 h-8" style={{ color: 'var(--vl-ink-mute)' }} />
+            </div>
+            <div>
+              <p className="text-lg font-semibold text-ink-strong">Nenhum modelo instalado</p>
+              <p className="text-sm text-ink-soft mt-1 max-w-xs">
+                Instale o Piper (CPU) para começar a falar em modo local. Funciona em qualquer computador.
+              </p>
+            </div>
+          </div>
+        )}
+        {visibleModels.length === 0 && models.length > 0 && (
+          <div className="col-span-full">
+            <div className="flex flex-col items-center gap-3 py-10 text-center">
+              {[0, 1].map((i) => (
+                <div key={i} className="skeleton-pulse h-24 w-full max-w-sm" />
+              ))}
+            </div>
+          </div>
+        )}
         {visibleModels.map((model) => {
           const isInstalled = installed.has(model.id) || model.installed
           const isDownloading = downloading.has(model.id)

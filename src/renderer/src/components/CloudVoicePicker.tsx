@@ -27,9 +27,11 @@ export default function CloudVoicePicker({ selectedVoice, onSelect }: CloudVoice
 
   if (loading) {
     return (
-      <div className="hud-frame p-4 flex items-center gap-3 text-ink-soft">
-        <Loader2 className="h-4 w-4 animate-spin" />
-        Carregando vozes online...
+      <div className="hud-frame p-4 space-y-3" aria-busy="true" aria-label="Carregando vozes online">
+        <div className="skeleton-pulse h-4 w-40" />
+        {[0, 1, 2, 3, 4].map((i) => (
+          <div key={i} className="skeleton-pulse h-12 w-full" />
+        ))}
       </div>
     )
   }

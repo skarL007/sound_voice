@@ -1,4 +1,5 @@
 import { useAppStore } from '../stores/appStore'
+import { toast } from '../utils/toast'
 import { Gamepad2, UserRound } from 'lucide-react'
 
 const ICON_FOR_ID: Record<string, typeof Gamepad2> = {
@@ -23,7 +24,12 @@ export default function ProfileSwitcher() {
           return (
             <button
               key={profile.id}
-              onClick={() => setActiveProfile(profile.id)}
+              onClick={() => {
+                if (profile.id !== activeProfileId) {
+                  setActiveProfile(profile.id)
+                  toast('Perfil ativo', `Perfil "${profile.name}" ativado.`, 'success')
+                }
+              }}
               className={`flex items-center gap-2 rounded-xl px-2.5 py-2 text-left text-sm transition-all ${
                 isActive ? 'status-pill status-pill--ready font-semibold' : 'text-ink-soft hover:text-ink-strong'
               }`}

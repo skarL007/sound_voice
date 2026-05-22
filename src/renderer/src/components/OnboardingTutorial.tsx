@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useAppStore } from '../stores/appStore'
 import {
@@ -107,6 +107,26 @@ export default function OnboardingTutorial() {
     }
   }, [])
 
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const previousFocusRef = useRef<Element | null>(null)
+
+  // Focus trap: save previous focus, move into modal, restore on close
+  useEffect(() => {
+    if (isOpen) {
+      previousFocusRef.current = document.activeElement
+      // Move focus to the first focusable element inside the dialog
+      requestAnimationFrame(() => {
+        const first = getFocusable(dialogRef.current)[0]
+        if (first) (first as HTMLElement).focus()
+      })
+    } else {
+      // Restore focus to the element that triggered the modal
+      if (previousFocusRef.current && (previousFocusRef.current as HTMLElement).focus) {
+        ;(previousFocusRef.current as HTMLElement).focus()
+      }
+    }
+  }, [isOpen])
+
   const close = () => {
     setIsOpen(false)
     setTutorialSeen(true)
@@ -149,6 +169,34 @@ export default function OnboardingTutorial() {
 
   if (!isOpen) return null
 
+  const FOCUSABLE = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+  function getFocusable(root: HTMLElement | null): Element[] {
+    return root ? Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE)) : []
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Escape') {
+      close()
+      return
+    }
+    if (e.key !== 'Tab') return
+    const focusable = getFocusable(dialogRef.current)
+    if (focusable.length === 0) return
+    const first = focusable[0] as HTMLElement
+    const last = focusable[focusable.length - 1] as HTMLElement
+    if (e.shiftKey) {
+      if (document.activeElement === first) {
+        e.preventDefault()
+        last.focus()
+      }
+    } else {
+      if (document.activeElement === last) {
+        e.preventDefault()
+        first.focus()
+      }
+    }
+  }
+
   const next = () => {
     if (stepIndex < steps.length - 1) {
       setStepIndex((index) => index + 1)
@@ -164,7 +212,14 @@ export default function OnboardingTutorial() {
   const trackHardware = hardware ? `${hardware.gpuVendor.toUpperCase()} · ${hardware.ramGB} GB` : 'Detectando hardware...'
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="onboarding-title"
+      onKeyDown={handleKeyDown}
+      ref={dialogRef}
+    >
       <div className="hud-frame hud-frame--hero scanline max-w-lg w-full overflow-hidden animate-lift-in">
         <div className="flex items-center gap-1 px-6 pt-6 pb-2">
           {steps.map((_, index) => (
@@ -205,7 +260,7 @@ export default function OnboardingTutorial() {
             {step.icon}
           </div>
 
-          <h2 className="text-xl font-bold text-ink-strong mb-3 neon-glow" style={{ color: 'var(--vl-purple-200)' }}>
+          <h2 id="onboarding-title" className="text-xl font-bold text-ink-strong mb-3 neon-glow" style={{ color: 'var(--vl-purple-200)' }}>
             {step.title}
           </h2>
           <p className="text-ink-body leading-relaxed mb-4">{step.description}</p>

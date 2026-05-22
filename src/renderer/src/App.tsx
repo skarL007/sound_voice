@@ -113,7 +113,15 @@ function BackendBanner({
           <div className="space-y-1">
             <p className="text-sm font-medium text-ink-strong">{title}</p>
             <p className="text-sm text-ink-body">{description}</p>
-            {hasDetails && (
+            {!isStarting && hasDetails && (
+              <div className="mt-2 rounded-xl p-2 font-mono text-[11px] leading-5 grid gap-1" style={{ background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,107,125,0.15)' }}>
+                {diagnostics?.command && <div><span className="text-ink-mute">command:</span> {diagnostics.command}</div>}
+                {diagnostics?.executor && <div><span className="text-ink-mute">executor:</span> {diagnostics.executor}</div>}
+                {diagnostics?.url && <div><span className="text-ink-mute">url:</span> {diagnostics.url}</div>}
+                {diagnostics?.detail && <div><span className="text-ink-mute">detail:</span> {diagnostics.detail}</div>}
+              </div>
+            )}
+            {isStarting && hasDetails && (
               <details className="mt-2 text-xs text-ink-soft">
                 <summary className="cursor-pointer inline-flex items-center gap-1 select-none hover:text-ink-strong">
                   <ChevronDown className="h-3 w-3" />
@@ -152,11 +160,31 @@ function BackendBanner({
   )
 }
 
-function TitleBar() {
+function TitleBar({
+  backendStatus,
+  onCheatsheet,
+}: {
+  backendStatus: BackendStatus
+  onCheatsheet: () => void
+}) {
   const alwaysOnTop = useAppStore((state) => state.alwaysOnTop)
   const setAlwaysOnTop = useAppStore((state) => state.setAlwaysOnTop)
   const compactMode = useAppStore((state) => state.compactMode)
   const setCompactMode = useAppStore((state) => state.setCompactMode)
+
+  const subtitleText = backendStatus.running
+    ? 'Pronto para falar'
+    : backendStatus.phase === 'starting'
+      ? 'Iniciando...'
+      : backendStatus.phase === 'error'
+        ? 'Backend com falha'
+        : 'Offline'
+
+  const subtitleColor = backendStatus.running
+    ? 'var(--vl-state-ready)'
+    : backendStatus.phase === 'starting'
+      ? 'var(--vl-state-warn)'
+      : 'var(--vl-state-error)'
 
   return (
     <div
@@ -180,10 +208,18 @@ function TitleBar() {
         </div>
         <div>
           <span className="block text-sm font-semibold text-ink-strong">VoiceLaunch TTS</span>
-          <span className="block text-[10px] uppercase tracking-[0.3em] text-ink-soft">Local Voice Console</span>
+          <span className="block text-[10px] uppercase tracking-[0.3em] transition-colors" style={{ color: subtitleColor }}>{subtitleText}</span>
         </div>
       </div>
       <div className="flex items-center gap-1 no-drag-region">
+        <button
+          onClick={onCheatsheet}
+          className="titlebar-btn text-slate-400 hover:bg-chrome-800 hover:text-brand-300"
+          title="Atalhos de teclado"
+          aria-label="Ver atalhos de teclado"
+        >
+          <Keyboard className="w-4 h-4" />
+        </button>
         <button
           onClick={() => setCompactMode(!compactMode)}
           className={`titlebar-btn ${compactMode ? 'bg-brand-400/10 text-brand-300' : 'text-slate-400 hover:bg-chrome-800 hover:text-brand-300'}`}
@@ -229,7 +265,7 @@ function TitleBar() {
 function Sidebar() {
   return (
     <nav
-      className="flex h-full w-20 flex-col px-3 py-4 lg:w-64"
+      className="flex h-full w-20 flex-col px-3 py-4 lg:w-64 transition-[width] duration-200 ease-in-out"
       style={{
         borderRight: '1px solid var(--vl-hud-border)',
         background: 'rgba(6, 3, 15, 0.6)',
@@ -598,6 +634,11 @@ function CompactView({ backendStatus }: { backendStatus: BackendStatus }) {
             value={defaultSpeed}
             onChange={(e) => setDefaultSpeed(parseFloat(e.target.value))}
             className="flex-1 accent-brand-400"
+            aria-label="Velocidade de fala"
+            aria-valuemin={0.5}
+            aria-valuemax={2.0}
+            aria-valuenow={defaultSpeed}
+            aria-valuetext={`${defaultSpeed.toFixed(1)}x`}
           />
           <span className="w-8 text-right font-mono text-ink-body">{defaultSpeed.toFixed(1)}x</span>
           <label className="flex items-center gap-1 text-ink-body">
@@ -623,9 +664,9 @@ function CompactView({ backendStatus }: { backendStatus: BackendStatus }) {
         autoFocus
       />
 
-      <div className="space-y-2 overflow-auto">
-        <div className="grid grid-cols-2 gap-2">
-          {quickPhrases.slice(0, 8).map((phrase, index) => (
+      <div className="relative space-y-2">
+        <div className="grid grid-cols-2 gap-2 max-h-[180px] overflow-y-auto pb-1">
+          {quickPhrases.map((phrase, index) => (
             <button
               key={phrase}
               onClick={() => {
@@ -689,6 +730,7 @@ export default function App() {
   const voiceSource = useAppStore((state) => state.voiceSource)
   const [backendStatus, setBackendStatus] = useState<BackendStatus>(INITIAL_BACKEND_STATUS)
   const [retryingBackend, setRetryingBackend] = useState(false)
+  const [showCheatsheet, setShowCheatsheet] = useState(false)
 
   useEffect(() => {
     window.electronAPI.setAlwaysOnTop(alwaysOnTop || compactMode)
@@ -953,10 +995,11 @@ export default function App() {
   if (compactMode) {
     return (
       <div className={rootClass}>
-        <TitleBar />
+        <TitleBar backendStatus={backendStatus} onCheatsheet={() => setShowCheatsheet(true)} />
         <BackendBanner status={backendStatus} retrying={retryingBackend} onRetry={() => void retryBackend()} voiceSource={voiceSource} />
         <CompactView backendStatus={backendStatus} />
         <ToastContainer />
+        {showCheatsheet && <CheatsheetModal onClose={() => setShowCheatsheet(false)} />}
       </div>
     )
   }
@@ -964,7 +1007,7 @@ export default function App() {
   return (
     <HashRouter>
       <div className={rootClass}>
-        <TitleBar />
+        <TitleBar backendStatus={backendStatus} onCheatsheet={() => setShowCheatsheet(true)} />
         <BackendBanner status={backendStatus} retrying={retryingBackend} onRetry={() => void retryBackend()} voiceSource={voiceSource} />
         <div className="flex-1 flex overflow-hidden">
           <Sidebar />
@@ -983,7 +1026,95 @@ export default function App() {
         </div>
         <OnboardingTutorial />
         <ToastContainer />
+        {showCheatsheet && <CheatsheetModal onClose={() => setShowCheatsheet(false)} />}
       </div>
     </HashRouter>
+  )
+}
+
+// ─── Cheatsheet Modal ────────────────────────────────────────────────────────
+
+const SHORTCUTS = [
+  { keys: 'Ctrl+Shift+F', desc: 'Focar campo de texto' },
+  { keys: 'Enter', desc: 'Falar texto' },
+  { keys: 'Shift+Enter', desc: 'Nova linha' },
+  { keys: 'Ctrl+Shift+1..9', desc: 'Frase rapida 1–9' },
+  { keys: 'Ctrl+Shift+M', desc: 'Ativar/desativar mic' },
+  { keys: 'Ctrl+Shift+V', desc: 'Modo compacto' },
+  { keys: 'Ctrl+Shift+S', desc: 'Parar audio' },
+  { keys: 'Escape', desc: 'Fechar modal / parar' },
+]
+
+function CheatsheetModal({ onClose }: { onClose: () => void }) {
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const previousFocusRef = useRef<Element | null>(null)
+
+  useEffect(() => {
+    previousFocusRef.current = document.activeElement
+    requestAnimationFrame(() => {
+      const btn = dialogRef.current?.querySelector<HTMLElement>('button')
+      btn?.focus()
+    })
+    return () => {
+      if (previousFocusRef.current && (previousFocusRef.current as HTMLElement).focus) {
+        ;(previousFocusRef.current as HTMLElement).focus()
+      }
+    }
+  }, [])
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Escape') { onClose(); return }
+    if (e.key !== 'Tab') return
+    const focusable = Array.from(
+      dialogRef.current?.querySelectorAll<HTMLElement>(
+        'button, [href], input, [tabindex]:not([tabindex="-1"])',
+      ) ?? [],
+    )
+    if (focusable.length === 0) return
+    const first = focusable[0]
+    const last = focusable[focusable.length - 1]
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus() }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus() }
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Atalhos de teclado"
+      onKeyDown={handleKeyDown}
+      ref={dialogRef}
+    >
+      <div className="hud-frame hud-frame--hero max-w-md w-full p-6 animate-lift-in">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-lg font-bold text-ink-strong flex items-center gap-2">
+            <Keyboard className="w-5 h-5" style={{ color: 'var(--vl-state-ready)' }} />
+            Atalhos de teclado
+          </h2>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-lg text-ink-soft hover:bg-brand-500/15 hover:text-ink-strong transition-colors"
+            aria-label="Fechar"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <div className="grid gap-2">
+          {SHORTCUTS.map(({ keys, desc }) => (
+            <div key={keys} className="flex items-center justify-between gap-4 py-2" style={{ borderBottom: '1px solid var(--vl-hud-border)' }}>
+              <span className="text-xs text-ink-soft">{desc}</span>
+              <kbd
+                className="shrink-0 rounded-lg px-2 py-1 text-[11px] font-mono font-semibold"
+                style={{ background: 'rgba(139,92,246,0.12)', border: '1px solid var(--vl-hud-border-strong)', color: 'var(--vl-purple-200)' }}
+              >
+                {keys}
+              </kbd>
+            </div>
+          ))}
+        </div>
+        <p className="mt-4 text-xs text-ink-mute">Ctrl+Alt+1..9 e Ctrl+Shift+F1..F12 disponíveis em Atalhos de Voz.</p>
+      </div>
+    </div>
   )
 }

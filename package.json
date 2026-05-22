@@ -5,7 +5,7 @@
   "main": "./out/main/index.js",
   "author": "VoiceLaunch Team",
   "license": "MIT",
-  "private": true,
+  "private": false,
   "repository": {
     "type": "git",
     "url": "https://github.com/skarL007/sound_voice.git"

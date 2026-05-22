@@ -19,7 +19,7 @@ const styleByType: Record<ToastType, { borderColor: string; background: string }
 }
 
 export default function ToastContainer() {
-  const { toasts, removeToast } = useToastStore()
+  const { toasts, removeToast, pauseToast, resumeToast } = useToastStore()
   const compactMode = useAppStore((state) => state.compactMode)
 
   if (toasts.length === 0) return null
@@ -43,6 +43,10 @@ export default function ToastContainer() {
               compactMode ? 'min-w-0 w-full' : 'min-w-[280px] max-w-md'
             }`}
             style={tone}
+            onMouseEnter={() => pauseToast(toast.id)}
+            onMouseLeave={() => resumeToast(toast.id)}
+            onFocus={() => pauseToast(toast.id)}
+            onBlur={() => resumeToast(toast.id)}
           >
             <div className="flex items-start gap-3">
               {iconMap[toast.type]}

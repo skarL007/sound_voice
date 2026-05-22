@@ -1,0 +1,82 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    name: Build instalador e publicar release
+    runs-on: windows-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # ---------------------------------------------------------------
+      # Backend Python: o python_dist/ pré-compilado deve ser fornecido.
+      #
+      # Opção A (recomendada para v1.0.0): build localmente, depois faça
+      # upload do diretório python_dist como artefato via build-python.yml
+      # e baixe aqui.
+      #
+      # Opção B (v1.1+): use um self-hosted runner Windows que já tem
+      # python_dist/ cacheado de um step anterior.
+      # ---------------------------------------------------------------
+      - name: Download backend Python pré-compilado
+        uses: actions/download-artifact@v4
+        with:
+          name: python-backend
+          path: python_dist/
+        continue-on-error: true
+
+      - name: Rodar testes
+        run: npm test
+
+      - name: Build Electron
+        run: npm run build
+
+      - name: Build instalador Windows
+        run: npm run dist:win
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Descomente quando tiver certificado de assinatura:
+          # WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          # WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+
+      - name: Upload artefato do instalador
+        uses: actions/upload-artifact@v4
+        with:
+          name: installer-windows
+          path: |
+            dist/*.exe
+            dist/latest.yml
+            dist/*.blockmap
+          retention-days: 30
+
+      - name: Criar GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: VoiceLaunch TTS ${{ github.ref_name }}
+          body_path: .github/RELEASE_NOTES.md
+          draft: true
+          prerelease: false
+          files: |
+            dist/*.exe
+            dist/latest.yml
+            dist/*.blockmap
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

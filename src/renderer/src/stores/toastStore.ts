@@ -6,25 +6,82 @@ export interface Toast {
   message: string
   type: 'success' | 'error' | 'info' | 'warning'
   duration?: number
+  expiresAt?: number
 }
 
 interface ToastState {
   toasts: Toast[]
-  addToast: (toast: Omit<Toast, 'id'>) => void
+  pausedIds: Set<string>
+  timers: Map<string, ReturnType<typeof setTimeout>>
+  addToast: (toast: Omit<Toast, 'id' | 'expiresAt'>) => void
   removeToast: (id: string) => void
+  pauseToast: (id: string) => void
+  resumeToast: (id: string) => void
 }
 
-export const useToastStore = create<ToastState>((set) => ({
+export const useToastStore = create<ToastState>((set, get) => ({
   toasts: [],
+  pausedIds: new Set(),
+  timers: new Map(),
+
   addToast: (toast) => {
     const id = Math.random().toString(36).substring(2, 9)
-    set((state) => ({ toasts: [...state.toasts, { ...toast, id }] }))
-    if (toast.duration !== 0) {
-      setTimeout(() => {
+    const duration = toast.duration !== undefined ? toast.duration : 4000
+    const expiresAt = duration !== 0 ? Date.now() + duration : undefined
+
+    set((state) => ({
+      toasts: [...state.toasts, { ...toast, id, expiresAt }],
+    }))
+
+    if (duration !== 0) {
+      const timer = setTimeout(() => {
         set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) }))
-      }, toast.duration || 4000)
+        get().timers.delete(id)
+      }, duration)
+      get().timers.set(id, timer)
     }
   },
-  removeToast: (id) =>
-    set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) })),
+
+  removeToast: (id) => {
+    const timer = get().timers.get(id)
+    if (timer) clearTimeout(timer)
+    get().timers.delete(id)
+    set((state) => ({
+      toasts: state.toasts.filter((t) => t.id !== id),
+      pausedIds: new Set([...state.pausedIds].filter((pid) => pid !== id)),
+    }))
+  },
+
+  pauseToast: (id) => {
+    const timer = get().timers.get(id)
+    if (timer) {
+      clearTimeout(timer)
+      get().timers.delete(id)
+    }
+    set((state) => ({ pausedIds: new Set([...state.pausedIds, id]) }))
+  },
+
+  resumeToast: (id) => {
+    const toast = get().toasts.find((t) => t.id === id)
+    if (!toast || !toast.expiresAt) return
+
+    const remaining = toast.expiresAt - Date.now()
+    if (remaining <= 0) {
+      set((state) => ({
+        toasts: state.toasts.filter((t) => t.id !== id),
+        pausedIds: new Set([...state.pausedIds].filter((pid) => pid !== id)),
+      }))
+      return
+    }
+
+    const timer = setTimeout(() => {
+      set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) }))
+      get().timers.delete(id)
+    }, remaining)
+    get().timers.set(id, timer)
+
+    set((state) => ({
+      pausedIds: new Set([...state.pausedIds].filter((pid) => pid !== id)),
+    }))
+  },
 }))

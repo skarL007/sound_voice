@@ -1,0 +1,46 @@
+name: Build Python backend
+
+on:
+  workflow_dispatch:
+    inputs:
+      upload_artifact:
+        description: Fazer upload do python_dist como artefato para o workflow de release
+        type: boolean
+        default: true
+
+jobs:
+  build-python:
+    name: Build bundle PyInstaller
+    runs-on: windows-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Build backend Python
+        run: scripts\build-python.bat
+        shell: cmd
+
+      - name: Verificar output
+        run: |
+          if (Test-Path "python_dist\voicelaunch-backend\voicelaunch-backend.exe") {
+            Write-Host "Build concluido com sucesso"
+            (Get-Item "python_dist\voicelaunch-backend\voicelaunch-backend.exe").Length
+          } else {
+            Write-Error "Build falhou - voicelaunch-backend.exe nao encontrado"
+            exit 1
+          }
+
+      - name: Upload artefato do backend Python
+        if: ${{ inputs.upload_artifact }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-backend
+          path: python_dist/
+          retention-days: 7

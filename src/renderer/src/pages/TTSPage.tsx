@@ -393,8 +393,9 @@ export default function TTSPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <label className="text-xs uppercase tracking-[0.18em] text-ink-mute">Velocidade</label>
+            <label htmlFor="tts-speed" className="text-xs uppercase tracking-[0.18em] text-ink-mute">Velocidade</label>
             <input
+              id="tts-speed"
               type="range"
               min={0.5}
               max={2.0}
@@ -402,19 +403,26 @@ export default function TTSPage() {
               value={speed}
               onChange={(e) => handleSpeedChange(parseFloat(e.target.value))}
               className="w-28 accent-brand-400"
+              aria-label="Velocidade de fala"
+              aria-valuemin={0.5}
+              aria-valuemax={2.0}
+              aria-valuenow={speed}
+              aria-valuetext={`${speed.toFixed(1)}x`}
             />
             <span className="w-10 text-sm text-ink-body font-mono">{speed.toFixed(1)}x</span>
           </div>
 
           <div className="flex items-center gap-3">
-            <label className="text-xs uppercase tracking-[0.18em] text-ink-mute">Voz</label>
+            <label htmlFor="tts-voice-id" className="text-xs uppercase tracking-[0.18em] text-ink-mute">Voz</label>
             <input
+              id="tts-voice-id"
               type="text"
               value={voiceId}
               onChange={(e) => setVoiceId(e.target.value)}
               placeholder="Padrao"
               className="input-field w-40 py-2 text-sm"
               disabled={noReadyModel}
+              aria-label="ID de voz (opcional)"
             />
           </div>
         </div>
@@ -438,6 +446,11 @@ export default function TTSPage() {
                 value={speed}
                 onChange={(e) => handleSpeedChange(parseFloat(e.target.value))}
                 className="flex-1 accent-brand-400"
+                aria-label="Velocidade de fala"
+                aria-valuemin={0.5}
+                aria-valuemax={2.0}
+                aria-valuenow={speed}
+                aria-valuetext={`${speed.toFixed(1)}x`}
               />
               <span className="w-12 text-sm text-ink-body font-mono">{speed.toFixed(1)}x</span>
             </div>
