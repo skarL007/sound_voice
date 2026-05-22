@@ -1,6 +1,6 @@
-## VoiceLaunch TTS ${{ github.ref_name }}
+## VoiceLaunch TTS v1.0.0
 
-Lançamento estável do VoiceLaunch TTS — launcher open-source local de
+Primeiro lançamento estável do VoiceLaunch TTS — launcher open-source local de
 text-to-speech para comunicação assistiva no Windows 10/11.
 
 ### O que está incluído
@@ -21,7 +21,7 @@ text-to-speech para comunicação assistiva no Windows 10/11.
 
 ### Instalação
 
-1. Baixe `VoiceLaunch-TTS-Setup-VERSION.exe`
+1. Baixe `VoiceLaunch-TTS-Setup-1.0.0.exe`
 2. Execute o instalador. O Windows SmartScreen vai avisar "O Windows protegeu
    seu PC" porque este build não está com assinatura de código. Clique em
    **Mais informações → Executar assim mesmo**.
@@ -34,7 +34,13 @@ text-to-speech para comunicação assistiva no Windows 10/11.
 ### Checksum SHA-256
 
 ```
-PREENCHER_ANTES_DE_PUBLICAR
+DDDFF206D3AC2D224CC24957A1B74C71C213C894EB1F0C26E9AB0E7BB3DAA336
+```
+
+Verifique com PowerShell antes de instalar:
+
+```powershell
+(Get-FileHash VoiceLaunch-TTS-Setup-1.0.0.exe -Algorithm SHA256).Hash
 ```
 
 ### Limitações conhecidas
