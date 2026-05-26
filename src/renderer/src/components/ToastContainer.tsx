@@ -13,10 +13,10 @@ const iconMap: Record<ToastType, ReactElement> = {
 }
 
 const styleByType: Record<ToastType, { borderColor: string; background: string }> = {
-  success: { borderColor: 'rgba(97,228,163,0.32)', background: 'rgba(97,228,163,0.10)' },
-  error: { borderColor: 'rgba(255,107,125,0.32)', background: 'rgba(255,107,125,0.10)' },
-  info: { borderColor: 'rgba(73,230,255,0.30)', background: 'rgba(73,230,255,0.08)' },
-  warning: { borderColor: 'rgba(255,193,90,0.32)', background: 'rgba(255,193,90,0.10)' },
+  success: { borderColor: 'var(--vl-state-success-border)', background: 'var(--vl-state-success-bg)' },
+  error:   { borderColor: 'var(--vl-state-error-border)',   background: 'var(--vl-state-error-bg)'   },
+  info:    { borderColor: 'var(--vl-state-live-border)',    background: 'var(--vl-state-live-bg)'    },
+  warning: { borderColor: 'var(--vl-state-warn-border)',    background: 'var(--vl-state-warn-bg)'    },
 }
 
 export default function ToastContainer() {

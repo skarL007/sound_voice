@@ -18,31 +18,31 @@ const config: Record<AlertSeverity, {
   Icon: typeof AlertCircle
 }> = {
   error: {
-    borderColor: 'rgba(255,107,125,0.5)',
-    background: 'rgba(255,107,125,0.08)',
+    borderColor: 'var(--vl-state-error-accent)',
+    background: 'var(--vl-state-error-bg)',
     iconColor: 'var(--vl-state-error)',
-    titleColor: '#FFC1CB',
+    titleColor: 'var(--vl-state-error-text)',
     Icon: AlertCircle,
   },
   warn: {
-    borderColor: 'rgba(255,193,90,0.5)',
-    background: 'rgba(255,193,90,0.08)',
+    borderColor: 'var(--vl-state-warn-accent)',
+    background: 'var(--vl-state-warn-bg)',
     iconColor: 'var(--vl-state-warn)',
-    titleColor: '#FFE2A8',
+    titleColor: 'var(--vl-state-warn-text)',
     Icon: AlertTriangle,
   },
   info: {
-    borderColor: 'rgba(73,230,255,0.4)',
-    background: 'rgba(73,230,255,0.07)',
+    borderColor: 'var(--vl-state-live-accent)',
+    background: 'var(--vl-state-live-bg)',
     iconColor: 'var(--vl-state-live)',
-    titleColor: '#A5F0FF',
+    titleColor: 'var(--vl-state-live-text)',
     Icon: Info,
   },
   success: {
-    borderColor: 'rgba(97,228,163,0.4)',
-    background: 'rgba(97,228,163,0.08)',
+    borderColor: 'var(--vl-state-success-accent)',
+    background: 'var(--vl-state-success-bg)',
     iconColor: 'var(--vl-state-success)',
-    titleColor: '#A7F3D0',
+    titleColor: 'var(--vl-state-success-text)',
     Icon: CheckCircle2,
   },
 }

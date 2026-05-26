@@ -66,7 +66,7 @@ export default function ClonedVoicesTab() {
     return (
       <div
         className="rounded-2xl p-5 space-y-3"
-        style={{ background: 'rgba(255,193,90,0.10)', border: '1px solid rgba(255,193,90,0.30)' }}
+        style={{ background: 'var(--vl-state-warn-bg)', border: '1px solid var(--vl-state-warn-border)' }}
       >
         <div className="flex items-center gap-2">
           <AlertCircle className="h-5 w-5" style={{ color: 'var(--vl-state-warn)' }} />
@@ -84,7 +84,7 @@ export default function ClonedVoicesTab() {
     return (
       <div
         className="rounded-2xl p-5"
-        style={{ background: 'rgba(255,193,90,0.10)', border: '1px solid rgba(255,193,90,0.30)' }}
+        style={{ background: 'var(--vl-state-warn-bg)', border: '1px solid var(--vl-state-warn-border)' }}
       >
         <p className="text-sm text-ink-body">
           O backend Python precisa estar ativo para listar e usar vozes clonadas. Tente reiniciar o backend nas Configuracoes.

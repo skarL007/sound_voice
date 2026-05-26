@@ -281,9 +281,9 @@ export default function OnboardingTutorial() {
             <div
               className="rounded-2xl p-3 text-sm mb-6 text-left flex items-center gap-2"
               style={{
-                background: micVerified ? 'rgba(97,228,163,0.10)' : 'rgba(73,230,255,0.08)',
-                border: `1px solid ${micVerified ? 'rgba(97,228,163,0.32)' : 'rgba(73,230,255,0.28)'}`,
-                color: micVerified ? '#B6F2D6' : '#A5F0FF',
+                background: micVerified ? 'var(--vl-state-success-bg)' : 'var(--vl-state-live-bg)',
+                border: `1px solid ${micVerified ? 'var(--vl-state-success-border)' : 'var(--vl-state-live-border)'}`,
+                color: micVerified ? 'var(--vl-state-success-text)' : 'var(--vl-state-live-text)',
               }}
             >
               {micVerified ? (

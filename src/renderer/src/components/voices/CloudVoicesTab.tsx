@@ -76,7 +76,7 @@ export default function CloudVoicesTab() {
     return (
       <div
         className="rounded-2xl p-4 text-sm"
-        style={{ background: 'rgba(255,107,125,0.10)', border: '1px solid rgba(255,107,125,0.30)', color: '#FFC1CB' }}
+        style={{ background: 'var(--vl-state-error-bg)', border: '1px solid var(--vl-state-error-border)', color: 'var(--vl-state-error-text)' }}
       >
         Sem internet ou Edge TTS indisponivel: {error}.
       </div>

@@ -78,8 +78,8 @@ export default function DiscordReadyBanner({ visible, onClose, modelId, speed = 
       aria-live="polite"
       className="hud-frame mb-4 flex flex-wrap items-center gap-3 p-3"
       style={{
-        background: 'rgba(73,230,255,0.10)',
-        border: '1px solid rgba(73,230,255,0.40)',
+        background: 'var(--vl-state-live-bg)',
+        border: '1px solid var(--vl-state-live-accent)',
         boxShadow: '0 0 28px rgba(73,230,255,0.18)',
       }}
     >

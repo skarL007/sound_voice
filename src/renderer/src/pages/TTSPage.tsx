@@ -9,6 +9,7 @@ import {
   Mic,
   MonitorUp,
   Pin,
+  Plus,
   Send,
   Square,
   Trash2,
@@ -581,6 +582,16 @@ export default function TTSPage() {
               As 9 primeiras tem atalho global <span className="font-mono">Ctrl+Shift+1..9</span>.
             </p>
             <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+              {quickPhrases.length === 0 && (
+                <div className="col-span-full hud-frame flex flex-col items-center gap-2 py-8 text-center"
+                  style={{ borderStyle: 'dashed' }}>
+                  <Plus className="w-6 h-6 text-ink-mute" aria-hidden="true" />
+                  <p className="text-sm font-medium text-ink-strong">Nenhuma frase salva ainda</p>
+                  <p className="text-xs text-ink-soft max-w-[240px]">
+                    Digite algo no editor e clique em <strong>Salvar frase</strong> para fixar aqui.
+                  </p>
+                </div>
+              )}
               {quickPhrases.map((phrase, index) => (
                 <div
                   key={phrase}
@@ -691,7 +702,7 @@ export default function TTSPage() {
       {virtualMicEnabled && (
         <div
           className="mt-4 flex items-center gap-2 text-sm p-3 rounded-2xl"
-          style={{ background: 'rgba(73,230,255,0.08)', border: '1px solid rgba(73,230,255,0.30)', color: '#A5F0FF' }}
+          style={{ background: 'var(--vl-state-live-bg)', border: '1px solid var(--vl-state-live-border)', color: 'var(--vl-state-live-text)' }}
         >
           <MonitorUp className="w-4 h-4" />
           <span>

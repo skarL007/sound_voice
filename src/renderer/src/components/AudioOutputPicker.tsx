@@ -145,7 +145,7 @@ export default function AudioOutputPicker({ showTestButton = true }: AudioOutput
       {needsPermission && (
         <div
           className="rounded-2xl p-3 text-xs flex items-start gap-2"
-          style={{ background: 'rgba(255,193,90,0.10)', border: '1px solid rgba(255,193,90,0.30)' }}
+          style={{ background: 'var(--vl-state-warn-bg)', border: '1px solid var(--vl-state-warn-border)' }}
         >
           <Volume2 className="h-4 w-4 flex-shrink-0 mt-0.5" style={{ color: 'var(--vl-state-warn)' }} />
           <div className="flex-1 text-ink-body">

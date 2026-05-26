@@ -108,7 +108,7 @@ export default function DiscordVRChatGuide({ defaultExpanded = false, compact = 
       {open && (
         <div
           className="rounded-xl p-3 text-xs flex items-start gap-2"
-          style={{ background: 'rgba(73,230,255,0.08)', border: '1px solid rgba(73,230,255,0.28)', color: '#A5F0FF' }}
+          style={{ background: 'var(--vl-state-live-bg)', border: '1px solid var(--vl-state-live-border)', color: 'var(--vl-state-live-text)' }}
         >
           <Zap className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
           <span>

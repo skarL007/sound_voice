@@ -190,7 +190,7 @@ export default function VoiceShortcutsPage() {
       {cloudError && (
         <div
           className="rounded-2xl p-3 text-sm"
-          style={{ background: 'rgba(255,193,90,0.10)', border: '1px solid rgba(255,193,90,0.30)', color: '#FFE2A8' }}
+          style={{ background: 'var(--vl-state-warn-bg)', border: '1px solid var(--vl-state-warn-border)', color: 'var(--vl-state-warn-text)' }}
         >
           Vozes online indisponiveis ({cloudError}). Atalhos cloud ainda podem ser criados mas so funcionam quando voltar a conexao.
         </div>

@@ -353,7 +353,7 @@ export default function ModelsPage() {
               {!runnable && level === 'advanced' && (
                 <div
                   className="flex items-center gap-2 text-xs p-2 rounded-xl"
-                  style={{ background: 'rgba(255,107,125,0.10)', border: '1px solid rgba(255,107,125,0.30)', color: '#FFC1CB' }}
+                  style={{ background: 'var(--vl-state-error-bg)', border: '1px solid var(--vl-state-error-border)', color: 'var(--vl-state-error-text)' }}
                 >
                   <AlertCircle className="w-4 h-4" />
                   Este recurso avancado so entra no MVP com NVIDIA e CUDA validados.
@@ -363,7 +363,7 @@ export default function ModelsPage() {
               {!runnable && level === 'experimental' && (
                 <div
                   className="flex items-center gap-2 text-xs p-2 rounded-xl"
-                  style={{ background: 'rgba(255,193,90,0.10)', border: '1px solid rgba(255,193,90,0.30)', color: '#FFE2A8' }}
+                  style={{ background: 'var(--vl-state-warn-bg)', border: '1px solid var(--vl-state-warn-border)', color: 'var(--vl-state-warn-text)' }}
                 >
                   <AlertCircle className="w-4 h-4" />
                   Este modelo aparece apenas como transparencia tecnica e nao faz parte do fluxo principal.

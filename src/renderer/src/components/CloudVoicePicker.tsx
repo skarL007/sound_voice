@@ -40,7 +40,7 @@ export default function CloudVoicePicker({ selectedVoice, onSelect }: CloudVoice
     return (
       <div
         className="rounded-2xl p-4 text-sm"
-        style={{ background: 'rgba(255,107,125,0.10)', border: '1px solid rgba(255,107,125,0.30)', color: '#FFC1CB' }}
+        style={{ background: 'var(--vl-state-error-bg)', border: '1px solid var(--vl-state-error-border)', color: 'var(--vl-state-error-text)' }}
       >
         Falha ao carregar vozes online: {error}. Verifique sua conexao com a internet e tente novamente.
       </div>

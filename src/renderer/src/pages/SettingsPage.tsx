@@ -136,11 +136,11 @@ export default function SettingsPage() {
         {!vbCableInstalled ? (
           <div
             className="flex items-start gap-3 p-4 rounded-2xl"
-            style={{ background: 'rgba(255,193,90,0.10)', border: '1px solid rgba(255,193,90,0.30)' }}
+            style={{ background: 'var(--vl-state-warn-bg)', border: '1px solid var(--vl-state-warn-border)' }}
           >
             <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--vl-state-warn)' }} />
             <div>
-              <p className="text-sm font-medium" style={{ color: '#FFE2A8' }}>VB-Audio Virtual Cable nao detectado</p>
+              <p className="text-sm font-medium" style={{ color: 'var(--vl-state-warn-text)' }}>VB-Audio Virtual Cable nao detectado</p>
               <p className="text-sm mt-1 text-ink-body">
                 Para usar o microfone virtual, instale o VB-Audio Virtual Cable. Se o instalador nao estiver embutido neste pacote, o site oficial sera aberto.
               </p>
@@ -176,11 +176,11 @@ export default function SettingsPage() {
         ) : (
           <div
             className="flex items-start gap-3 p-4 rounded-2xl"
-            style={{ background: 'rgba(97,228,163,0.10)', border: '1px solid rgba(97,228,163,0.30)' }}
+            style={{ background: 'var(--vl-state-success-bg)', border: '1px solid var(--vl-state-success-border)' }}
           >
             <Info className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--vl-state-success)' }} />
             <div>
-              <p className="text-sm font-medium" style={{ color: '#B6F2D6' }}>VB-Audio Virtual Cable detectado</p>
+              <p className="text-sm font-medium" style={{ color: 'var(--vl-state-success-text)' }}>VB-Audio Virtual Cable detectado</p>
               <p className="text-sm mt-1 text-ink-body">
                 O dispositivo &quot;CABLE Output&quot; esta disponivel como microfone em seus aplicativos.
               </p>

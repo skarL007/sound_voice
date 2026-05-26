@@ -52,6 +52,24 @@
     --vl-state-error: #FF6B7D;
     --vl-state-success: #61E4A3;
 
+    /* Estado — superfícies (bg + borda para alertas e painéis) */
+    --vl-state-error-bg:      rgba(255, 107, 125, 0.10);
+    --vl-state-error-border:  rgba(255, 107, 125, 0.30);
+    --vl-state-error-accent:  rgba(255, 107, 125, 0.50);
+    --vl-state-error-text:    #FFC1CB;
+    --vl-state-warn-bg:       rgba(255, 193, 90,  0.10);
+    --vl-state-warn-border:   rgba(255, 193, 90,  0.30);
+    --vl-state-warn-accent:   rgba(255, 193, 90,  0.50);
+    --vl-state-warn-text:     #FFE2A8;
+    --vl-state-success-bg:    rgba(97,  228, 163, 0.10);
+    --vl-state-success-border: rgba(97, 228, 163, 0.32);
+    --vl-state-success-accent: rgba(97, 228, 163, 0.50);
+    --vl-state-success-text:  #A7F3D0;
+    --vl-state-live-bg:       rgba(73,  230, 255, 0.08);
+    --vl-state-live-border:   rgba(73,  230, 255, 0.30);
+    --vl-state-live-accent:   rgba(73,  230, 255, 0.40);
+    --vl-state-live-text:     #A5F0FF;
+
     /* HUD */
     --vl-hud-border: rgba(167, 139, 250, 0.32);
     --vl-hud-border-strong: rgba(167, 139, 250, 0.66);
