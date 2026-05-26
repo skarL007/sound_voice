@@ -212,132 +212,144 @@ export default function OnboardingTutorial() {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
-      role="dialog"
-      aria-modal="true"
+      className="fixed right-0 inset-y-0 z-40 flex flex-col w-full max-w-[400px] animate-slide-in-right scanline overflow-hidden"
+      style={{
+        borderLeft: '1px solid var(--vl-hud-border-strong)',
+        background: 'rgba(6,3,15,0.97)',
+        backdropFilter: 'blur(12px)',
+        boxShadow: '-8px 0 40px rgba(0,0,0,0.6)',
+      }}
+      role="complementary"
+      aria-modal="false"
+      aria-label="Tutorial de introducao"
       aria-labelledby="onboarding-title"
       onKeyDown={handleKeyDown}
       ref={dialogRef}
     >
-      <div className="hud-frame hud-frame--hero scanline max-w-lg w-full overflow-hidden animate-lift-in">
-        <div className="flex items-center gap-1 px-6 pt-6 pb-2">
-          {steps.map((_, index) => (
-            <div
-              key={index}
-              className="h-1.5 flex-1 rounded-full transition-colors"
-              style={{
-                background: index <= stepIndex ? 'var(--vl-state-ready)' : 'rgba(95,35,194,0.25)',
-                boxShadow: index <= stepIndex ? '0 0 8px rgba(139,92,246,0.5)' : 'none',
-              }}
-            />
-          ))}
-        </div>
-
-        <div className="flex justify-between items-center px-4 pt-2">
-          <span className="text-[10px] uppercase tracking-[0.2em] text-ink-mute">
-            Passo {stepIndex + 1} de {steps.length} · {trackHardware}
-          </span>
-          <button
-            onClick={close}
-            className="p-2 rounded-lg text-ink-soft hover:bg-brand-500/15 hover:text-ink-strong transition-colors"
-            title="Pular tutorial"
-            aria-label="Pular tutorial"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        <div className="px-8 pb-6 text-center">
+      {/* Progress bar */}
+      <div className="flex items-center gap-1 px-5 pt-5 pb-2 flex-shrink-0">
+        {steps.map((_, index) => (
           <div
-            className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-5"
+            key={index}
+            className="h-1.5 flex-1 rounded-full transition-colors"
             style={{
-              background: 'rgba(139, 92, 246, 0.14)',
-              border: '1px solid var(--vl-hud-border-strong)',
-              boxShadow: '0 0 30px rgba(139,92,246,0.25)',
+              background: index <= stepIndex ? 'var(--vl-state-ready)' : 'rgba(95,35,194,0.25)',
+              boxShadow: index <= stepIndex ? '0 0 8px rgba(139,92,246,0.5)' : 'none',
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Header */}
+      <div className="flex justify-between items-center px-5 pt-1 pb-2 flex-shrink-0">
+        <span className="text-[10px] uppercase tracking-[0.2em] text-ink-mute">
+          Passo {stepIndex + 1} de {steps.length} · {trackHardware}
+        </span>
+        <button
+          onClick={close}
+          className="p-2 rounded-lg text-ink-soft hover:bg-brand-500/15 hover:text-ink-strong transition-colors"
+          title="Pular tutorial"
+          aria-label="Pular tutorial"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      </div>
+
+      {/* Scrollable step content */}
+      <div className="flex-1 overflow-y-auto px-6 pb-4 text-center">
+        <div
+          className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
+          style={{
+            background: 'rgba(139, 92, 246, 0.14)',
+            border: '1px solid var(--vl-hud-border-strong)',
+            boxShadow: '0 0 24px rgba(139,92,246,0.25)',
+          }}
+        >
+          {step.icon}
+        </div>
+
+        <h2 id="onboarding-title" className="text-lg font-bold text-ink-strong mb-2 neon-glow" style={{ color: 'var(--vl-purple-200)' }}>
+          {step.title}
+        </h2>
+        <p className="text-sm text-ink-body leading-relaxed mb-3">{step.description}</p>
+
+        {step.tip && (
+          <div
+            className="rounded-2xl p-3 text-sm mb-3 text-left"
+            style={{
+              background: 'rgba(139,92,246,0.10)',
+              border: '1px solid rgba(139,92,246,0.32)',
+              color: 'var(--vl-purple-200)',
             }}
           >
-            {step.icon}
+            <strong>Dica:</strong> {step.tip}
           </div>
+        )}
 
-          <h2 id="onboarding-title" className="text-xl font-bold text-ink-strong mb-3 neon-glow" style={{ color: 'var(--vl-purple-200)' }}>
-            {step.title}
-          </h2>
-          <p className="text-ink-body leading-relaxed mb-4">{step.description}</p>
+        {step.verify === 'mic-virtual' && (
+          <div
+            className="rounded-2xl p-3 text-sm mb-4 text-left flex items-center gap-2"
+            style={{
+              background: micVerified ? 'var(--vl-state-success-bg)' : 'var(--vl-state-live-bg)',
+              border: `1px solid ${micVerified ? 'var(--vl-state-success-border)' : 'var(--vl-state-live-border)'}`,
+              color: micVerified ? 'var(--vl-state-success-text)' : 'var(--vl-state-live-text)',
+            }}
+          >
+            {micVerified ? (
+              <CheckCircle2 className="h-5 w-5 flex-shrink-0" />
+            ) : polling ? (
+              <Volume2 className="h-5 w-5 flex-shrink-0 animate-pulse" />
+            ) : (
+              <Volume2 className="h-5 w-5 flex-shrink-0" />
+            )}
+            <span>
+              {micVerified
+                ? 'Microfone virtual ativo. Discord/VRChat devem ouvir voce agora.'
+                : polling
+                  ? 'Aguardando voce ativar o microfone virtual (botao "Ativar" na aba Falar)...'
+                  : 'Nao detectei o microfone virtual ainda. Voce pode continuar e configurar depois em Ajustes.'}
+            </span>
+          </div>
+        )}
+      </div>
 
-          {step.tip && (
-            <div
-              className="rounded-2xl p-3 text-sm mb-4 text-left"
-              style={{
-                background: 'rgba(139,92,246,0.10)',
-                border: '1px solid rgba(139,92,246,0.32)',
-                color: 'var(--vl-purple-200)',
-              }}
-            >
-              <strong>Dica:</strong> {step.tip}
-            </div>
-          )}
+      {/* Footer nav — always visible */}
+      <div
+        className="flex-shrink-0 flex items-center justify-between gap-3 px-6 py-4"
+        style={{ borderTop: '1px solid var(--vl-hud-border)' }}
+      >
+        <button
+          onClick={prev}
+          disabled={stepIndex === 0}
+          className="px-4 py-2 text-sm text-ink-soft hover:text-ink-strong disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        >
+          Voltar
+        </button>
 
-          {step.verify === 'mic-virtual' && (
-            <div
-              className="rounded-2xl p-3 text-sm mb-6 text-left flex items-center gap-2"
-              style={{
-                background: micVerified ? 'var(--vl-state-success-bg)' : 'var(--vl-state-live-bg)',
-                border: `1px solid ${micVerified ? 'var(--vl-state-success-border)' : 'var(--vl-state-live-border)'}`,
-                color: micVerified ? 'var(--vl-state-success-text)' : 'var(--vl-state-live-text)',
-              }}
-            >
-              {micVerified ? (
-                <CheckCircle2 className="h-5 w-5 flex-shrink-0" />
-              ) : polling ? (
-                <Volume2 className="h-5 w-5 flex-shrink-0 animate-pulse" />
-              ) : (
-                <Volume2 className="h-5 w-5 flex-shrink-0" />
-              )}
-              <span>
-                {micVerified
-                  ? 'Microfone virtual ativo. Discord/VRChat devem ouvir voce agora.'
-                  : polling
-                    ? 'Aguardando voce ativar o microfone virtual (botao "Ativar" na aba Falar)...'
-                    : 'Nao detectei o microfone virtual ainda. Voce pode continuar e configurar depois em Ajustes.'}
-              </span>
-            </div>
-          )}
-
-          <div className="flex items-center justify-between gap-3 pt-2">
+        <div className="flex gap-2">
+          {!isLast && (
             <button
-              onClick={prev}
-              disabled={stepIndex === 0}
-              className="px-4 py-2 text-sm text-ink-soft hover:text-ink-strong disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              onClick={close}
+              className="px-4 py-2 text-sm text-ink-soft hover:text-ink-strong flex items-center gap-1.5 transition-colors"
             >
-              Voltar
+              <SkipForward className="w-4 h-4" />
+              Pular
             </button>
+          )}
 
-            <div className="flex gap-2">
-              {!isLast && (
-                <button
-                  onClick={close}
-                  className="px-4 py-2 text-sm text-ink-soft hover:text-ink-strong flex items-center gap-1.5 transition-colors"
-                >
-                  <SkipForward className="w-4 h-4" />
-                  Pular
-                </button>
-              )}
-
-              <button onClick={next} className="btn-primary flex items-center gap-2 px-6">
-                {isLast ? (
-                  <>
-                    <CheckCircle2 className="w-4 h-4" />
-                    Comecar
-                  </>
-                ) : (
-                  <>
-                    Proximo
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
+          <button onClick={next} className="btn-primary flex items-center gap-2 px-5">
+            {isLast ? (
+              <>
+                <CheckCircle2 className="w-4 h-4" />
+                Comecar
+              </>
+            ) : (
+              <>
+                Proximo
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
+          </button>
         </div>
       </div>
     </div>

@@ -103,6 +103,7 @@ module.exports = {
         'text-shimmer': 'text-shimmer 4s linear infinite',
         'scanline-sweep': 'scanline-sweep 7s linear infinite',
         'hud-flicker': 'hud-flicker 5s steps(20, end) infinite',
+        'slide-in-right': 'slide-in-right 280ms cubic-bezier(0.25,0.46,0.45,0.94) both',
       },
       keyframes: {
         'glow-soft': {
@@ -112,6 +113,10 @@ module.exports = {
         'lift-in': {
           from: { opacity: '0', transform: 'translateY(10px)' },
           to: { opacity: '1', transform: 'translateY(0)' },
+        },
+        'slide-in-right': {
+          from: { transform: 'translateX(100%)' },
+          to: { transform: 'translateX(0)' },
         },
         'glow-pulse': {
           '0%, 100%': { boxShadow: '0 0 0 rgba(139,92,246,0)' },
