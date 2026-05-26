@@ -133,6 +133,20 @@ module.exports = {
       fontFamily: {
         mono: ['"JetBrains Mono"', '"Cascadia Code"', '"Consolas"', 'monospace'],
       },
+      // Semantic typography scale — use these instead of raw text-xs/sm/base/etc.
+      // caption → 11px meta/badge, label → 12px tags/inputs, body → 14px copy,
+      // ui → 15px interactive, heading → 17px sections, title → 20px cards,
+      // page → 24px page headings, hero → 30px display.
+      fontSize: {
+        caption: ['0.6875rem', { lineHeight: '1rem' }],
+        label:   ['0.75rem',   { lineHeight: '1rem' }],
+        body:    ['0.875rem',  { lineHeight: '1.375rem' }],
+        ui:      ['0.9375rem', { lineHeight: '1.5rem' }],
+        heading: ['1.0625rem', { lineHeight: '1.5rem' }],
+        title:   ['1.25rem',   { lineHeight: '1.75rem' }],
+        page:    ['1.5rem',    { lineHeight: '2rem' }],
+        hero:    ['1.875rem',  { lineHeight: '2.25rem' }],
+      },
     },
   },
   plugins: [],
