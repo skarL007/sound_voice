@@ -931,6 +931,8 @@ export default function App() {
       const shortcuts = Array.isArray(settings.voiceShortcuts) ? settings.voiceShortcuts : []
       const shortcut = shortcuts.find((entry) => entry.id === shortcutId)
       if (!shortcut || !shortcut.enabled) return
+      // Feedback visual imediato na página de atalhos
+      window.dispatchEvent(new CustomEvent('voicelaunch:shortcut-triggered', { detail: shortcutId }))
       const cableDeviceId = settings.cableDeviceId ?? null
 
       try {

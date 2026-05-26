@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   AlertCircle,
   Cloud,
@@ -51,6 +51,8 @@ export default function VoiceShortcutsPage() {
   const [editing, setEditing] = useState<VoiceShortcut | null>(null)
   const [isNew, setIsNew] = useState(false)
   const [testingId, setTestingId] = useState<string | null>(null)
+  const [activeId, setActiveId] = useState<string | null>(null)
+  const activeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [cloudVoices, setCloudVoices] = useState<CloudVoice[]>([])
   const [localModels, setLocalModels] = useState<ModelInfo[]>([])
   const [cloudError, setCloudError] = useState<string | null>(null)
@@ -70,8 +72,22 @@ export default function VoiceShortcutsPage() {
       if (!active) return
       setLocalModels(registry.filter((model) => model.installed))
     })
+
+    const handleShortcutTriggered = (event: Event) => {
+      const id = (event as CustomEvent<string>).detail
+      setActiveId(id)
+      if (activeTimerRef.current) clearTimeout(activeTimerRef.current)
+      activeTimerRef.current = setTimeout(() => {
+        setActiveId(null)
+        activeTimerRef.current = null
+      }, 2000)
+    }
+    window.addEventListener('voicelaunch:shortcut-triggered', handleShortcutTriggered as EventListener)
+
     return () => {
       active = false
+      window.removeEventListener('voicelaunch:shortcut-triggered', handleShortcutTriggered as EventListener)
+      if (activeTimerRef.current) clearTimeout(activeTimerRef.current)
     }
   }, [])
 
@@ -205,6 +221,7 @@ export default function VoiceShortcutsPage() {
               key={shortcut.id}
               shortcut={shortcut}
               isTesting={testingId === shortcut.id}
+              isActive={activeId === shortcut.id}
               cloudVoices={cloudVoices}
               localModels={localModels}
               onTest={() => void handleTest(shortcut)}
@@ -253,6 +270,7 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
 function ShortcutCard({
   shortcut,
   isTesting,
+  isActive = false,
   cloudVoices,
   localModels,
   onTest,
@@ -262,6 +280,7 @@ function ShortcutCard({
 }: {
   shortcut: VoiceShortcut
   isTesting: boolean
+  isActive?: boolean
   cloudVoices: CloudVoice[]
   localModels: ModelInfo[]
   onTest: () => void
@@ -279,7 +298,11 @@ function ShortcutCard({
   }, [shortcut, cloudVoices, localModels])
 
   return (
-    <div className={`hud-frame card-hover p-4 space-y-3 ${shortcut.enabled ? '' : 'opacity-60'}`}>
+    <div
+      className={`hud-frame card-hover p-4 space-y-3 transition-all duration-300 ${shortcut.enabled ? '' : 'opacity-60'}`}
+      style={isActive ? { boxShadow: '0 0 0 2px var(--vl-state-ready), 0 0 20px rgba(139,92,246,0.35)', borderColor: 'var(--vl-state-ready)' } : {}}
+      aria-current={isActive ? 'true' : undefined}
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1.5 flex-wrap">
