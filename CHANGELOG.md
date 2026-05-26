@@ -1,5 +1,45 @@
 # Changelog
 
+## [1.1.0] - 2026-05-26 (Auditoria completa + qualidade + novas funcionalidades)
+
+### Adicionado
+
+- **Exportar historico como CSV**: botao "Exportar CSV" no painel TTS exporta todas as frases com timestamp UTC, voz e texto no formato RFC 4180. Funciona via `historyExport.ts`; timestamps sempre em UTC independente do fuso horario local.
+- **Feedback visual de atalhos**: ao disparar um atalho de voz via hotkey global, o card correspondente na pagina de Atalhos acende com brilho roxo por 2 s (evento `voicelaunch:shortcut-triggered`). Feedback imediato mesmo com o app minimizado.
+- **Escala de tipografia semantica**: 8 tokens Tailwind com nomes de funcao — `text-caption` (11 px meta/badge) ate `text-hero` (30 px display) — em vez de tamanhos numericos sem contexto.
+- **Botao "Rever tutorial"** em Configuracoes: reinicia o onboarding sem precisar reinstalar o app.
+- **20 design tokens de estado**: variaveis CSS `--vl-state-error/warn/success/live-{bg,border,accent,text}` em `index.css`. Elimina rgba() hardcoded em 14 arquivos e habilita theming futuro.
+- **Estado vazio das frases rapidas**: placeholder dashed com icone Plus e instrucao clara quando nenhuma frase foi salva ainda.
+- **Feedback de sintese**: botao Falar tem 3 estados visuais — Falar / Gerando... (spinner) / Parar — e `aria-busy` durante geracao.
+
+### Alterado
+
+- **OnboardingTutorial**: convertido de modal bloqueante (`fixed inset-0 bg-black/70`, `aria-modal="true"`) para painel lateral deslizante pela direita (`aria-modal="false"`). O usuario pode navegar nas abas e interagir com o app enquanto le o tutorial. Animacao `slide-in-right` 280 ms.
+- **AlertBox**: configuracao de severidades (`alertConfig`) extraida para modulo proprio `alertConfig.ts`, separada do componente React — testavel de forma isolada.
+- **Zustand selectors em TTSPage**: `useAppStore(useShallow(...))` com mapa de campos explicito; callbacks `handleCloudVoiceSelect`, `handleModelChange`, `handleSpeedChange`, `saveCurrentPhrase` envolvidos em `useCallback`. Reduz re-renders da TTSPage aos 10 campos relevantes.
+- **toastStore**: `Set.add()`/`Set.delete()` O(1) em `pauseToast`/`resumeToast`/`removeToast`; elimina alocacao de array intermediario a cada mutacao.
+- **Ordem de navegacao**: Vozes (3a posicao) antes de Atalhos — reflete a jornada do usuario (primeiro escolhe a voz, depois cria atalhos).
+- **LogsPage**: semântica de abas com `role="tablist"`, `role="tab"`, `aria-selected`, `aria-controls` e `tabIndex` corretos (WCAG 2.1 AA).
+
+### Corrigido
+
+- **TOCTOU em `getFolderSize` / `deleteFolderRecursive`**: `try/catch` por arquivo ignora silenciosamente arquivos deletados entre `readdirSync` e `statSync`. Antes podia crashar com `ENOENT` em delecoes concorrentes.
+- **Notificacoes com HTML**: `send-notification` faz strip de tags antes de truncar — evita `&lt;b&gt;` escapado no toast do sistema.
+- **SettingsPage**: blocos warn/success usam tokens CSS (`var(--vl-state-warn-*)`) em vez de rgba() inline; consistente com o restante da UI.
+- **cloudAudio.ts**: 4 `console.log`/`console.warn` de debug removidos; mantidos apenas os 3 handlers de erro legitimos.
+- **Seletor de voz**: `isSpeakingRef.current` como guarda sincrono na funcao `speak()` evita race condition ao clicar duas vezes em "Falar".
+
+### Testes
+
+- `alertConfig.test.ts` (3): campos CSS var, icones distintos por severidade, error ≠ warn
+- `toastStore.test.ts` (6): addToast, auto-remove por duracao, removeToast, pauseToast (para timer), resumeToast (retoma tempo restante), duration 0 = persistente — tudo com `vi.useFakeTimers()`
+- `historyExport.test.ts` (6): buildCsv vazio (so header), linha unica, escape de aspas duplas, escape de virgulas, timestamp UTC, downloadCsv criacao e revogacao de blob URL (jsdom)
+- **110/110 verde** (era 95/95)
+
+### Infra / CI
+
+- Workflow Linear sync (`linear-sync.yml`): branch com ID → In Progress; PR merge → Done; sem dependencia de token de terceiros.
+
 ## [1.0.0-rc.4] - 2026-05-20 (Polimento + dedup + perf)
 
 ### Adicionado

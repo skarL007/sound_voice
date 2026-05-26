@@ -1,53 +1,55 @@
-## VoiceLaunch TTS v1.0.0
+## VoiceLaunch TTS v1.1.0
 
-Primeiro lançamento estável do VoiceLaunch TTS — launcher open-source local de
-text-to-speech para comunicação assistiva no Windows 10/11.
+Atualização de qualidade com novas funcionalidades, auditoria completa de UX/acessibilidade e cobertura de testes ampliada.
 
-### O que está incluído
+### Novidades
 
-- **Edge TTS** (nuvem): ~400 vozes Microsoft, funciona imediatamente sem downloads
-- **Piper TTS** (local, CPU): rápido e leve, funciona em qualquer PC Windows
-- **Kokoro TTS** (local, CPU): voz local de maior qualidade, ~300 MB de download
-- **Integração VB-Cable**: roteie a voz sintetizada para Discord, Zoom e jogos
-  como microfone virtual
-- **Comunicador compacto**: janela sempre no topo com frases rápidas e atalhos
-  globais (Ctrl+Shift+1–9)
-- **Soundboard de atalhos de voz**: 31 slots de hotkey com voz e velocidade por atalho
-- **Onboarding hardware-aware**: passos de configuração adaptados ao seu GPU
-  (NVIDIA/AMD/Intel/CPU)
-- **Navegação completa por teclado** e design acessível (contraste WCAG AA,
-  foco visível, suporte a reduced-motion)
-- **95 testes unitários** passando
+- **Exportar histórico como CSV** — botão "Exportar CSV" no painel TTS salva todas as frases com timestamp UTC, voz e texto no padrão RFC 4180
+- **Feedback visual de atalhos** — ao disparar um atalho via hotkey, o card pisca com brilho roxo por 2 s na página de Atalhos
+- **Onboarding não-bloqueante** — tutorial migrado de modal overlay para painel lateral deslizante; você pode usar o app enquanto lê
+- **Escala tipográfica semântica** — 8 novos tokens Tailwind (`text-caption` → `text-hero`) para consistência visual
+- **Botão "Rever tutorial"** em Configurações
+- **Estado vazio de frases rápidas** com instrução e ícone explicativo
+- **Feedback Gerando…/Parar** no botão Falar (3 estados visuais + `aria-busy`)
+
+### Correções
+
+- Race condition (TOCTOU) em operações de sistema de arquivos
+- HTML stripped de notificações nativas antes de truncar
+- 4 console.log de debug removidos de `cloudAudio.ts`
+- Semântica de abas (`role="tablist/tab"`, `aria-selected`) em LogsPage — WCAG 2.1 AA
+
+### Performance
+
+- `useShallow` selector em TTSPage — re-render apenas nos 10 campos usados
+- `Set.add()` / `Set.delete()` O(1) no toastStore — sem alocação de array a cada mutação
+
+### Testes
+
+- **110 testes unitários** (eram 95) — alertConfig, toastStore com fake timers, historyExport com TDD
 
 ### Instalação
 
-1. Baixe `VoiceLaunch-TTS-Setup-1.0.0.exe`
-2. Execute o instalador. O Windows SmartScreen vai avisar "O Windows protegeu
-   seu PC" porque este build não está com assinatura de código. Clique em
-   **Mais informações → Executar assim mesmo**.
-3. O VB-Audio Virtual Cable está incluído e será instalado automaticamente
-   se não estiver presente. Um reinício pode ser necessário após a instalação
-   do VB-Cable.
-4. No primeiro início, o onboarding vai guiá-lo pela escolha de uma voz e
-   configuração do microfone virtual.
+1. Baixe `VoiceLaunch-TTS-Setup-1.1.0.exe`
+2. Execute o instalador. Clique em **Mais informações → Executar assim mesmo** no aviso do SmartScreen (build sem assinatura de código).
+3. O VB-Audio Virtual Cable está incluído e será instalado automaticamente se necessário.
 
 ### Checksum SHA-256
 
 ```
-DDDFF206D3AC2D224CC24957A1B74C71C213C894EB1F0C26E9AB0E7BB3DAA336
+(disponível após build do instalador)
 ```
 
-Verifique com PowerShell antes de instalar:
+### Atualização a partir de v1.0.0
 
-```powershell
-(Get-FileHash VoiceLaunch-TTS-Setup-1.0.0.exe -Algorithm SHA256).Hash
-```
+Feche o app, execute o instalador da v1.1.0 sobre a instalação existente.
+Configurações, frases rápidas e histórico são preservados automaticamente.
 
 ### Limitações conhecidas
 
-- Somente Windows 10/11 x64 (Mac/Linux planejado para v1.1)
+- Somente Windows 10/11 x64
 - Instalador sem assinatura de código — aviso do SmartScreen é esperado
-- Auto-update desabilitado nesta versão (planejado para v1.1)
+- Auto-update desabilitado (planejado para v1.2)
 - Clonagem de voz com XTTS v2 requer GPU NVIDIA com CUDA
 
 ### Changelog completo
