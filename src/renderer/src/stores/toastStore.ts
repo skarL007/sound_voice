@@ -48,10 +48,11 @@ export const useToastStore = create<ToastState>((set, get) => ({
     const timer = _timers.get(id)
     if (timer) clearTimeout(timer)
     _timers.delete(id)
-    set((state) => ({
-      toasts: state.toasts.filter((t) => t.id !== id),
-      pausedIds: new Set([...state.pausedIds].filter((pid) => pid !== id)),
-    }))
+    set((state) => {
+      const next = new Set(state.pausedIds)
+      next.delete(id)
+      return { toasts: state.toasts.filter((t) => t.id !== id), pausedIds: next }
+    })
   },
 
   pauseToast: (id) => {
@@ -60,7 +61,11 @@ export const useToastStore = create<ToastState>((set, get) => ({
       clearTimeout(timer)
       _timers.delete(id)
     }
-    set((state) => ({ pausedIds: new Set([...state.pausedIds, id]) }))
+    set((state) => {
+      const next = new Set(state.pausedIds)
+      next.add(id)
+      return { pausedIds: next }
+    })
   },
 
   resumeToast: (id) => {
@@ -69,10 +74,11 @@ export const useToastStore = create<ToastState>((set, get) => ({
 
     const remaining = toast.expiresAt - Date.now()
     if (remaining <= 0) {
-      set((state) => ({
-        toasts: state.toasts.filter((t) => t.id !== id),
-        pausedIds: new Set([...state.pausedIds].filter((pid) => pid !== id)),
-      }))
+      set((state) => {
+        const next = new Set(state.pausedIds)
+        next.delete(id)
+        return { toasts: state.toasts.filter((t) => t.id !== id), pausedIds: next }
+      })
       return
     }
 
@@ -82,8 +88,10 @@ export const useToastStore = create<ToastState>((set, get) => ({
     }, remaining)
     _timers.set(id, timer)
 
-    set((state) => ({
-      pausedIds: new Set([...state.pausedIds].filter((pid) => pid !== id)),
-    }))
+    set((state) => {
+      const next = new Set(state.pausedIds)
+      next.delete(id)
+      return { pausedIds: next }
+    })
   },
 }))

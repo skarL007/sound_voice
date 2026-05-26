@@ -480,14 +480,23 @@ export function registerIpcHandlers(): void {
 
 function getFolderSize(dir: string): number {
   let size = 0
-  const files = readdirSync(dir)
+  let files: string[]
+  try {
+    files = readdirSync(dir)
+  } catch {
+    return 0
+  }
   for (const file of files) {
     const path = join(dir, file)
-    const stat = statSync(path)
-    if (stat.isDirectory()) {
-      size += getFolderSize(path)
-    } else {
-      size += stat.size
+    try {
+      const stat = statSync(path)
+      if (stat.isDirectory()) {
+        size += getFolderSize(path)
+      } else {
+        size += stat.size
+      }
+    } catch {
+      // File deleted between readdir and stat — skip silently
     }
   }
   return size
@@ -495,15 +504,24 @@ function getFolderSize(dir: string): number {
 
 function deleteFolderRecursive(dir: string): void {
   if (!existsSync(dir)) return
-  const files = readdirSync(dir)
+  let files: string[]
+  try {
+    files = readdirSync(dir)
+  } catch {
+    return
+  }
   for (const file of files) {
     const path = join(dir, file)
-    const stat = statSync(path)
-    if (stat.isDirectory()) {
-      deleteFolderRecursive(path)
-    } else {
-      unlinkSync(path)
+    try {
+      const stat = statSync(path)
+      if (stat.isDirectory()) {
+        deleteFolderRecursive(path)
+      } else {
+        unlinkSync(path)
+      }
+    } catch {
+      // Already gone — skip
     }
   }
-  rmdirSync(dir)
+  try { rmdirSync(dir) } catch { /* ignore if already removed */ }
 }
