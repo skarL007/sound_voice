@@ -37,7 +37,13 @@ Atualização de qualidade com novas funcionalidades, auditoria completa de UX/a
 ### Checksum SHA-256
 
 ```
-(disponível após build do instalador)
+29FE2514DC6F55291EE2927A32985FBB2CEF0CA91BE5C32A10E6C3BF59FE8489
+```
+
+Verifique com PowerShell antes de instalar:
+
+```powershell
+(Get-FileHash VoiceLaunch-TTS-Setup-1.1.0.exe -Algorithm SHA256).Hash
 ```
 
 ### Atualização a partir de v1.0.0
