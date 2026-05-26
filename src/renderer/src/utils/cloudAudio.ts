@@ -4,9 +4,10 @@ let currentAudioContext: AudioContext | null = null
 let currentSource: AudioBufferSourceNode | null = null
 let playbackToken = 0
 
-function base64ToBytes(base64: string): Uint8Array {
+function base64ToBytes(base64: string): Uint8Array<ArrayBuffer> {
   const binary = atob(base64)
-  const bytes = new Uint8Array(binary.length)
+  const buf = new ArrayBuffer(binary.length)
+  const bytes = new Uint8Array(buf)
   for (let i = 0; i < binary.length; i += 1) {
     bytes[i] = binary.charCodeAt(i)
   }
@@ -61,7 +62,7 @@ async function tryPlayWithWebAudio(bytes: Uint8Array, deviceId: string | undefin
   const ctx = new AudioContext()
   let decoded: AudioBuffer
   try {
-    const copy = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)
+    const copy = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer
     decoded = await ctx.decodeAudioData(copy)
   } catch (err) {
     console.error('[cloudAudio] decodeAudioData falhou:', err)
@@ -128,16 +129,10 @@ export async function playCloudAudio(audioBase64: string, mimeType = 'audio/webm
   stopCloudAudio()
   const token = ++playbackToken
   const bytes = base64ToBytes(audioBase64)
-  const headHex = Array.from(bytes.slice(0, 8))
-    .map((byte) => byte.toString(16).padStart(2, '0'))
-    .join(' ')
-  console.log(`[cloudAudio] received ${bytes.length} bytes, mime=${mimeType}, head: ${headHex}`)
-
   // Tentativa 1: <audio> com blob URL
   const blob = new Blob([bytes], { type: mimeType })
   const blobUrl = URL.createObjectURL(blob)
   if (await tryPlayWithUrl(blobUrl, mimeType, deviceId, token)) {
-    console.log('[cloudAudio] playback OK via blob URL')
     return
   }
   URL.revokeObjectURL(blobUrl)
@@ -146,14 +141,12 @@ export async function playCloudAudio(audioBase64: string, mimeType = 'audio/webm
   // Tentativa 2: <audio> com data URL (mais permissivo em alguns CSPs)
   const dataUrl = `data:${mimeType};base64,${audioBase64}`
   if (await tryPlayWithUrl(dataUrl, mimeType, deviceId, token)) {
-    console.log('[cloudAudio] playback OK via data URL')
     return
   }
   if (token !== playbackToken) return
 
   // Tentativa 3: Web Audio API — bypassa CSP media-src e da erro especifico se falhar
   if (await tryPlayWithWebAudio(bytes, deviceId, token)) {
-    console.log('[cloudAudio] playback OK via Web Audio API')
     return
   }
 
