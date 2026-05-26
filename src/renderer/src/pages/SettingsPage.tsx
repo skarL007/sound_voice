@@ -3,6 +3,7 @@ import type { BackendStatus } from '../../../shared/types'
 import { useAppStore } from '../stores/appStore'
 import {
   AlertTriangle,
+  BookOpen,
   ChevronRight,
   Contrast,
   Cpu,
@@ -27,6 +28,7 @@ export default function SettingsPage() {
     setLargeFont,
     showExperimentalModels,
     setShowExperimentalModels,
+    setTutorialSeen,
   } = useAppStore()
   const [backendStatus, setBackendStatus] = useState<BackendStatus>({
     running: false,
@@ -314,6 +316,14 @@ export default function SettingsPage() {
           VoiceLaunch TTS e uma ferramenta gratuita e open source de comunicacao assistiva local.
           Ela ajuda quem prefere, precisa ou escolhe transformar texto em voz com rapidez, autonomia e privacidade.
         </p>
+        <button
+          onClick={() => setTutorialSeen(false)}
+          className="btn-secondary inline-flex items-center gap-2 text-sm mb-4"
+          aria-label="Rever tutorial de introducao"
+        >
+          <BookOpen className="w-4 h-4" />
+          Rever tutorial de introducao
+        </button>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
           <div className="panel-muted p-3">
             <span className="text-ink-mute block mb-1">Versao</span>
