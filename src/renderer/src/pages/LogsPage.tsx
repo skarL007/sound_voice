@@ -129,24 +129,34 @@ export default function LogsPage() {
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <button
-          onClick={() => setActiveTab('main')}
-          className={`px-4 py-2 rounded-2xl text-sm font-medium transition-colors ${
-            activeTab === 'main' ? 'btn-primary' : 'btn-secondary'
-          }`}
-          aria-label="Mostrar logs do processo principal"
-        >
-          Main Process
-        </button>
-        <button
-          onClick={() => setActiveTab('python')}
-          className={`px-4 py-2 rounded-2xl text-sm font-medium transition-colors ${
-            activeTab === 'python' ? 'btn-primary' : 'btn-secondary'
-          }`}
-          aria-label="Mostrar logs do backend Python"
-        >
-          Python Backend
-        </button>
+        <div role="tablist" aria-label="Fonte dos logs" className="flex gap-2">
+          <button
+            id="tab-main"
+            role="tab"
+            aria-selected={activeTab === 'main'}
+            aria-controls="tabpanel-logs"
+            tabIndex={activeTab === 'main' ? 0 : -1}
+            onClick={() => setActiveTab('main')}
+            className={`px-4 py-2 rounded-2xl text-sm font-medium transition-colors ${
+              activeTab === 'main' ? 'btn-primary' : 'btn-secondary'
+            }`}
+          >
+            Main Process
+          </button>
+          <button
+            id="tab-python"
+            role="tab"
+            aria-selected={activeTab === 'python'}
+            aria-controls="tabpanel-logs"
+            tabIndex={activeTab === 'python' ? 0 : -1}
+            onClick={() => setActiveTab('python')}
+            className={`px-4 py-2 rounded-2xl text-sm font-medium transition-colors ${
+              activeTab === 'python' ? 'btn-primary' : 'btn-secondary'
+            }`}
+          >
+            Python Backend
+          </button>
+        </div>
 
         <div className="flex items-center gap-1 ml-2">
           {(['info', 'warn', 'error'] as const).map((level) => (
@@ -180,6 +190,10 @@ export default function LogsPage() {
       </div>
 
       <div
+        id="tabpanel-logs"
+        role="tabpanel"
+        aria-labelledby={activeTab === 'main' ? 'tab-main' : 'tab-python'}
+        tabIndex={0}
         ref={scrollRef}
         className="hud-frame flex-1 p-4 overflow-auto font-mono text-xs leading-relaxed"
       >

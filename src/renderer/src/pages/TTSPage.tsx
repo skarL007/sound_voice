@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   BookmarkPlus,
   Cloud,
@@ -22,6 +22,7 @@ import CloudVoicePicker from '../components/CloudVoicePicker'
 import AlertBox from '../components/AlertBox'
 import { useCommunicationSettings } from '../hooks/useCommunicationSettings'
 import { useAppStore } from '../stores/appStore'
+import { useShallow } from 'zustand/react/shallow'
 import { notify } from '../utils/notify'
 import { toast } from '../utils/toast'
 import { buildHistoryItem } from '../utils/communicationState'
@@ -37,10 +38,23 @@ export default function TTSPage() {
     showExperimentalModels,
     voiceSource,
     setVoiceSource,
-    cloudVoice: storedCloudVoiceShortName,
-    setCloudVoice: setStoredCloudVoice,
+    storedCloudVoiceShortName,
+    setStoredCloudVoice,
     cableDeviceId,
-  } = useAppStore()
+  } = useAppStore(
+    useShallow((s) => ({
+      defaultModelId: s.defaultModelId,
+      defaultSpeed: s.defaultSpeed,
+      setDefaultModelId: s.setDefaultModelId,
+      setDefaultSpeed: s.setDefaultSpeed,
+      showExperimentalModels: s.showExperimentalModels,
+      voiceSource: s.voiceSource,
+      setVoiceSource: s.setVoiceSource,
+      storedCloudVoiceShortName: s.cloudVoice,
+      setStoredCloudVoice: s.setCloudVoice,
+      cableDeviceId: s.cableDeviceId,
+    })),
+  )
   const {
     text,
     setText,
@@ -64,10 +78,10 @@ export default function TTSPage() {
   const [showDiscordBanner, setShowDiscordBanner] = useState(false)
   const [cloudVoice, setLocalCloudVoice] = useState<CloudVoice | null>(null)
 
-  const handleCloudVoiceSelect = (voice: CloudVoice) => {
+  const handleCloudVoiceSelect = useCallback((voice: CloudVoice) => {
     setLocalCloudVoice(voice)
     setStoredCloudVoice(voice.ShortName)
-  }
+  }, [setStoredCloudVoice])
   const textAreaRef = useRef<HTMLTextAreaElement>(null)
   const cancelRef = useRef(false)
   const isSpeakingRef = useRef(false)
@@ -135,21 +149,21 @@ export default function TTSPage() {
     }
   }
 
-  const handleModelChange = (newModelId: string) => {
+  const handleModelChange = useCallback((newModelId: string) => {
     setModelId(newModelId)
     setDefaultModelId(newModelId)
-  }
+  }, [setDefaultModelId])
 
-  const handleSpeedChange = (newSpeed: number) => {
+  const handleSpeedChange = useCallback((newSpeed: number) => {
     setSpeed(newSpeed)
     setDefaultSpeed(newSpeed)
-  }
+  }, [setDefaultSpeed])
 
-  const saveCurrentPhrase = () => {
+  const saveCurrentPhrase = useCallback(() => {
     if (!text.trim()) return
     addQuickPhrase(text)
     toast('Frase salva', 'A frase atual foi adicionada aos atalhos rapidos.', 'success')
-  }
+  }, [text, addQuickPhrase])
 
   const speak = async (textToSpeak: string) => {
     if (!textToSpeak.trim()) return
