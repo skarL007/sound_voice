@@ -46,6 +46,8 @@ export default function VirtualKeyboard({ onKeyPress, onBackspace, onEnter, onSp
         onClick={() => setIsOpen(true)}
         className="btn-secondary flex items-center gap-2 text-sm"
         title="Abrir teclado virtual"
+        aria-label="Abrir teclado virtual"
+        aria-expanded={false}
       >
         <Keyboard className="w-4 h-4" />
         Teclado Virtual
@@ -61,29 +63,34 @@ export default function VirtualKeyboard({ onKeyPress, onBackspace, onEnter, onSp
   return (
     <div className="hud-frame p-3 space-y-2 animate-lift-in">
       <div className="flex items-center justify-between mb-1">
-        <span className="text-xs font-medium text-ink-soft uppercase tracking-wider">Teclado Virtual</span>
+        <span className="text-xs font-medium text-ink-soft uppercase tracking-wider" id="vkb-label">Teclado Virtual</span>
         <button
           onClick={() => setIsOpen(false)}
           className="p-1 rounded text-ink-soft hover:bg-brand-500/15 hover:text-ink-strong transition-colors"
           title="Fechar teclado"
+          aria-label="Fechar teclado virtual"
         >
           <X className="w-4 h-4" />
         </button>
       </div>
 
-      <div className="space-y-1.5">
+      <div className="space-y-1.5" role="group" aria-label="Teclas de caractere">
         {rows.map((row, ri) => (
           <div key={ri} className="flex gap-1 justify-center">
-            {row.map((key) => (
-              <button
-                key={key}
-                onClick={() => handleKey(key)}
-                className={KEY_BASE_CLASS}
-                style={KEY_BASE_STYLE}
-              >
-                {isShift ? key.toUpperCase() : key}
-              </button>
-            ))}
+            {row.map((key) => {
+              const label = isShift ? key.toUpperCase() : key
+              return (
+                <button
+                  key={key}
+                  onClick={() => handleKey(key)}
+                  className={KEY_BASE_CLASS}
+                  style={KEY_BASE_STYLE}
+                  aria-label={label}
+                >
+                  {label}
+                </button>
+              )
+            })}
           </div>
         ))}
       </div>
@@ -95,6 +102,8 @@ export default function VirtualKeyboard({ onKeyPress, onBackspace, onEnter, onSp
             isShift ? 'btn-primary' : ''
           }`}
           style={isShift ? undefined : KEY_BASE_STYLE}
+          aria-label={isShift ? 'Shift ativado' : 'Shift desativado'}
+          aria-pressed={isShift}
         >
           Shift
         </button>

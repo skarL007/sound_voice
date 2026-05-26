@@ -62,6 +62,18 @@ export default function ClonePage() {
     }
   }, [])
 
+  // Escape fecha/cancela o wizard quando estiver no meio do fluxo
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && wizard.step > 1 && !wizard.isProcessing) {
+        e.preventDefault()
+        resetWizard()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [wizard.step, wizard.isProcessing])
+
   const cloneCapability = getCloneCapability(hardware)
 
   const loadClonedVoices = async () => {

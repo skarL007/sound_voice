@@ -156,15 +156,18 @@ export default function TTSPage() {
       return
     }
 
-    if (isSpeaking) {
+    // Usa ref para evitar race condition: estado React ainda pode não ter atualizado
+    if (isSpeakingRef.current) {
       cancelRef.current = true
       await window.electronAPI.stopAudio()
       stopCloudAudio()
       setIsSpeaking(false)
+      isSpeakingRef.current = false
       return
     }
 
     cancelRef.current = false
+    isSpeakingRef.current = true
     setIsSpeaking(true)
 
     try {
@@ -226,6 +229,7 @@ export default function TTSPage() {
       notify('Erro na fala', msg)
       toast('Erro na fala', msg, 'error')
     } finally {
+      isSpeakingRef.current = false
       setIsSpeaking(false)
       textAreaRef.current?.focus()
     }
@@ -376,8 +380,9 @@ export default function TTSPage() {
       {voiceSource === 'local' ? (
         <div className="hud-frame mb-4 flex flex-wrap items-center gap-4 p-4">
           <div className="flex items-center gap-3">
-            <label className="text-xs uppercase tracking-[0.18em] text-ink-mute">Modelo</label>
+            <label htmlFor="tts-model" className="text-xs uppercase tracking-[0.18em] text-ink-mute">Modelo</label>
             <select
+              id="tts-model"
               value={modelId}
               onChange={(e) => handleModelChange(e.target.value)}
               className="input-field w-56 py-2 text-sm"

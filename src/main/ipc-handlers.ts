@@ -438,8 +438,10 @@ export function registerIpcHandlers(): void {
   // Desktop notifications
   ipcMain.on('notification:show', (_, title: string, body: string) => {
     const MAX_LEN = 200
-    const safeTitle = title.slice(0, MAX_LEN)
-    const safeBody = body.slice(0, MAX_LEN)
+    // Strip HTML tags to prevent spoofing via injected markup
+    const stripHtml = (s: string) => String(s).replace(/<[^>]*>/g, '').replace(/&[a-z]+;/gi, ' ')
+    const safeTitle = stripHtml(title).slice(0, MAX_LEN)
+    const safeBody = stripHtml(body).slice(0, MAX_LEN)
     if (Notification.isSupported()) {
       new Notification({
         title: safeTitle,
