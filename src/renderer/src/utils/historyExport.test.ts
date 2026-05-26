@@ -37,7 +37,7 @@ describe('downloadCsv', () => {
   it('creates and immediately revokes an object URL', () => {
     const urls: string[] = []
     const revoked: string[] = []
-    globalThis.URL.createObjectURL = (blob) => {
+    globalThis.URL.createObjectURL = (_blob) => {
       const url = `blob:mock-${urls.length}`
       urls.push(url)
       return url
@@ -46,7 +46,8 @@ describe('downloadCsv', () => {
 
     const clicks: string[] = []
     const origCreate = document.createElement.bind(document)
-    document.createElement = (tag: string) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ;(document as any).createElement = (tag: string) => {
       const el = origCreate(tag)
       if (tag === 'a') {
         Object.defineProperty(el, 'click', { value: () => clicks.push((el as HTMLAnchorElement).href) })

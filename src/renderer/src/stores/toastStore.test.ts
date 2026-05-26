@@ -38,7 +38,7 @@ describe('toastStore', () => {
   })
 
   it('pauseToast stops the auto-dismiss timer', () => {
-    useToastStore.getState().addToast({ title: 'T', message: 'M', type: 'warn', duration: 2000 })
+    useToastStore.getState().addToast({ title: 'T', message: 'M', type: 'warning', duration: 2000 })
     const id = useToastStore.getState().toasts[0].id
     vi.advanceTimersByTime(1000)   // consume half the duration
     useToastStore.getState().pauseToast(id)

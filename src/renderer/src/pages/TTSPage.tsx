@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   BookmarkPlus,
   Cloud,
+  Download,
   HardDrive,
   History,
   Keyboard,
@@ -28,6 +29,7 @@ import { toast } from '../utils/toast'
 import { buildHistoryItem } from '../utils/communicationState'
 import { isModelVisibleInMvp } from '../utils/modelSupport'
 import { playCloudAudio, stopCloudAudio } from '../utils/cloudAudio'
+import { buildCsv, downloadCsv } from '../utils/historyExport'
 
 export default function TTSPage() {
   const {
@@ -164,6 +166,22 @@ export default function TTSPage() {
     addQuickPhrase(text)
     toast('Frase salva', 'A frase atual foi adicionada aos atalhos rapidos.', 'success')
   }, [text, addQuickPhrase])
+
+  const exportHistory = useCallback(() => {
+    if (history.length === 0) {
+      toast('Historico vazio', 'Nao ha frases no historico para exportar.', 'info')
+      return
+    }
+    const entries = history.map((item) => ({
+      timestamp: item.timestamp,
+      voice: item.modelId,
+      text: item.text,
+    }))
+    const csv = buildCsv(entries)
+    const date = new Date().toISOString().slice(0, 10)
+    downloadCsv(csv, `historico-tts-${date}.csv`)
+    toast('CSV exportado', `${entries.length} frases exportadas com sucesso.`, 'success')
+  }, [history])
 
   const speak = async (textToSpeak: string) => {
     if (!textToSpeak.trim()) return
@@ -322,6 +340,16 @@ export default function TTSPage() {
             >
               <History className="h-4 w-4" />
               {showHistory ? 'Ocultar historico' : 'Abrir historico'}
+            </button>
+            <button
+              onClick={exportHistory}
+              disabled={history.length === 0}
+              className="btn-secondary inline-flex items-center gap-2 text-sm"
+              title="Exportar historico como CSV"
+              aria-label="Exportar historico como CSV"
+            >
+              <Download className="h-4 w-4" />
+              Exportar CSV
             </button>
           </div>
         </div>
