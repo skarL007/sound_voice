@@ -20,6 +20,7 @@ import type { HardwareInfo, ModelInfo } from '../../../shared/types'
 import { useAppStore } from '../stores/appStore'
 import { toast } from '../utils/toast'
 import { getModelLevel, getRecommendedSetup, isModelVisibleInMvp } from '../utils/modelSupport'
+import AlertBox from '../components/AlertBox'
 import CloudVoicesTab from '../components/voices/CloudVoicesTab'
 import ClonedVoicesTab from '../components/voices/ClonedVoicesTab'
 
@@ -246,18 +247,10 @@ export default function ModelsPage() {
       )}
 
       {hardware?.gpuVendor === 'amd' && (
-        <div
-          className="flex items-start gap-3 p-4 rounded-2xl"
-          style={{ background: 'rgba(255,193,90,0.10)', border: '1px solid rgba(255,193,90,0.30)' }}
-        >
-          <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--vl-state-warn)' }} />
-          <div>
-            <p className="text-sm font-medium" style={{ color: '#FFE2A8' }}>GPU AMD detectada</p>
-            <p className="text-sm mt-1 text-ink-body">
-              O caminho garantido deste MVP local continua sendo Piper e Kokoro. Modelos pesados em PyTorch ficam fora do fluxo principal ate validacao pratica do runtime.
-            </p>
-          </div>
-        </div>
+        <AlertBox severity="warn" title="GPU AMD detectada">
+          O caminho garantido deste MVP local continua sendo Piper e Kokoro. Modelos pesados em PyTorch
+          ficam fora do fluxo principal em AMD ate validacao pratica do runtime.
+        </AlertBox>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

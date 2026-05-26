@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import {
-  AlertCircle,
   BookmarkPlus,
   Cloud,
   HardDrive,
   History,
   Keyboard,
+  Loader2,
   Mic,
   MonitorUp,
   Pin,
@@ -18,6 +18,7 @@ import type { CloudVoice, HardwareInfo, ModelInfo } from '../../../shared/types'
 import VirtualKeyboard from '../components/VirtualKeyboard'
 import DiscordReadyBanner from '../components/DiscordReadyBanner'
 import CloudVoicePicker from '../components/CloudVoicePicker'
+import AlertBox from '../components/AlertBox'
 import { useCommunicationSettings } from '../hooks/useCommunicationSettings'
 import { useAppStore } from '../stores/appStore'
 import { notify } from '../utils/notify'
@@ -54,6 +55,7 @@ export default function TTSPage() {
   const [voiceId, setVoiceId] = useState('')
   const [speed, setSpeed] = useState(defaultSpeed)
   const [isSpeaking, setIsSpeaking] = useState(false)
+  const [isSynthesizing, setIsSynthesizing] = useState(false)
   const [virtualMicEnabled, setVirtualMicEnabled] = useState(false)
   const [availableModels, setAvailableModels] = useState<ModelInfo[]>([])
   const [hardware, setHardware] = useState<HardwareInfo | null>(null)
@@ -169,6 +171,7 @@ export default function TTSPage() {
     cancelRef.current = false
     isSpeakingRef.current = true
     setIsSpeaking(true)
+    setIsSynthesizing(true)
 
     try {
       if (voiceSource === 'cloud' && cloudVoice) {
@@ -178,6 +181,7 @@ export default function TTSPage() {
           speed,
         })
         if (cancelRef.current) return
+        setIsSynthesizing(false)
         if (response.success && response.audioBase64) {
           await playCloudAudio(
             response.audioBase64,
@@ -205,6 +209,7 @@ export default function TTSPage() {
           speed,
         })
         if (cancelRef.current) return
+        setIsSynthesizing(false)
         if (response.success && response.audioPath) {
           await window.electronAPI.playAudio(response.audioPath)
           if (cancelRef.current) return
@@ -231,6 +236,7 @@ export default function TTSPage() {
     } finally {
       isSpeakingRef.current = false
       setIsSpeaking(false)
+      setIsSynthesizing(false)
       textAreaRef.current?.focus()
     }
   }
@@ -316,9 +322,9 @@ export default function TTSPage() {
             <Mic className="h-3.5 w-3.5" />
             {virtualMicEnabled ? 'Mic virtual ligado' : 'Mic virtual desligado'}
           </span>
-          <span className={`status-pill ${isSpeaking ? 'status-pill--warn' : 'status-pill--ready'}`}>
-            <MonitorUp className="h-3.5 w-3.5" />
-            {isSpeaking ? 'Falando agora' : canSpeak ? 'Pronto para falar' : 'Aguardando voz'}
+          <span className={`status-pill ${isSynthesizing ? 'status-pill--live' : isSpeaking ? 'status-pill--warn' : 'status-pill--ready'}`}>
+            {isSynthesizing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MonitorUp className="h-3.5 w-3.5" />}
+            {isSynthesizing ? 'Gerando audio...' : isSpeaking ? 'Falando agora' : canSpeak ? 'Pronto para falar' : 'Aguardando voz'}
           </span>
           <span className={`status-pill ${keepTextAfterSpeak ? 'status-pill--live' : 'status-pill--ready'}`}>
             <Pin className="h-3.5 w-3.5" />
@@ -358,23 +364,13 @@ export default function TTSPage() {
       </div>
 
       {voiceSource === 'local' && noReadyModel && (
-        <div
-          className="mb-4 flex items-start gap-3 p-4 rounded-2xl"
-          style={{ background: 'rgba(255,193,90,0.10)', border: '1px solid rgba(255,193,90,0.30)' }}
-        >
-          <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--vl-state-warn)' }} />
-          <div>
-            <p className="text-sm font-medium" style={{ color: '#FFE2A8' }}>Nenhum modelo local pronto para uso</p>
-            <p className="text-sm mt-1 text-ink-body">
-              Instale o Piper na aba Modelos para o fluxo offline, ou volte para <strong>Online (Edge TTS)</strong> para falar agora sem instalacao.
-            </p>
-            {hardware?.gpuVendor?.trim().toLowerCase() === 'amd' && (
-              <p className="text-sm mt-2 text-ink-body">
-                Em AMD a trilha local recomendada continua sendo Piper e Kokoro.
-              </p>
-            )}
-          </div>
-        </div>
+        <AlertBox severity="warn" title="Nenhum modelo local pronto para uso" className="mb-4">
+          Instale o Piper na aba Modelos para o fluxo offline, ou volte para{' '}
+          <strong>Online (Edge TTS)</strong> para falar agora sem instalacao.
+          {hardware?.gpuVendor?.trim().toLowerCase() === 'amd' && (
+            <p className="mt-2">Em AMD a trilha local recomendada continua sendo Piper e Kokoro.</p>
+          )}
+        </AlertBox>
       )}
 
       {voiceSource === 'local' ? (
@@ -550,13 +546,21 @@ export default function TTSPage() {
                   onClick={() => void speak(text)}
                   disabled={(!isSpeaking && !text.trim()) || speakDisabled}
                   className={`btn-primary ${canSpeak && text.trim() ? 'btn-primary--armed' : ''} inline-flex min-w-[158px] items-center justify-center gap-2 px-5 py-3 text-sm`}
-                  aria-label={isSpeaking ? 'Parar de falar' : 'Falar texto'}
+                  aria-label={isSpeaking ? (isSynthesizing ? 'Gerando audio...' : 'Parar de falar') : 'Falar texto'}
+                  aria-busy={isSynthesizing}
                 >
                   {isSpeaking ? (
-                    <>
-                      <Square className="w-4 h-4" />
-                      Parar
-                    </>
+                    isSynthesizing ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Gerando...
+                      </>
+                    ) : (
+                      <>
+                        <Square className="w-4 h-4" />
+                        Parar
+                      </>
+                    )
                   ) : (
                     <>
                       <Send className="w-4 h-4" />

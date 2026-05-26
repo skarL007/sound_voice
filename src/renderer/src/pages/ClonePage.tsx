@@ -12,6 +12,7 @@ import {
   Wand2,
 } from 'lucide-react'
 import type { HardwareInfo } from '../../../shared/types'
+import AlertBox from '../components/AlertBox'
 import { notify } from '../utils/notify'
 import { toast } from '../utils/toast'
 import { getCloneCapability } from '../utils/modelSupport'
@@ -215,19 +216,13 @@ export default function ClonePage() {
       </p>
 
       {!cloneCapability.enabled && (
-        <div
-          className="flex items-start gap-3 p-4 rounded-2xl"
-          style={{ background: 'rgba(255,193,90,0.10)', border: '1px solid rgba(255,193,90,0.30)' }}
-        >
-          <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--vl-state-warn)' }} />
-          <div>
-            <p className="text-sm font-medium" style={{ color: '#FFE2A8' }}>Clonagem avancada indisponivel neste runtime</p>
-            <p className="text-sm mt-1 text-ink-body">{cloneCapability.reason}</p>
-            <p className="text-sm mt-2 text-ink-body">
-              Primeiro valide a fala local com Piper ou Kokoro. Se quiser clonagem, use uma maquina com NVIDIA/CUDA funcional.
-            </p>
-          </div>
-        </div>
+        <AlertBox severity="warn" title="Clonagem avancada indisponivel neste runtime">
+          {cloneCapability.reason}
+          <p className="mt-2">
+            Primeiro valide a fala local com Piper ou Kokoro. Se quiser clonagem, use uma maquina com
+            NVIDIA/CUDA funcional.
+          </p>
+        </AlertBox>
       )}
 
       <div className="hud-frame p-6">

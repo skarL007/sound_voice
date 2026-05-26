@@ -43,11 +43,12 @@ import { toast } from './utils/toast'
 import { playCloudAudio } from './utils/cloudAudio'
 import type { BackendStatus, ModelInfo } from '../../shared/types'
 
+// Ordem segue a jornada do usuário: começa → fala → escolhe voz → cria atalho → clona
 const navItems = [
   { to: '/', icon: Home, label: 'Início' },
   { to: '/tts', icon: Volume2, label: 'Falar' },
-  { to: '/shortcuts', icon: Keyboard, label: 'Atalhos' },
   { to: '/models', icon: Download, label: 'Vozes' },
+  { to: '/shortcuts', icon: Keyboard, label: 'Atalhos' },
   { to: '/clone', icon: UserCircle, label: 'Clonar' },
   { to: '/settings', icon: Settings, label: 'Ajustes' },
   { to: '/logs', icon: Terminal, label: 'Logs' },
