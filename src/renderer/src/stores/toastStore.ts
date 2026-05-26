@@ -12,17 +12,19 @@ export interface Toast {
 interface ToastState {
   toasts: Toast[]
   pausedIds: Set<string>
-  timers: Map<string, ReturnType<typeof setTimeout>>
   addToast: (toast: Omit<Toast, 'id' | 'expiresAt'>) => void
   removeToast: (id: string) => void
   pauseToast: (id: string) => void
   resumeToast: (id: string) => void
 }
 
+// Module-level timer map — kept outside Zustand state to avoid serialization
+// issues with devtools and avoid triggering unnecessary re-renders.
+const _timers = new Map<string, ReturnType<typeof setTimeout>>()
+
 export const useToastStore = create<ToastState>((set, get) => ({
   toasts: [],
   pausedIds: new Set(),
-  timers: new Map(),
 
   addToast: (toast) => {
     const id = Math.random().toString(36).substring(2, 9)
@@ -36,16 +38,16 @@ export const useToastStore = create<ToastState>((set, get) => ({
     if (duration !== 0) {
       const timer = setTimeout(() => {
         set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) }))
-        get().timers.delete(id)
+        _timers.delete(id)
       }, duration)
-      get().timers.set(id, timer)
+      _timers.set(id, timer)
     }
   },
 
   removeToast: (id) => {
-    const timer = get().timers.get(id)
+    const timer = _timers.get(id)
     if (timer) clearTimeout(timer)
-    get().timers.delete(id)
+    _timers.delete(id)
     set((state) => ({
       toasts: state.toasts.filter((t) => t.id !== id),
       pausedIds: new Set([...state.pausedIds].filter((pid) => pid !== id)),
@@ -53,10 +55,10 @@ export const useToastStore = create<ToastState>((set, get) => ({
   },
 
   pauseToast: (id) => {
-    const timer = get().timers.get(id)
+    const timer = _timers.get(id)
     if (timer) {
       clearTimeout(timer)
-      get().timers.delete(id)
+      _timers.delete(id)
     }
     set((state) => ({ pausedIds: new Set([...state.pausedIds, id]) }))
   },
@@ -76,9 +78,9 @@ export const useToastStore = create<ToastState>((set, get) => ({
 
     const timer = setTimeout(() => {
       set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) }))
-      get().timers.delete(id)
+      _timers.delete(id)
     }, remaining)
-    get().timers.set(id, timer)
+    _timers.set(id, timer)
 
     set((state) => ({
       pausedIds: new Set([...state.pausedIds].filter((pid) => pid !== id)),

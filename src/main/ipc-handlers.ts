@@ -6,7 +6,7 @@ import { detectHardware } from './hardware-detector'
 import { downloadModelWithProgress, cancelDownload } from './download-manager'
 import { loadSettings, saveSettings } from './settings-store'
 import { logMain, getLogs, clearLogs } from './logger'
-import { join } from 'path'
+import { join, relative, isAbsolute, resolve } from 'path'
 import { existsSync, readdirSync, statSync, unlinkSync, rmdirSync, readFileSync, mkdirSync, writeFileSync } from 'fs'
 import { validateModelId, validateAudioExtension, isHttpUrl } from './security-utils'
 import { getBundledVBCableInstallerCandidates, isAutoUpdateEnabled } from './app-config'
@@ -355,7 +355,7 @@ export function registerIpcHandlers(): void {
     if (installerPath) {
       logMain('INFO', `Launching VB-Cable installer: ${installerPath}`)
       try {
-        spawn(installerPath, [], { detached: true, shell: true })
+        spawn(installerPath, [], { detached: true, shell: false })
         return { success: true, launched: true }
       } catch (e) {
         logMain('ERROR', `Failed to launch VB-Cable installer: ${e}`)
@@ -384,8 +384,9 @@ export function registerIpcHandlers(): void {
     if (!existsSync(tempDir)) mkdirSync(tempDir, { recursive: true })
     const fileName = `clone_${Date.now()}.${cleanExt}`
     const filePath = join(tempDir, fileName)
-    const resolvedPath = join(filePath) // normalize
-    if (!resolvedPath.startsWith(tempDir)) {
+    const resolvedPath = resolve(filePath)
+    const rel = relative(tempDir, resolvedPath)
+    if (rel.startsWith('..') || isAbsolute(rel)) {
       throw new Error('Path escape detected')
     }
     const buffer = Buffer.from(arrayBuffer)

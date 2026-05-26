@@ -18,7 +18,6 @@ import {
 } from 'lucide-react'
 import type { HardwareInfo, ModelInfo } from '../../../shared/types'
 import { useAppStore } from '../stores/appStore'
-import { notify } from '../utils/notify'
 import { toast } from '../utils/toast'
 import { getModelLevel, getRecommendedSetup, isModelVisibleInMvp } from '../utils/modelSupport'
 import CloudVoicesTab from '../components/voices/CloudVoicesTab'
@@ -58,12 +57,10 @@ export default function ModelsPage() {
       if (data.success) {
         setInstalled((prev) => new Set(prev).add(data.modelId))
         const msg = `O modelo ${data.modelId} foi instalado com sucesso.`
-        notify('Download concluido', msg)
         toast('Download concluido', msg, 'success')
         loadModels()
       } else {
         const msg = `Falha ao baixar o modelo ${data.modelId}: ${data.error || 'Erro desconhecido'}`
-        notify('Erro no download', msg)
         toast('Erro no download', msg, 'error')
       }
     })
@@ -281,11 +278,13 @@ export default function ModelsPage() {
           </div>
         )}
         {visibleModels.length === 0 && models.length > 0 && (
-          <div className="col-span-full">
-            <div className="flex flex-col items-center gap-3 py-10 text-center">
-              {[0, 1].map((i) => (
-                <div key={i} className="skeleton-pulse h-24 w-full max-w-sm" />
-              ))}
+          <div className="col-span-full hud-frame flex flex-col items-center gap-4 py-12 text-center">
+            <AlertCircle className="w-8 h-8" style={{ color: 'var(--vl-ink-mute)' }} />
+            <div>
+              <p className="text-sm font-medium text-ink-strong">Nenhum modelo disponível para o seu hardware</p>
+              <p className="text-sm text-ink-soft mt-1 max-w-xs">
+                Ative &quot;Mostrar modelos experimentais&quot; em Configurações para ver todos os modelos registrados.
+              </p>
             </div>
           </div>
         )}

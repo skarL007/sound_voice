@@ -1,10 +1,11 @@
+import type { ReactElement } from 'react'
 import { useToastStore } from '../stores/toastStore'
 import { useAppStore } from '../stores/appStore'
 import { CheckCircle2, AlertCircle, Info, AlertTriangle, X } from 'lucide-react'
 
 type ToastType = 'success' | 'error' | 'info' | 'warning'
 
-const iconMap: Record<ToastType, JSX.Element> = {
+const iconMap: Record<ToastType, ReactElement> = {
   success: <CheckCircle2 className="w-5 h-5" style={{ color: 'var(--vl-state-success)' }} />,
   error: <AlertCircle className="w-5 h-5" style={{ color: 'var(--vl-state-error)' }} />,
   info: <Info className="w-5 h-5" style={{ color: 'var(--vl-state-live)' }} />,

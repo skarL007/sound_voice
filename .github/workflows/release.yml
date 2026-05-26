@@ -72,7 +72,7 @@ jobs:
         with:
           name: VoiceLaunch TTS ${{ github.ref_name }}
           body_path: .github/RELEASE_NOTES.md
-          draft: true
+          draft: false
           prerelease: false
           files: |
             dist/*.exe

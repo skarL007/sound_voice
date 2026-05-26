@@ -13,7 +13,6 @@ import {
   Zap,
 } from 'lucide-react'
 import type { HardwareInfo } from '../../../shared/types'
-import { getRecommendedSetup } from '../utils/modelSupport'
 import { getHardwarePlaybook } from '../utils/hardwarePlaybook'
 
 type Tier = 'S' | 'A' | 'B' | 'C'
@@ -65,7 +64,6 @@ export default function DashboardPage() {
   }
 
   const tierMeta = tierMap[hardware.recommendedTier] || tierMap.cpu
-  const recommendation = getRecommendedSetup(hardware)
   const playbook = getHardwarePlaybook(hardware)
   const gpuAccel = hardware.isCudaAvailable
     ? `NVIDIA CUDA ${hardware.cudaVersion}`

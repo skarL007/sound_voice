@@ -3,7 +3,6 @@ import { HashRouter, Routes, Route, NavLink } from 'react-router-dom'
 import {
   AlertTriangle,
   Mic,
-  Cpu,
   Settings,
   UserCircle,
   Volume2,
@@ -21,9 +20,7 @@ import {
   ChevronDown,
   Sparkles,
   Activity,
-  Zap,
   Keyboard,
-  PlayCircle,
 } from 'lucide-react'
 
 import DashboardPage from './pages/DashboardPage'

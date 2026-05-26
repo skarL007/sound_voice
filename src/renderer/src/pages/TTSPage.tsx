@@ -14,7 +14,7 @@ import {
   Trash2,
   Volume2,
 } from 'lucide-react'
-import type { CloudVoice, HardwareInfo, ModelInfo, VoiceSource } from '../../../shared/types'
+import type { CloudVoice, HardwareInfo, ModelInfo } from '../../../shared/types'
 import VirtualKeyboard from '../components/VirtualKeyboard'
 import DiscordReadyBanner from '../components/DiscordReadyBanner'
 import CloudVoicePicker from '../components/CloudVoicePicker'
@@ -439,6 +439,7 @@ export default function TTSPage() {
             </div>
             <div className="flex items-center gap-3">
               <input
+                id="tts-speed-cloud"
                 type="range"
                 min={0.5}
                 max={2.0}

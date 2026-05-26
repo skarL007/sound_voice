@@ -15,7 +15,7 @@ import {
 } from 'lucide-react'
 import { useAppStore } from '../stores/appStore'
 import DiscordVRChatGuide from '../components/DiscordVRChatGuide'
-import { playCloudAudio, stopCloudAudio } from '../utils/cloudAudio'
+import { playCloudAudio } from '../utils/cloudAudio'
 import { toast } from '../utils/toast'
 import {
   HOTKEY_SLOTS,

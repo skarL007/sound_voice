@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Cloud, Globe, Loader2, Search, Volume2 } from 'lucide-react'
+import { Cloud, Globe, Search, Volume2 } from 'lucide-react'
 import type { CloudVoice } from '../../../shared/types'
 import { useCloudVoices } from '../hooks/useCloudVoices'
 import {

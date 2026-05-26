@@ -17,7 +17,9 @@
     "dist": "npm run build && electron-builder",
     "dist:win": "npm run build && electron-builder --win",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui",
+    "type-check": "tsc --noEmit",
     "postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
@@ -35,7 +37,7 @@
     "@vitejs/plugin-react": "^4.3.4",
     "@vitest/ui": "^4.1.6",
     "autoprefixer": "^10.4.20",
-    "electron": "^35.0.0",
+    "electron": "^36.0.0",
     "electron-builder": "^25.1.8",
     "electron-vite": "^3.0.0",
     "lucide-react": "^0.475.0",

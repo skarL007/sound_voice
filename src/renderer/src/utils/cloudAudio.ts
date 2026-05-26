@@ -36,7 +36,7 @@ function trackTeardown(audio: HTMLAudioElement, url: string | null, token: numbe
   audio.addEventListener('error', teardown)
 }
 
-async function tryPlayWithUrl(url: string, mimeType: string, deviceId: string | undefined, token: number): Promise<boolean> {
+async function tryPlayWithUrl(url: string, deviceId: string | undefined, token: number): Promise<boolean> {
   const audio = new Audio(url)
   audio.preload = 'auto'
   await attachToAudio(audio, deviceId)
@@ -50,8 +50,7 @@ async function tryPlayWithUrl(url: string, mimeType: string, deviceId: string | 
   try {
     await audio.play()
     return true
-  } catch (err) {
-    console.warn(`[cloudAudio] play() falhou para ${mimeType}:`, err)
+  } catch {
     return false
   }
 }
@@ -64,8 +63,7 @@ async function tryPlayWithWebAudio(bytes: Uint8Array, deviceId: string | undefin
   try {
     const copy = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer
     decoded = await ctx.decodeAudioData(copy)
-  } catch (err) {
-    console.error('[cloudAudio] decodeAudioData falhou:', err)
+  } catch {
     await ctx.close().catch(() => undefined)
     return false
   }
@@ -103,8 +101,7 @@ async function tryPlayWithWebAudio(bytes: Uint8Array, deviceId: string | undefin
       await audio.play()
       source.start()
       return true
-    } catch (err) {
-      console.error('[cloudAudio] play() do MediaStream falhou:', err)
+    } catch {
       await ctx.close().catch(() => undefined)
       return false
     }
@@ -132,25 +129,18 @@ export async function playCloudAudio(audioBase64: string, mimeType = 'audio/webm
   // Tentativa 1: <audio> com blob URL
   const blob = new Blob([bytes], { type: mimeType })
   const blobUrl = URL.createObjectURL(blob)
-  if (await tryPlayWithUrl(blobUrl, mimeType, deviceId, token)) {
+  if (await tryPlayWithUrl(blobUrl, deviceId, token)) {
     return
   }
   URL.revokeObjectURL(blobUrl)
   if (token !== playbackToken) return
 
-  // Tentativa 2: <audio> com data URL (mais permissivo em alguns CSPs)
-  const dataUrl = `data:${mimeType};base64,${audioBase64}`
-  if (await tryPlayWithUrl(dataUrl, mimeType, deviceId, token)) {
-    return
-  }
-  if (token !== playbackToken) return
-
-  // Tentativa 3: Web Audio API — bypassa CSP media-src e da erro especifico se falhar
+  // Tentativa 2: Web Audio API — bypassa CSP media-src e da erro especifico se falhar
   if (await tryPlayWithWebAudio(bytes, deviceId, token)) {
     return
   }
 
-  throw new Error('Nao foi possivel reproduzir o audio: todas as estrategias falharam. Abra DevTools para detalhes.')
+  throw new Error('Nao foi possivel reproduzir o audio: todas as estrategias falharam.')
 }
 
 export function stopCloudAudio(): void {

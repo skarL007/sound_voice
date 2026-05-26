@@ -5,7 +5,6 @@ import {
   ArrowRight,
   CheckCircle2,
   Cloud,
-  Cpu,
   Download,
   Headphones,
   Keyboard,
@@ -167,8 +166,6 @@ export default function OnboardingTutorial() {
     }
   }, [isOpen, stepIndex, step])
 
-  if (!isOpen) return null
-
   const FOCUSABLE = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
   function getFocusable(root: HTMLElement | null): Element[] {
     return root ? Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE)) : []
@@ -210,6 +207,8 @@ export default function OnboardingTutorial() {
   }
 
   const trackHardware = hardware ? `${hardware.gpuVendor.toUpperCase()} · ${hardware.ramGB} GB` : 'Detectando hardware...'
+
+  if (!isOpen) return null
 
   return (
     <div
