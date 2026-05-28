@@ -6,139 +6,122 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Primary brand: roxo neon gamer
+        // Brand: indigo/violeta refinado — só para ação primária + nav ativo.
         brand: {
-          50: '#F5F0FF',
-          100: '#E9DCFF',
-          200: '#D3B8FF',
-          300: '#B98EFF',
-          400: '#A06EFF',
-          500: '#8B5CF6',
-          600: '#7C3AED',
-          700: '#5F23C2',
-          800: '#3F1791',
-          900: '#1B0B3C',
+          50: '#EEECFB',
+          100: '#DAD5F6',
+          200: '#B8ADEE',
+          300: '#9585E5',
+          400: '#7C6BDE',
+          500: '#6D5DE6',
+          600: '#5A49D8',
+          700: '#4A3BB4',
+          800: '#372C86',
+          900: '#241D57',
         },
-        // Secondary: cyan (ex-brand). Reservado para estado "ao vivo" / transmitindo.
+        // Secondary cyan: reservado para estado "ao vivo" / transmitindo.
         secondary: {
           50: '#ECFCFF',
           100: '#CFF8FF',
           200: '#A5F0FF',
           300: '#74E8FF',
           400: '#49E6FF',
-          500: '#1FD0F0',
+          500: '#22C9EC',
           600: '#10A6C5',
           700: '#117D95',
           800: '#125E71',
           900: '#103F4C',
         },
-        // Accent: alias do brand roxo (compat com codigo legado que usava 'accent').
+        // Accent: alias do brand (compat com código legado que usava 'accent').
         accent: {
-          50: '#F5F0FF',
-          100: '#E9DCFF',
-          200: '#D3B8FF',
-          300: '#B98EFF',
-          400: '#A06EFF',
-          500: '#8B5CF6',
-          600: '#7C3AED',
-          700: '#5F23C2',
-          800: '#3F1791',
-          900: '#1B0B3C',
+          50: '#EEECFB',
+          100: '#DAD5F6',
+          200: '#B8ADEE',
+          300: '#9585E5',
+          400: '#7C6BDE',
+          500: '#6D5DE6',
+          600: '#5A49D8',
+          700: '#4A3BB4',
+          800: '#372C86',
+          900: '#241D57',
         },
+        // Ember: laranja discreto (compat).
         ember: {
-          100: '#FFE2D6',
-          300: '#FFB291',
-          500: '#FF8A5B',
-          600: '#F06B34',
-          700: '#BF4E20',
+          100: '#FBE6DA',
+          300: '#F2B58E',
+          500: '#E58B57',
+          600: '#CC723E',
+          700: '#A6562B',
         },
+        // Chrome: escala neutra fria (compat com refs legadas).
         chrome: {
-          950: '#06090D',
-          900: '#0C1219',
-          850: '#111A24',
-          800: '#16212D',
-          700: '#1B2836',
-          600: '#243446',
-          500: '#33506B',
+          950: '#0B0E14',
+          900: '#0F131A',
+          850: '#141923',
+          800: '#1A2029',
+          700: '#222935',
+          600: '#2E3744',
+          500: '#3C4654',
         },
         signal: {
-          success: '#61E4A3',
-          warning: '#FFC15A',
-          danger: '#FF6B7D',
+          success: '#5BD8A0',
+          warning: '#F5B544',
+          danger: '#F0697A',
         },
-        // Surfaces (escalonamento de profundidade)
+        // Superfícies (profundidade por luminância, neutras).
         surface: {
-          base: '#0A0716',
-          raised: '#13092B',
-          sunken: '#06030F',
+          base: '#0F131A',
+          raised: '#161B24',
+          sunken: '#0B0E14',
         },
-        // Texto (hierarquia)
+        // Texto (hierarquia, contraste AA sobre surface-base).
         ink: {
-          strong: '#F3F0FF',
-          body: '#C9BEE6',
-          soft: '#8B7FB0',
-          mute: '#5E5380',
+          strong: '#F2F5F9',
+          body: '#C4CCD6',
+          soft: '#8A93A0',
+          mute: '#5C6470',
         },
-        // Estados semanticos
+        // Estados semânticos.
         state: {
-          ready: '#8B5CF6',
+          ready: '#6D5DE6',
           live: '#49E6FF',
-          warn: '#FFC15A',
-          error: '#FF6B7D',
-          success: '#61E4A3',
+          warn: '#F5B544',
+          error: '#F0697A',
+          success: '#5BD8A0',
         },
-        // HUD (linhas, frames, grid)
+        // Bordas/linhas neutras (sem o roxo translúcido do HUD antigo).
         hud: {
-          border: 'rgba(167,139,250,0.32)',
-          'border-strong': 'rgba(167,139,250,0.66)',
-          grid: 'rgba(167,139,250,0.06)',
+          border: 'rgba(255,255,255,0.09)',
+          'border-strong': 'rgba(255,255,255,0.18)',
+          grid: 'rgba(255,255,255,0.03)',
         },
       },
       animation: {
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'bounce-small': 'bounce 1s infinite',
-        'glow-soft': 'glow-soft 2.6s ease-in-out infinite',
-        'lift-in': 'lift-in 240ms ease-out both',
-        'glow-pulse': 'glow-pulse 2.4s ease-in-out infinite',
-        'text-shimmer': 'text-shimmer 4s linear infinite',
-        'scanline-sweep': 'scanline-sweep 7s linear infinite',
-        'hud-flicker': 'hud-flicker 5s steps(20, end) infinite',
-        'slide-in-right': 'slide-in-right 280ms cubic-bezier(0.25,0.46,0.45,0.94) both',
+        'lift-in': 'lift-in 200ms ease-out both',
+        'slide-in-right': 'slide-in-right 240ms cubic-bezier(0.16, 1, 0.3, 1) both',
+        // Efeitos antigos neutralizados (design v2 — calma > espetáculo).
+        'glow-soft': 'none',
+        'glow-pulse': 'none',
+        'text-shimmer': 'none',
+        'scanline-sweep': 'none',
+        'hud-flicker': 'none',
       },
       keyframes: {
-        'glow-soft': {
-          '0%, 100%': { boxShadow: '0 0 0 rgba(73,230,255,0)' },
-          '50%': { boxShadow: '0 0 24px rgba(73,230,255,0.22)' },
-        },
         'lift-in': {
-          from: { opacity: '0', transform: 'translateY(10px)' },
+          from: { opacity: '0', transform: 'translateY(8px)' },
           to: { opacity: '1', transform: 'translateY(0)' },
         },
         'slide-in-right': {
           from: { transform: 'translateX(100%)' },
           to: { transform: 'translateX(0)' },
         },
-        'glow-pulse': {
-          '0%, 100%': { boxShadow: '0 0 0 rgba(139,92,246,0)' },
-          '50%': { boxShadow: '0 0 28px rgba(139,92,246,0.38)' },
-        },
-        'text-shimmer': {
-          '0%': { backgroundPosition: '0% 50%' },
-          '100%': { backgroundPosition: '200% 50%' },
-        },
-        'scanline-sweep': {
-          '0%': { transform: 'translateY(-100%)' },
-          '100%': { transform: 'translateY(100%)' },
-        },
-        'hud-flicker': {
-          '0%, 100%': { opacity: '1' },
-          '50%': { opacity: '0.92' },
-        },
       },
       fontFamily: {
         mono: ['"JetBrains Mono"', '"Cascadia Code"', '"Consolas"', 'monospace'],
       },
-      // Semantic typography scale — use these instead of raw text-xs/sm/base/etc.
+      // Escala tipográfica semântica — usar no lugar de text-xs/sm/base cru.
       // caption → 11px meta/badge, label → 12px tags/inputs, body → 14px copy,
       // ui → 15px interactive, heading → 17px sections, title → 20px cards,
       // page → 24px page headings, hero → 30px display.
