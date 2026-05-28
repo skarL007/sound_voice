@@ -103,30 +103,74 @@ class PiperEngine(BaseTTSEngine):
 # ============== Kokoro Engine ==============
 
 class KokoroEngine(BaseTTSEngine):
+    """Kokoro TTS.
+
+    Prefere kokoro-onnx (ONNX Runtime, compatível com Python 3.13, sem PyTorch),
+    usando o modelo `*.onnx` + as vozes `voices-*.bin` baixados em model_dir.
+    Cai para o pacote `kokoro` (PyTorch/KPipeline) quando disponível (Python <3.13).
+    """
+
     def __init__(self, model_dir: Path):
         self.model_dir = model_dir
-        self._pipeline = None
+        self._pipeline = None   # KPipeline (fallback torch)
+        self._onnx = None       # kokoro_onnx.Kokoro
+        self._model_path: Optional[Path] = None
+        self._voices_path: Optional[Path] = None
+        self._find_model_files()
 
-    def is_available(self) -> bool:
+    def _find_model_files(self):
+        onnx_files = list(self.model_dir.glob("*.onnx"))
+        if onnx_files:
+            self._model_path = onnx_files[0]
+        bin_files = list(self.model_dir.glob("*.bin"))
+        voices = [p for p in bin_files if "voice" in p.name.lower()]
+        if voices:
+            self._voices_path = voices[0]
+        elif bin_files:
+            self._voices_path = bin_files[0]
+
+    @staticmethod
+    def _module_available(name: str) -> bool:
         try:
-            from kokoro import KPipeline
-            return True
-        except ImportError:
+            import importlib.util
+            return importlib.util.find_spec(name) is not None
+        except Exception:
             return False
 
+    def _onnx_ready(self) -> bool:
+        return (
+            self._module_available("kokoro_onnx")
+            and self._model_path is not None and self._model_path.exists()
+            and self._voices_path is not None and self._voices_path.exists()
+        )
+
+    def is_available(self) -> bool:
+        # Caminho ONNX (Python 3.13+): precisa do pacote + modelo + vozes baixados.
+        if self._onnx_ready():
+            return True
+        # Fallback PyTorch: KPipeline baixa o próprio modelo sob demanda.
+        return self._module_available("kokoro")
+
     def synthesize(self, text, voice_id=None, speed=1.0, language="pt"):
-        from kokoro import KPipeline
         import numpy as np
 
+        voice = voice_id or "pf_dora"
+
+        if self._onnx_ready():
+            from kokoro_onnx import Kokoro
+            if self._onnx is None:
+                self._onnx = Kokoro(str(self._model_path), str(self._voices_path))
+            lang = "pt-br" if str(language).lower().startswith("pt") else (language or "en-us")
+            samples, sample_rate = self._onnx.create(text, voice=voice, speed=speed, lang=lang)
+            return np.asarray(samples, dtype=np.float32), int(sample_rate)
+
+        # Fallback: kokoro (PyTorch) KPipeline
+        from kokoro import KPipeline
         if self._pipeline is None:
             self._pipeline = KPipeline(lang_code="p")
-
-        voice = voice_id or "pf_dora"
         samples = list(self._pipeline(text, voice=voice, speed=speed))
-
         if not samples:
             return np.zeros(0, dtype=np.float32), 24000
-
         audio_arrays = [audio for (_, _, audio) in samples]
         full_audio = np.concatenate(audio_arrays)
         return full_audio, 24000
@@ -310,9 +354,20 @@ class ModelManager:
 
     def _check_deps_installed(self, model_id: str) -> bool:
         """Check if Python dependencies for a model are available (lightweight)."""
+        import importlib.util
+
+        # Kokoro: ONNX Runtime (kokoro_onnx, Python 3.13+) OU torch (kokoro, legado).
+        if model_id == "kokoro":
+            for mod in ("kokoro_onnx", "kokoro"):
+                try:
+                    if importlib.util.find_spec(mod) is not None:
+                        return True
+                except Exception:
+                    pass
+            return False
+
         engine_map = {
             "piper": "piper",
-            "kokoro": "kokoro",
             "melotts": "melo",
             "xtts_v2": "TTS",
             "fish_speech": "fish_speech",
@@ -322,7 +377,6 @@ class ModelManager:
         if not module:
             return False
         try:
-            import importlib.util
             spec = importlib.util.find_spec(module)
             return spec is not None
         except Exception:

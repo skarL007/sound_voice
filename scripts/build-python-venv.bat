@@ -96,12 +96,10 @@ echo Building Python backend...
     --hidden-import psutil ^
     --hidden-import piper ^
     --hidden-import piper.voice ^
-    --hidden-import kokoro ^
-    --hidden-import kokoro.pipeline ^
+    --hidden-import kokoro_onnx ^
     --hidden-import websockets ^
     --hidden-import python_multipart ^
     --collect-all piper ^
-    --collect-all kokoro ^
     --collect-all kokoro_onnx ^
     --collect-all sounddevice ^
     --collect-all soundfile ^

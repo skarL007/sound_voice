@@ -30,8 +30,10 @@
       "cloning": false,
       "license": "Apache 2.0",
       "sizeMB": 300,
-      "downloadUrl": "https://huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX/resolve/main/model.onnx?download=true",
-      "filename": "kokoro-v1_0.onnx",
+      "downloadUrl": "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx",
+      "filename": "kokoro-v1.0.onnx",
+      "configUrl": "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin",
+      "configFilename": "voices-v1.0.bin",
       "tags": ["Qualidade", "Eficiente", "PT-BR", "Apache"]
     },
     {
