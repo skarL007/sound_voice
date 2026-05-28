@@ -91,8 +91,8 @@ function BackendBanner({
       'Voce ainda pode usar vozes online (Edge TTS) sem instalacao em "Falar". Para liberar Piper/Kokoro, tente reiniciar o backend ou veja os logs.'
 
   const containerStyle = isStarting
-    ? { borderBottomColor: 'rgba(255,193,90,0.3)', background: 'rgba(255,193,90,0.10)' }
-    : { borderBottomColor: 'rgba(255,107,125,0.3)', background: 'rgba(255,107,125,0.10)' }
+    ? { borderBottomColor: 'var(--vl-state-warn-border)', background: 'var(--vl-state-warn-bg)' }
+    : { borderBottomColor: 'var(--vl-state-error-border)', background: 'var(--vl-state-error-bg)' }
 
   const accentColor = isStarting ? 'var(--vl-state-warn)' : 'var(--vl-state-error)'
 
@@ -112,7 +112,7 @@ function BackendBanner({
             <p className="text-sm font-medium text-ink-strong">{title}</p>
             <p className="text-sm text-ink-body">{description}</p>
             {!isStarting && hasDetails && (
-              <div className="mt-2 rounded-xl p-2 font-mono text-[11px] leading-5 grid gap-1" style={{ background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,107,125,0.15)' }}>
+              <div className="mt-2 rounded-lg p-2 font-mono text-[11px] leading-5 grid gap-1" style={{ background: 'var(--vl-surface-sunken)', border: '1px solid var(--vl-state-error-border)' }}>
                 {diagnostics?.command && <div><span className="text-ink-mute">command:</span> {diagnostics.command}</div>}
                 {diagnostics?.executor && <div><span className="text-ink-mute">executor:</span> {diagnostics.executor}</div>}
                 {diagnostics?.url && <div><span className="text-ink-mute">url:</span> {diagnostics.url}</div>}
@@ -189,20 +189,19 @@ function TitleBar({
       className="h-12 flex items-center justify-between px-2 select-none app-drag-region relative"
       style={{
         borderBottom: '1px solid var(--vl-hud-border)',
-        background: 'linear-gradient(180deg, rgba(20, 10, 46, 0.95), rgba(6, 3, 15, 0.92))',
-        boxShadow: '0 1px 0 rgba(167, 139, 250, 0.10) inset, 0 8px 24px -12px rgba(0, 0, 0, 0.45)',
+        background: 'var(--vl-surface-raised)',
+        boxShadow: '0 1px 0 rgba(255, 255, 255, 0.04) inset',
       }}
     >
       <div className="flex items-center gap-3 px-3">
         <div
-          className="flex h-8 w-8 items-center justify-center rounded-xl relative"
+          className="flex h-8 w-8 items-center justify-center rounded-lg relative"
           style={{
-            border: '1px solid var(--vl-hud-border-strong)',
-            background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.22), rgba(95, 35, 194, 0.18))',
-            boxShadow: '0 0 16px rgba(139, 92, 246, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
+            border: '1px solid var(--vl-hud-border)',
+            background: 'var(--vl-surface-overlay)',
           }}
         >
-          <Mic className="w-4 h-4 neon-glow" style={{ color: 'var(--vl-state-ready)' }} />
+          <Mic className="w-4 h-4" style={{ color: 'var(--vl-state-ready)' }} />
         </div>
         <div>
           <span className="block text-sm font-semibold text-ink-strong">VoiceLaunch TTS</span>
@@ -266,7 +265,7 @@ function Sidebar() {
       className="flex h-full w-20 flex-col px-3 py-4 lg:w-64 transition-[width] duration-200 ease-in-out"
       style={{
         borderRight: '1px solid var(--vl-hud-border)',
-        background: 'rgba(6, 3, 15, 0.6)',
+        background: 'var(--vl-surface-sunken)',
       }}
     >
       {navItems.map((item) => (
@@ -278,15 +277,15 @@ function Sidebar() {
             [
               'nav-link',
               isActive
-                ? 'border border-brand-500/40 bg-brand-500/12 text-brand-100 shadow-[inset_3px_0_0_0_rgba(139,92,246,0.95)]'
-                : 'text-ink-soft hover:bg-brand-500/8 hover:text-brand-200',
+                ? 'border border-brand-500/40 bg-brand-500/12 text-brand-100 shadow-[inset_3px_0_0_0_#6D5DE6]'
+                : 'text-ink-soft hover:bg-white/5 hover:text-ink-strong',
             ].join(' ')
           }
         >
           {({ isActive }) => (
             <>
               <item.icon
-                className={`w-5 h-5 flex-shrink-0 ${isActive ? 'animate-glow-pulse' : ''}`}
+                className="w-5 h-5 flex-shrink-0"
                 style={isActive ? { color: 'var(--vl-state-ready)' } : undefined}
               />
               <span className="hidden lg:block text-sm font-medium">{item.label}</span>
@@ -335,7 +334,7 @@ function HudStat({
       />
       <div className="flex items-center justify-between relative">
         <span className="text-[11px] uppercase tracking-[0.22em] text-ink-soft">{label}</span>
-        <Icon className="h-5 w-5 neon-glow" style={{ color: toneVar }} />
+        <Icon className="h-5 w-5" style={{ color: toneVar }} />
       </div>
       <div className="text-2xl font-bold text-ink-strong leading-tight relative">{value}</div>
       {hint && <p className="text-xs text-ink-soft leading-relaxed relative">{hint}</p>}
@@ -398,12 +397,12 @@ function HomePage({ backendStatus }: { backendStatus: BackendStatus }) {
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6">
-      <section className="hud-frame hud-frame--hero scanline animate-lift-in p-8 lg:p-10">
+      <section className="hud-frame hud-frame--hero animate-lift-in p-8 lg:p-10">
         <div className="status-pill status-pill--ready w-fit">
           <Sparkles className="h-3.5 w-3.5" />
           Modo local assistivo
         </div>
-        <h1 className="mt-6 text-4xl lg:text-5xl font-bold tracking-tight text-display-gradient">
+        <h1 className="mt-6 text-3xl lg:text-4xl font-bold tracking-tight text-ink-strong">
           Uma estacao de voz local para falar rapido, com clareza.
         </h1>
         <p className="mt-4 max-w-2xl text-base lg:text-lg leading-7 text-ink-body">
@@ -687,8 +686,8 @@ function CompactView({ backendStatus }: { backendStatus: BackendStatus }) {
               <button
                 key={item.id}
                 onClick={() => setText(item.text)}
-                className="whitespace-nowrap rounded-xl border px-3 py-1.5 text-xs text-ink-body transition-colors hover:text-ink-strong"
-                style={{ borderColor: 'var(--vl-hud-border)', background: 'rgba(19,9,43,0.7)' }}
+                className="whitespace-nowrap rounded-lg border px-3 py-1.5 text-xs text-ink-body transition-colors hover:text-ink-strong"
+                style={{ borderColor: 'var(--vl-hud-border)', background: 'var(--vl-surface-overlay)' }}
               >
                 {item.text}
               </button>
@@ -1106,7 +1105,7 @@ function CheatsheetModal({ onClose }: { onClose: () => void }) {
               <span className="text-xs text-ink-soft">{desc}</span>
               <kbd
                 className="shrink-0 rounded-lg px-2 py-1 text-[11px] font-mono font-semibold"
-                style={{ background: 'rgba(139,92,246,0.12)', border: '1px solid var(--vl-hud-border-strong)', color: 'var(--vl-purple-200)' }}
+                style={{ background: 'rgba(109,93,230,0.14)', border: '1px solid var(--vl-hud-border-strong)', color: 'var(--vl-purple-200)' }}
               >
                 {keys}
               </kbd>

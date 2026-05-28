@@ -218,7 +218,7 @@ export default function ModelsPage() {
       {activeTab === 'cloned' && <ClonedVoicesTab />}
       {activeTab === 'local' && (
       <>
-      <div className="hud-frame hud-frame--hero scanline p-5 space-y-3">
+      <div className="hud-frame hud-frame--hero p-5 space-y-3">
         <div className="flex items-center gap-2 text-ink-strong">
           <Sparkles className="w-5 h-5" style={{ color: 'var(--vl-state-ready)' }} />
           <h2 className="text-lg font-semibold">Fluxo recomendado do MVP</h2>
@@ -258,7 +258,7 @@ export default function ModelsPage() {
           <div className="col-span-full hud-frame flex flex-col items-center gap-4 py-16 text-center">
             <div
               className="w-16 h-16 rounded-2xl flex items-center justify-center"
-              style={{ background: 'rgba(139,92,246,0.10)', border: '1px solid var(--vl-hud-border)' }}
+              style={{ background: 'var(--vl-surface-raised)', border: '1px solid var(--vl-hud-border)' }}
             >
               <Download className="w-8 h-8" style={{ color: 'var(--vl-ink-mute)' }} />
             </div>
@@ -310,7 +310,7 @@ export default function ModelsPage() {
                 </div>
                 <span
                   className="text-xs px-2 py-1 rounded text-ink-soft"
-                  style={{ background: 'rgba(19,9,43,0.7)', border: '1px solid var(--vl-hud-border)' }}
+                  style={{ background: 'var(--vl-surface-overlay)', border: '1px solid var(--vl-hud-border)' }}
                 >
                   {model.license}
                 </span>
@@ -324,7 +324,7 @@ export default function ModelsPage() {
                   <span
                     key={tag}
                     className="text-xs px-2 py-0.5 rounded"
-                    style={{ background: 'rgba(139,92,246,0.10)', color: 'var(--vl-purple-300)', border: '1px solid rgba(139,92,246,0.28)' }}
+                    style={{ background: 'var(--vl-surface-overlay)', color: 'var(--vl-purple-300)', border: '1px solid var(--vl-hud-border)' }}
                   >
                     {tag}
                   </span>
@@ -377,15 +377,15 @@ export default function ModelsPage() {
                     <span>{prog}% {etas[model.id] ? `· ETA ${etas[model.id]}` : ''}</span>
                   </div>
                   <div
-                    className="h-2 rounded-full overflow-hidden relative scanline"
-                    style={{ background: 'rgba(95,35,194,0.25)' }}
+                    className="h-2 rounded-full overflow-hidden relative"
+                    style={{ background: 'var(--vl-surface-sunken)' }}
                   >
                     <div
                       className="h-full rounded-full transition-all duration-300"
                       style={{
                         width: `${prog}%`,
-                        background: 'linear-gradient(90deg, #8B5CF6, #49E6FF)',
-                        boxShadow: '0 0 12px rgba(139,92,246,0.7)',
+                        background: 'var(--vl-state-ready)',
+                        boxShadow: 'none',
                       }}
                     />
                   </div>

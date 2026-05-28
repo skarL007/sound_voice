@@ -165,7 +165,7 @@ export default function LogsPage() {
               onClick={() => setFilters((prev) => ({ ...prev, [level]: !prev[level] }))}
               className="status-pill"
               style={{
-                background: filters[level] ? `${levelStyle[level]}22` : 'rgba(19,9,43,0.4)',
+                background: filters[level] ? `${levelStyle[level]}22` : 'var(--vl-surface-overlay)',
                 color: filters[level] ? levelStyle[level] : 'var(--vl-ink-mute)',
                 borderColor: filters[level] ? `${levelStyle[level]}66` : 'var(--vl-hud-border)',
                 cursor: 'pointer',

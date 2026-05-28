@@ -305,11 +305,11 @@ export default function TTSPage() {
               className="flex h-11 w-11 items-center justify-center rounded-2xl"
               style={{
                 border: '1px solid var(--vl-hud-border-strong)',
-                background: 'rgba(139,92,246,0.14)',
-                boxShadow: '0 0 24px rgba(139,92,246,0.25)',
+                background: 'var(--vl-surface-raised)',
+                boxShadow: 'none',
               }}
             >
-              <Volume2 className="h-5 w-5 neon-glow" style={{ color: 'var(--vl-state-ready)' }} />
+              <Volume2 className="h-5 w-5" style={{ color: 'var(--vl-state-ready)' }} />
             </div>
             <div className="space-y-1">
               <h1 className="text-3xl font-bold tracking-tight text-ink-strong">Falar</h1>
@@ -528,13 +528,13 @@ export default function TTSPage() {
             <div className="mt-4 flex flex-col gap-3 border-t border-chrome-600/70 pt-4 xl:flex-row xl:items-center xl:justify-between">
               <div className="flex flex-col gap-3">
                 <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                  <span className="rounded-full border px-3 py-1 text-ink-soft" style={{ borderColor: 'var(--vl-hud-border)', background: 'rgba(6,3,15,0.6)' }}>
+                  <span className="rounded-full border px-3 py-1 text-ink-soft" style={{ borderColor: 'var(--vl-hud-border)', background: 'var(--vl-surface-sunken)' }}>
                     {text.length} caracteres
                   </span>
-                  <span className="rounded-full border px-3 py-1 text-ink-soft" style={{ borderColor: 'var(--vl-hud-border)', background: 'rgba(6,3,15,0.6)' }}>
+                  <span className="rounded-full border px-3 py-1 text-ink-soft" style={{ borderColor: 'var(--vl-hud-border)', background: 'var(--vl-surface-sunken)' }}>
                     {availableModels.length} modelos prontos
                   </span>
-                  <span className="rounded-full border px-3 py-1 text-ink-soft" style={{ borderColor: 'var(--vl-hud-border)', background: 'rgba(6,3,15,0.6)' }}>
+                  <span className="rounded-full border px-3 py-1 text-ink-soft" style={{ borderColor: 'var(--vl-hud-border)', background: 'var(--vl-surface-sunken)' }}>
                     {voiceId.trim() ? `Voz ${voiceId}` : 'Voz padrao'}
                   </span>
                 </div>
@@ -687,7 +687,7 @@ export default function TTSPage() {
                   <div
                     key={item.id}
                     className="rounded-2xl border p-3"
-                    style={{ borderColor: 'var(--vl-hud-border)', background: 'rgba(6,3,15,0.55)' }}
+                    style={{ borderColor: 'var(--vl-hud-border)', background: 'var(--vl-surface-sunken)' }}
                   >
                     <button
                       onClick={() => {
@@ -702,7 +702,7 @@ export default function TTSPage() {
                       <div className="mt-2 flex flex-wrap items-center gap-2">
                         <span
                           className="rounded-full border px-2 py-1 text-[11px] text-ink-soft"
-                          style={{ borderColor: 'var(--vl-hud-border)', background: 'rgba(19,9,43,0.7)' }}
+                          style={{ borderColor: 'var(--vl-hud-border)', background: 'var(--vl-surface-overlay)' }}
                         >
                           {item.modelId}
                         </span>

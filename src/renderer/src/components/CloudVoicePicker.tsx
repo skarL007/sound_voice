@@ -110,7 +110,7 @@ export default function CloudVoicePicker({ selectedVoice, onSelect }: CloudVoice
               style={
                 isSelected
                   ? undefined
-                  : { border: '1px solid var(--vl-hud-border)', background: 'rgba(14,8,32,0.6)' }
+                  : { border: '1px solid var(--vl-hud-border)', background: 'var(--vl-surface-raised)' }
               }
               aria-pressed={isSelected}
             >
@@ -121,8 +121,8 @@ export default function CloudVoicePicker({ selectedVoice, onSelect }: CloudVoice
                   <span
                     className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded"
                     style={{
-                      background: voice.Gender === 'Female' ? 'rgba(255,107,125,0.16)' : 'rgba(73,230,255,0.14)',
-                      color: voice.Gender === 'Female' ? '#FFC1CB' : '#A5F0FF',
+                      background: voice.Gender === 'Female' ? 'rgba(255,107,125,0.16)' : 'var(--vl-surface-overlay)',
+                      color: voice.Gender === 'Female' ? '#FFC1CB' : 'var(--vl-state-live-text)',
                     }}
                   >
                     {voice.Gender === 'Female' ? 'F' : 'M'}

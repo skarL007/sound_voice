@@ -80,10 +80,10 @@ export default function DiscordReadyBanner({ visible, onClose, modelId, speed = 
       style={{
         background: 'var(--vl-state-live-bg)',
         border: '1px solid var(--vl-state-live-accent)',
-        boxShadow: '0 0 28px rgba(73,230,255,0.18)',
+        boxShadow: 'none',
       }}
     >
-      <Headphones className="h-5 w-5 animate-glow-pulse" style={{ color: 'var(--vl-state-live)' }} />
+      <Headphones className="h-5 w-5" style={{ color: 'var(--vl-state-live)' }} />
       <div className="flex-1 min-w-[200px]">
         <p className="text-sm font-medium text-ink-strong">Microfone virtual ativo</p>
         <p className="text-xs text-ink-body mt-0.5">

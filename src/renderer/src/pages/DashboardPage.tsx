@@ -81,7 +81,7 @@ export default function DashboardPage() {
         <h1 className="text-2xl font-bold text-ink-strong">Meu Computador</h1>
       </div>
 
-      <div className="hud-frame hud-frame--hero scanline p-6 space-y-4">
+      <div className="hud-frame hud-frame--hero p-6 space-y-4">
         <div className="flex items-center gap-3">
           <Sparkles className="w-6 h-6" style={{ color: 'var(--vl-state-ready)' }} />
           <h2 className="text-xl font-bold text-ink-strong">{playbook.headline}</h2>
@@ -104,7 +104,7 @@ export default function DashboardPage() {
               <span
                 className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold font-mono"
                 style={{
-                  background: 'rgba(139,92,246,0.18)',
+                  background: 'var(--vl-surface-overlay)',
                   border: '1px solid var(--vl-hud-border-strong)',
                   color: 'var(--vl-purple-200)',
                 }}
@@ -243,14 +243,14 @@ function SpecCard({ icon, title, value, detail, fraction }: {
       {typeof fraction === 'number' && (
         <div
           className="mt-3 h-1.5 rounded-full overflow-hidden"
-          style={{ background: 'rgba(95,35,194,0.25)' }}
+          style={{ background: 'var(--vl-surface-sunken)' }}
         >
           <div
             className="h-full rounded-full transition-all"
             style={{
               width: `${Math.round(fraction * 100)}%`,
-              background: 'linear-gradient(90deg, #8B5CF6, #49E6FF)',
-              boxShadow: '0 0 8px rgba(139,92,246,0.6)',
+              background: 'var(--vl-state-ready)',
+              boxShadow: 'none',
             }}
           />
         </div>

@@ -166,7 +166,7 @@ export default function AudioOutputPicker({ showTestButton = true }: AudioOutput
           style={
             cableDeviceId === null
               ? undefined
-              : { border: '1px solid var(--vl-hud-border)', background: 'rgba(14,8,32,0.6)' }
+              : { border: '1px solid var(--vl-hud-border)', background: 'var(--vl-surface-raised)' }
           }
         >
           <Volume2 className="h-4 w-4 flex-shrink-0" />
@@ -251,7 +251,7 @@ function DeviceRow({
           ? undefined
           : {
               border: '1px solid var(--vl-hud-border)',
-              background: highlight ? 'rgba(73,230,255,0.06)' : 'rgba(14,8,32,0.6)',
+              background: highlight ? 'var(--vl-state-live-bg)' : 'var(--vl-surface-raised)',
             }
       }
       aria-pressed={selected}

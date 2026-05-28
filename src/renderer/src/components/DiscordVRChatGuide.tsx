@@ -89,7 +89,7 @@ export default function DiscordVRChatGuide({ defaultExpanded = false, compact = 
               <span
                 className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full font-mono text-[11px] font-bold"
                 style={{
-                  background: 'rgba(139,92,246,0.18)',
+                  background: 'var(--vl-surface-overlay)',
                   border: '1px solid var(--vl-hud-border-strong)',
                   color: 'var(--vl-purple-200)',
                 }}

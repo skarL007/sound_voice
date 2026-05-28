@@ -89,7 +89,7 @@ export default function CloudVoicesTab() {
 
   return (
     <div className="space-y-4">
-      <div className="hud-frame hud-frame--hero scanline p-5 space-y-3">
+      <div className="hud-frame hud-frame--hero p-5 space-y-3">
         <div className="flex items-center gap-2">
           <Cloud className="h-5 w-5" style={{ color: 'var(--vl-state-live)' }} />
           <h2 className="text-lg font-semibold text-ink-strong">Catalogo online (Edge TTS)</h2>
@@ -137,7 +137,7 @@ export default function CloudVoicesTab() {
             <div
               key={voice.ShortName}
               className={`hud-frame card-hover p-3 flex items-center gap-3 ${isSelected ? 'status-pill--ready' : ''}`}
-              style={isSelected ? undefined : { background: 'rgba(14,8,32,0.6)' }}
+              style={isSelected ? undefined : { background: 'var(--vl-surface-raised)' }}
             >
               <span className="text-2xl flex-shrink-0">{localeFlag(voice.Locale)}</span>
               <div className="flex-1 min-w-0">
@@ -146,8 +146,8 @@ export default function CloudVoicesTab() {
                   <span
                     className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded"
                     style={{
-                      background: voice.Gender === 'Female' ? 'rgba(255,107,125,0.16)' : 'rgba(73,230,255,0.14)',
-                      color: voice.Gender === 'Female' ? '#FFC1CB' : '#A5F0FF',
+                      background: voice.Gender === 'Female' ? 'rgba(255,107,125,0.16)' : 'var(--vl-surface-overlay)',
+                      color: voice.Gender === 'Female' ? '#FFC1CB' : 'var(--vl-state-live-text)',
                     }}
                   >
                     {voice.Gender === 'Female' ? 'F' : 'M'}

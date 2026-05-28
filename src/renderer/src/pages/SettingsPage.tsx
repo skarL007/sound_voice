@@ -211,7 +211,7 @@ export default function SettingsPage() {
                     {device.isDefault && (
                       <span
                         className="text-xs px-1.5 rounded text-ink-soft"
-                        style={{ background: 'rgba(19,9,43,0.7)' }}
+                        style={{ background: 'var(--vl-surface-overlay)' }}
                       >
                         padrao
                       </span>

@@ -212,10 +212,10 @@ export default function OnboardingTutorial() {
 
   return (
     <div
-      className="fixed right-0 inset-y-0 z-40 flex flex-col w-full max-w-[400px] animate-slide-in-right scanline overflow-hidden"
+      className="fixed right-0 inset-y-0 z-40 flex flex-col w-full max-w-[400px] animate-slide-in-right overflow-hidden"
       style={{
         borderLeft: '1px solid var(--vl-hud-border-strong)',
-        background: 'rgba(6,3,15,0.97)',
+        background: 'var(--vl-surface-overlay)',
         backdropFilter: 'blur(12px)',
         boxShadow: '-8px 0 40px rgba(0,0,0,0.6)',
       }}
@@ -233,8 +233,8 @@ export default function OnboardingTutorial() {
             key={index}
             className="h-1.5 flex-1 rounded-full transition-colors"
             style={{
-              background: index <= stepIndex ? 'var(--vl-state-ready)' : 'rgba(95,35,194,0.25)',
-              boxShadow: index <= stepIndex ? '0 0 8px rgba(139,92,246,0.5)' : 'none',
+              background: index <= stepIndex ? 'var(--vl-state-ready)' : 'var(--vl-surface-sunken)',
+              boxShadow: 'none',
             }}
           />
         ))}
@@ -260,15 +260,15 @@ export default function OnboardingTutorial() {
         <div
           className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
           style={{
-            background: 'rgba(139, 92, 246, 0.14)',
+            background: 'var(--vl-surface-raised)',
             border: '1px solid var(--vl-hud-border-strong)',
-            boxShadow: '0 0 24px rgba(139,92,246,0.25)',
+            boxShadow: 'none',
           }}
         >
           {step.icon}
         </div>
 
-        <h2 id="onboarding-title" className="text-lg font-bold text-ink-strong mb-2 neon-glow" style={{ color: 'var(--vl-purple-200)' }}>
+        <h2 id="onboarding-title" className="text-lg font-bold text-ink-strong mb-2" style={{ color: 'var(--vl-purple-200)' }}>
           {step.title}
         </h2>
         <p className="text-sm text-ink-body leading-relaxed mb-3">{step.description}</p>
@@ -277,8 +277,8 @@ export default function OnboardingTutorial() {
           <div
             className="rounded-2xl p-3 text-sm mb-3 text-left"
             style={{
-              background: 'rgba(139,92,246,0.10)',
-              border: '1px solid rgba(139,92,246,0.32)',
+              background: 'var(--vl-surface-overlay)',
+              border: '1px solid var(--vl-hud-border)',
               color: 'var(--vl-purple-200)',
             }}
           >

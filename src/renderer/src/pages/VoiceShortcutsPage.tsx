@@ -184,11 +184,11 @@ export default function VoiceShortcutsPage() {
             className="flex h-11 w-11 items-center justify-center rounded-2xl"
             style={{
               border: '1px solid var(--vl-hud-border-strong)',
-              background: 'rgba(139,92,246,0.14)',
-              boxShadow: '0 0 24px rgba(139,92,246,0.25)',
+              background: 'var(--vl-surface-raised)',
+              boxShadow: 'none',
             }}
           >
-            <Keyboard className="h-5 w-5 neon-glow" style={{ color: 'var(--vl-state-ready)' }} />
+            <Keyboard className="h-5 w-5" style={{ color: 'var(--vl-state-ready)' }} />
           </div>
           <div className="space-y-1">
             <h1 className="text-3xl font-bold tracking-tight text-ink-strong">Atalhos de voz</h1>
@@ -253,8 +253,8 @@ export default function VoiceShortcutsPage() {
 
 function EmptyState({ onCreate }: { onCreate: () => void }) {
   return (
-    <div className="hud-frame hud-frame--hero scanline p-10 text-center space-y-4">
-      <Keyboard className="h-12 w-12 mx-auto neon-glow" style={{ color: 'var(--vl-state-ready)' }} />
+    <div className="hud-frame hud-frame--hero p-10 text-center space-y-4">
+      <Keyboard className="h-12 w-12 mx-auto" style={{ color: 'var(--vl-state-ready)' }} />
       <h2 className="text-2xl font-bold text-ink-strong">Crie seu primeiro atalho</h2>
       <p className="text-ink-body max-w-md mx-auto">
         Salve frases que voce usa muito (GG, cuidado, oi pessoal) com voz fixa e dispare via teclado a qualquer hora.
@@ -300,7 +300,7 @@ function ShortcutCard({
   return (
     <div
       className={`hud-frame card-hover p-4 space-y-3 transition-all duration-300 ${shortcut.enabled ? '' : 'opacity-60'}`}
-      style={isActive ? { boxShadow: '0 0 0 2px var(--vl-state-ready), 0 0 20px rgba(139,92,246,0.35)', borderColor: 'var(--vl-state-ready)' } : {}}
+      style={isActive ? { boxShadow: '0 0 0 2px var(--vl-state-ready)', borderColor: 'var(--vl-state-ready)' } : {}}
       aria-current={isActive ? 'true' : undefined}
     >
       <div className="flex items-start justify-between gap-3">
@@ -312,8 +312,8 @@ function ShortcutCard({
             <span
               className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded inline-flex items-center gap-1"
               style={{
-                background: shortcut.voiceSource === 'cloud' ? 'rgba(73,230,255,0.14)' : 'rgba(139,92,246,0.18)',
-                color: shortcut.voiceSource === 'cloud' ? '#A5F0FF' : '#D3B8FF',
+                background: shortcut.voiceSource === 'cloud' ? 'var(--vl-state-live-bg)' : 'var(--vl-surface-overlay)',
+                color: shortcut.voiceSource === 'cloud' ? 'var(--vl-state-live-text)' : 'var(--vl-purple-200)',
               }}
             >
               {shortcut.voiceSource === 'cloud' ? <Cloud className="h-3 w-3" /> : <HardDrive className="h-3 w-3" />}

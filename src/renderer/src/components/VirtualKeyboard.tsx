@@ -18,7 +18,7 @@ const rows = [
 
 const KEY_BASE_CLASS = 'min-w-[2rem] h-10 px-2 text-sm font-medium rounded-lg border transition-colors'
 const KEY_BASE_STYLE: React.CSSProperties = {
-  background: 'rgba(19,9,43,0.78)',
+  background: 'var(--vl-surface-overlay)',
   borderColor: 'var(--vl-hud-border)',
   color: 'var(--vl-ink-strong)',
 }

@@ -228,7 +228,7 @@ export default function ClonePage() {
       <div className="hud-frame p-6">
         <div
           className="rounded-2xl p-4 mb-6"
-          style={{ background: 'rgba(139,92,246,0.10)', border: '1px solid rgba(139,92,246,0.30)' }}
+          style={{ background: 'var(--vl-surface-raised)', border: '1px solid var(--vl-hud-border)' }}
         >
           <p className="text-sm font-medium" style={{ color: 'var(--vl-purple-200)' }}>Motor desta tela</p>
           <p className="text-sm mt-1 text-ink-strong">XTTS v2 (avancado, recomendado apenas com NVIDIA/CUDA)</p>
@@ -240,9 +240,9 @@ export default function ClonePage() {
               <div
                 className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
                 style={{
-                  background: wizard.step >= step ? 'linear-gradient(135deg, #A06EFF, #7C3AED)' : 'rgba(19,9,43,0.7)',
+                  background: wizard.step >= step ? 'var(--vl-state-ready)' : 'var(--vl-surface-overlay)',
                   color: wizard.step >= step ? '#fff' : 'var(--vl-ink-mute)',
-                  boxShadow: wizard.step >= step ? '0 0 16px rgba(139,92,246,0.5)' : 'none',
+                  boxShadow: 'none',
                 }}
               >
                 {step}
@@ -364,13 +364,13 @@ export default function ClonePage() {
             <h3 className="text-lg font-medium text-ink-strong">Processando...</h3>
             <p className="text-ink-soft">{wizard.progress.message || 'Extraindo caracteristicas da voz...'}</p>
             <div className="max-w-xs mx-auto">
-              <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(95,35,194,0.25)' }}>
+              <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--vl-surface-sunken)' }}>
                 <div
                   className="h-full rounded-full transition-all duration-500"
                   style={{
                     width: `${wizard.progress.percent}%`,
-                    background: 'linear-gradient(90deg, #8B5CF6, #49E6FF)',
-                    boxShadow: '0 0 12px rgba(139,92,246,0.7)',
+                    background: 'var(--vl-state-ready)',
+                    boxShadow: 'none',
                   }}
                 />
               </div>
