@@ -201,11 +201,6 @@ export default function TTSPage() {
     }
   }
 
-  const handleModelChange = useCallback((newModelId: string) => {
-    setModelId(newModelId)
-    setDefaultModelId(newModelId)
-  }, [setDefaultModelId])
-
   const handleSpeedChange = useCallback((newSpeed: number) => {
     setSpeed(newSpeed)
     setDefaultSpeed(newSpeed)
@@ -530,62 +525,7 @@ export default function TTSPage() {
         </div>
       )}
 
-      {false ? (
-        <div className="hud-frame mb-4 flex flex-wrap items-center gap-4 p-4">
-          <div className="flex items-center gap-3">
-            <label htmlFor="tts-model" className="text-xs uppercase tracking-[0.18em] text-ink-mute">Modelo</label>
-            <select
-              id="tts-model"
-              value={modelId}
-              onChange={(e) => handleModelChange(e.target.value)}
-              className="input-field w-56 py-2 text-sm"
-              disabled={noReadyModel}
-            >
-              {noReadyModel && <option value="">Nenhum modelo pronto</option>}
-              {availableModels.map((model) => (
-                <option key={model.id} value={model.id}>
-                  {model.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <label htmlFor="tts-speed" className="text-xs uppercase tracking-[0.18em] text-ink-mute">Velocidade</label>
-            <input
-              id="tts-speed"
-              type="range"
-              min={0.5}
-              max={2.0}
-              step={0.1}
-              value={speed}
-              onChange={(e) => handleSpeedChange(parseFloat(e.target.value))}
-              className="w-28 accent-brand-400"
-              aria-label="Velocidade de fala"
-              aria-valuemin={0.5}
-              aria-valuemax={2.0}
-              aria-valuenow={speed}
-              aria-valuetext={`${speed.toFixed(1)}x`}
-            />
-            <span className="w-10 text-sm text-ink-body font-mono">{speed.toFixed(1)}x</span>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <label htmlFor="tts-voice-id" className="text-xs uppercase tracking-[0.18em] text-ink-mute">Voz</label>
-            <input
-              id="tts-voice-id"
-              type="text"
-              value={voiceId}
-              onChange={(e) => setVoiceId(e.target.value)}
-              placeholder="Padrao"
-              className="input-field w-40 py-2 text-sm"
-              disabled={noReadyModel}
-              aria-label="ID de voz (opcional)"
-            />
-          </div>
-        </div>
-      ) : (
-        <div className="mb-4 grid gap-4 lg:grid-cols-[1.6fr_1fr]">
+      <div className="mb-4 grid gap-4 lg:grid-cols-[1.6fr_1fr]">
           <CloudVoicePicker
             selectedVoice={cloudVoice?.ShortName ?? storedCloudVoiceShortName ?? null}
             onSelect={handleCloudVoiceSelect}
@@ -623,7 +563,6 @@ export default function TTSPage() {
             )}
           </div>
         </div>
-      )}
 
       <div className="flex min-h-0 flex-1 flex-col gap-4 xl:flex-row xl:items-stretch">
         <div className="flex min-h-0 flex-1 flex-col gap-4">

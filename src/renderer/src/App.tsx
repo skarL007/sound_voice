@@ -23,9 +23,7 @@ import {
 } from 'lucide-react'
 
 import DashboardPage from './pages/DashboardPage'
-import ModelsPage from './pages/ModelsPage'
 import TTSPage from './pages/TTSPage'
-import ClonePage from './pages/ClonePage'
 import SettingsPage from './pages/SettingsPage'
 import LogsPage from './pages/LogsPage'
 import VoiceShortcutsPage from './pages/VoiceShortcutsPage'
@@ -1020,10 +1018,8 @@ export default function App() {
             <Routes>
               <Route path="/" element={<HomePage backendStatus={backendStatus} />} />
               <Route path="/dashboard" element={<DashboardPage />} />
-              <Route path="/models" element={<ModelsPage />} />
               <Route path="/tts" element={<TTSPage />} />
               <Route path="/shortcuts" element={<VoiceShortcutsPage />} />
-              <Route path="/clone" element={<ClonePage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/logs" element={<LogsPage />} />
             </Routes>
