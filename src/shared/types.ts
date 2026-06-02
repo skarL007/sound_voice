@@ -233,5 +233,9 @@ export interface AppSettings {
   cloudVoice?: string
   cableDeviceId?: string | null
   cableDeviceLabel?: string | null
+  // Monitor: onde o usuario ouve a propria voz online enquanto ela vai ao cabo.
+  // 'default' = alto-falante padrao do sistema; null = nao ouvir (mudo).
+  monitorDeviceId?: string | null
+  monitorDeviceLabel?: string | null
   voiceShortcuts?: VoiceShortcut[]
 }

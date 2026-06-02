@@ -53,6 +53,9 @@ interface AppState {
   cableDeviceId: string | null
   cableDeviceLabel: string | null
   setCableDevice: (deviceId: string | null, deviceLabel: string | null) => void
+  monitorDeviceId: string | null
+  monitorDeviceLabel: string | null
+  setMonitorDevice: (deviceId: string | null, deviceLabel: string | null) => void
   voiceShortcuts: VoiceShortcut[]
   addVoiceShortcut: (shortcut: VoiceShortcut) => void
   updateVoiceShortcut: (id: string, patch: Partial<VoiceShortcut>) => void
@@ -108,6 +111,8 @@ export function migrateSettings(saved: Partial<AppSettings> | null | undefined):
     voiceSource: 'cloud',
     cableDeviceId: null,
     cableDeviceLabel: null,
+    monitorDeviceId: 'default',
+    monitorDeviceLabel: null,
     voiceShortcuts: [],
     ...base,
   })
@@ -219,6 +224,12 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ cableDeviceId: deviceId, cableDeviceLabel: deviceLabel })
     saveToDisk({ cableDeviceId: deviceId, cableDeviceLabel: deviceLabel })
   },
+  monitorDeviceId: 'default',
+  monitorDeviceLabel: null,
+  setMonitorDevice: (deviceId, deviceLabel) => {
+    set({ monitorDeviceId: deviceId, monitorDeviceLabel: deviceLabel })
+    saveToDisk({ monitorDeviceId: deviceId, monitorDeviceLabel: deviceLabel })
+  },
   voiceShortcuts: [],
   addVoiceShortcut: (shortcut) => {
     const next = [...get().voiceShortcuts, shortcut]
@@ -288,6 +299,8 @@ if (typeof window !== 'undefined') {
       cloudVoice: migrated.cloudVoice ?? null,
       cableDeviceId: migrated.cableDeviceId ?? null,
       cableDeviceLabel: migrated.cableDeviceLabel ?? null,
+      monitorDeviceId: migrated.monitorDeviceId ?? 'default',
+      monitorDeviceLabel: migrated.monitorDeviceLabel ?? null,
       voiceShortcuts: migrated.voiceShortcuts ?? [],
       _hydrated: true,
     })

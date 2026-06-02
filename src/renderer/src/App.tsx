@@ -30,7 +30,6 @@ import VoiceShortcutsPage from './pages/VoiceShortcutsPage'
 import { useAppStore } from './stores/appStore'
 import OnboardingTutorial from './components/OnboardingTutorial'
 import ToastContainer from './components/ToastContainer'
-import LocalSetupCard from './components/LocalSetupCard'
 import DiscordVRChatGuide from './components/DiscordVRChatGuide'
 import ProfileSwitcher from './components/ProfileSwitcher'
 import { useCommunicationSettings } from './hooks/useCommunicationSettings'
@@ -456,8 +455,6 @@ function HomePage({ backendStatus }: { backendStatus: BackendStatus }) {
       </div>
 
       <DiscordVRChatGuide />
-
-      <LocalSetupCard />
     </div>
   )
 }
@@ -820,11 +817,10 @@ export default function App() {
             toast('Erro na voz online', response.error || 'Nao foi possivel gerar a voz.', 'error')
             return
           }
-          await playCloudAudio(
-            response.audioBase64,
-            response.mimeType ?? 'audio/webm',
-            virtualMicOn && cableDeviceId ? cableDeviceId : undefined,
-          )
+          await playCloudAudio(response.audioBase64, response.mimeType ?? 'audio/webm', {
+            cableDeviceId: virtualMicOn ? cableDeviceId : undefined,
+            monitorDeviceId: settings.monitorDeviceId,
+          })
           const nextCommunication = {
             ...communication,
             ttsDraft: communication.keepTextAfterSpeak ? phrase : '',
@@ -950,12 +946,10 @@ export default function App() {
             toast('Falha no atalho', response.error || 'Nao foi possivel gerar a voz.', 'error')
             return
           }
-          await playCloudAudio(
-            response.audioBase64,
-            response.mimeType ?? 'audio/webm',
-            virtualMicOn && cableDeviceId ? cableDeviceId : undefined,
-            { monitor: virtualMicOn && Boolean(cableDeviceId) },
-          )
+          await playCloudAudio(response.audioBase64, response.mimeType ?? 'audio/webm', {
+            cableDeviceId: virtualMicOn ? cableDeviceId : undefined,
+            monitorDeviceId: settings.monitorDeviceId,
+          })
           return
         }
         if (!runtimeStatus.running) {

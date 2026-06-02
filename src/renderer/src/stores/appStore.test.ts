@@ -140,6 +140,7 @@ describe('migrateSettings', () => {
     expect(result.voiceSource).toBe('cloud')
     expect(result.cableDeviceId).toBeNull()
     expect(result.cableDeviceLabel).toBeNull()
+    expect(result.monitorDeviceId).toBe('default')
   })
 
   it('preserves explicit voiceSource/cableDeviceId when already set', () => {

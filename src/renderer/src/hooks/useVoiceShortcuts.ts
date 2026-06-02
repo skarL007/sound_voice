@@ -24,6 +24,7 @@ export function useVoiceShortcuts() {
   const deleteShortcut = useAppStore((s) => s.deleteVoiceShortcut)
   const cloudVoiceDefault = useAppStore((s) => s.cloudVoice)
   const cableDeviceId = useAppStore((s) => s.cableDeviceId)
+  const monitorDeviceId = useAppStore((s) => s.monitorDeviceId)
 
   const [cloudVoices, setCloudVoices] = useState<CloudVoice[]>([])
   const [cloudError, setCloudError] = useState<string | null>(null)
@@ -132,8 +133,9 @@ export function useVoiceShortcuts() {
         toast('Falha no teste', response.error || 'Nao foi possivel gerar a voz.', 'error')
         return
       }
-      await playCloudAudio(response.audioBase64, response.mimeType ?? 'audio/webm', cableDeviceId ?? undefined, {
-        monitor: Boolean(cableDeviceId),
+      await playCloudAudio(response.audioBase64, response.mimeType ?? 'audio/webm', {
+        cableDeviceId: cableDeviceId ?? undefined,
+        monitorDeviceId,
       })
     } catch (error) {
       toast('Falha no teste', String(error), 'error')

@@ -19,6 +19,7 @@ export default function DiscordReadyBanner({ visible, onClose, modelId, speed = 
   const voiceSource = useAppStore((state) => state.voiceSource)
   const cloudVoiceShortName = useAppStore((state) => state.cloudVoice)
   const cableDeviceId = useAppStore((state) => state.cableDeviceId)
+  const monitorDeviceId = useAppStore((state) => state.monitorDeviceId)
 
   useEffect(() => {
     if (!visible) return
@@ -47,12 +48,10 @@ export default function DiscordReadyBanner({ visible, onClose, modelId, speed = 
           toast('Falha no teste', response.error || 'Nao foi possivel gerar o audio.', 'error')
           return
         }
-        await playCloudAudio(
-          response.audioBase64,
-          response.mimeType ?? 'audio/webm',
-          cableDeviceId ?? undefined,
-          { monitor: Boolean(cableDeviceId) },
-        )
+        await playCloudAudio(response.audioBase64, response.mimeType ?? 'audio/webm', {
+          cableDeviceId: cableDeviceId ?? undefined,
+          monitorDeviceId,
+        })
         return
       }
 

@@ -76,6 +76,7 @@ export default function TTSPage() {
     setStoredCloudVoice,
     cableDeviceId,
     setCableDevice,
+    monitorDeviceId,
   } = useAppStore(
     useShallow((s) => ({
       defaultModelId: s.defaultModelId,
@@ -89,6 +90,7 @@ export default function TTSPage() {
       setStoredCloudVoice: s.setCloudVoice,
       cableDeviceId: s.cableDeviceId,
       setCableDevice: s.setCableDevice,
+      monitorDeviceId: s.monitorDeviceId,
     })),
   )
   const {
@@ -260,12 +262,10 @@ export default function TTSPage() {
         if (cancelRef.current) return
         setIsSynthesizing(false)
         if (response.success && response.audioBase64) {
-          await playCloudAudio(
-            response.audioBase64,
-            response.mimeType ?? 'audio/webm',
-            virtualMicEnabled && cableDeviceId ? cableDeviceId : undefined,
-            { monitor: virtualMicEnabled && Boolean(cableDeviceId) },
-          )
+          await playCloudAudio(response.audioBase64, response.mimeType ?? 'audio/webm', {
+            cableDeviceId: virtualMicEnabled ? cableDeviceId : undefined,
+            monitorDeviceId,
+          })
           addHistoryItem(
             buildHistoryItem({
               text: textToSpeak,
