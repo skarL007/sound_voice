@@ -6,7 +6,7 @@ import { detectHardware } from './hardware-detector'
 import { downloadModelWithProgress, downloadFileWithProgress, cancelDownload } from './download-manager'
 import { loadSettings, saveSettings } from './settings-store'
 import { logMain, getLogs, clearLogs } from './logger'
-import { join, relative, isAbsolute, resolve } from 'path'
+import { join, relative, isAbsolute, resolve, dirname } from 'path'
 import { existsSync, readdirSync, statSync, unlinkSync, rmdirSync, readFileSync, mkdirSync, writeFileSync } from 'fs'
 import { validateModelId, validateAudioExtension, isHttpUrl } from './security-utils'
 import { getBundledVBCableInstallerCandidates, isAutoUpdateEnabled, VBCABLE_DOWNLOAD } from './app-config'
@@ -399,8 +399,14 @@ export function registerIpcHandlers(): void {
       logMain('WARN', `Bundled VB-Cable launch failed (${openError}), will try download`)
     }
 
-    // 2. Baixa o ZIP oficial para userData/temp/vbcable.
-    const workDir = join(USER_DATA, 'temp', 'vbcable')
+    // 2. Baixa o ZIP para ProgramData (fora do perfil do usuario). Critico:
+    // em contas PADRAO (nao-admin) o UAC eleva para OUTRA conta de admin, que
+    // nao acessa o AppData do usuario — por isso RunAs de um exe em AppData
+    // falha com "The system cannot find the file specified". ProgramData e
+    // gravavel pelo usuario E acessivel ao admin que eleva, entao o RunAs
+    // funciona em conta padrao e em conta de admin.
+    const programData = process.env.ProgramData || process.env.ALLUSERSPROFILE || 'C:\\ProgramData'
+    const workDir = join(programData, 'VoiceLaunch TTS', 'vbcable')
     try {
       if (!existsSync(workDir)) mkdirSync(workDir, { recursive: true })
     } catch (e) {
@@ -468,13 +474,11 @@ export function registerIpcHandlers(): void {
     if (launchError) {
       logMain('ERROR', `VB-Cable installer launch failed: ${launchError}`)
       sendComplete({ success: false, error: launchError })
-      void shell.openPath(workDir)
       return {
-        success: true,
-        launched: false,
+        success: false,
         downloaded: true,
-        message:
-          'Baixei o instalador, mas o Windows pediu permissao. Abri a pasta — execute o VBCABLE_Setup_x64.exe (botao direito > Executar como administrador) e depois clique em Verificar instalacao.',
+        error: launchError,
+        message: `Baixei o instalador, mas nao consegui abri-lo (${launchError}). Execute manualmente como administrador: ${exePath}`,
       }
     }
     sendComplete({ success: true })
@@ -613,9 +617,14 @@ async function launchInstaller(exePath: string): Promise<string> {
   }
   const system32 = join(process.env.SystemRoot || 'C:\\Windows', 'System32')
   const powershell = join(system32, 'WindowsPowerShell', 'v1.0', 'powershell.exe')
-  const command = `Start-Process -FilePath '${exePath.replace(/'/g, "''")}' -Verb RunAs`
+  const installerDir = dirname(exePath)
+  // -WorkingDirectory explicito e obrigatorio: sem ele o Start-Process -Verb
+  // RunAs herda o cwd do processo Electron, que ao elevar resulta em
+  // "The system cannot find the path specified" (ERROR_PATH_NOT_FOUND).
+  const command = `Start-Process -FilePath '${exePath.replace(/'/g, "''")}' -WorkingDirectory '${installerDir.replace(/'/g, "''")}' -Verb RunAs`
   return await new Promise<string>((resolve) => {
     const ps = spawn(existsSync(powershell) ? powershell : 'powershell.exe', ['-NoProfile', '-Command', command], {
+      cwd: installerDir,
       shell: false,
       windowsHide: true,
     })
