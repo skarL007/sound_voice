@@ -381,17 +381,12 @@ function CompactView({ backendStatus }: { backendStatus: BackendStatus }) {
   }
 
   const toggleVirtualMic = async () => {
-    if (!backendStatus.running) {
-      toast('Backend indisponivel', 'Espere o backend iniciar antes de ativar o microfone virtual.', 'warning')
-      return
-    }
-    const current = await window.electronAPI.getVirtualMicStatus()
-    const nextState = !current
-    const success = await window.electronAPI.setVirtualMic(nextState)
-    if (success) {
-      setVirtualMicEnabled(nextState)
-      window.dispatchEvent(new CustomEvent('voicelaunch:virtual-mic-changed', { detail: nextState }))
-    }
+    // Online-first: o estado do mic nao depende do backend (a voz e roteada no
+    // renderer via setSinkId). setVirtualMic e best-effort (so as vozes locais usam).
+    const nextState = !virtualMicEnabled
+    setVirtualMicEnabled(nextState)
+    void window.electronAPI.setVirtualMic(nextState)
+    window.dispatchEvent(new CustomEvent('voicelaunch:virtual-mic-changed', { detail: nextState }))
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -699,23 +694,16 @@ export default function App() {
     }
 
     const toggleVirtualMic = async () => {
-      const runtimeStatus = await window.electronAPI.getBackendStatus()
-      if (!runtimeStatus.running) {
-        toast('Backend indisponivel', 'Espere o backend iniciar antes de ativar o microfone virtual.', 'warning')
-        return
-      }
-
-      const current = await window.electronAPI.getVirtualMicStatus()
+      // Online-first: nao bloqueia no backend; setVirtualMic e best-effort.
+      const current = await window.electronAPI.getVirtualMicStatus().catch(() => false)
       const nextState = !current
-      const success = await window.electronAPI.setVirtualMic(nextState)
-      if (success) {
-        window.dispatchEvent(new CustomEvent('voicelaunch:virtual-mic-changed', { detail: nextState }))
-        toast(
-          'Microfone virtual',
-          nextState ? 'Microfone virtual ativado.' : 'Microfone virtual desativado.',
-          'info',
-        )
-      }
+      void window.electronAPI.setVirtualMic(nextState)
+      window.dispatchEvent(new CustomEvent('voicelaunch:virtual-mic-changed', { detail: nextState }))
+      toast(
+        'Microfone virtual',
+        nextState ? 'Microfone virtual ativado.' : 'Microfone virtual desativado.',
+        'info',
+      )
     }
 
     const unsubQuickPhrase = window.electronAPI.onGlobalSpeakQuickPhrase((index) => {

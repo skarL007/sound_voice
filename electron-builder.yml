@@ -1,6 +1,8 @@
 appId: com.voicelaunch.tts
 productName: VoiceLaunch TTS
 copyright: Copyright © 2026 VoiceLaunch Team
+# Garante o instalador do VB-Cable em assets/vbcable antes de empacotar.
+beforePack: scripts/before-pack.cjs
 directories:
   output: dist
   buildResources: build
