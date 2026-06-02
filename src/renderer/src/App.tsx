@@ -298,7 +298,7 @@ function Sidebar() {
         </div>
         <div className="hidden lg:block text-xs text-ink-mute px-3">
           <p>VoiceLaunch TTS v1.0</p>
-          <p>100% Offline · Open Source</p>
+          <p>Voz online (Edge TTS) · Open Source</p>
         </div>
       </div>
     </nav>
@@ -398,13 +398,13 @@ function HomePage({ backendStatus }: { backendStatus: BackendStatus }) {
       <section className="hud-frame hud-frame--hero animate-lift-in p-8 lg:p-10">
         <div className="status-pill status-pill--ready w-fit">
           <Sparkles className="h-3.5 w-3.5" />
-          Modo local assistivo
+          Comunicacao assistiva
         </div>
         <h1 className="mt-6 text-3xl lg:text-4xl font-bold tracking-tight text-ink-strong">
-          Uma estacao de voz local para falar rapido, com clareza.
+          Uma estacao de voz para falar rapido, com clareza.
         </h1>
         <p className="mt-4 max-w-2xl text-base lg:text-lg leading-7 text-ink-body">
-          Trilha principal em Piper + Kokoro, microfone virtual para Discord/jogos, frases rapidas com atalhos globais 1..9 e modo compacto sempre no topo.
+          Vozes online (Edge TTS), microfone virtual para Discord e jogos, atalhos de voz com teclas globais e modo compacto sempre no topo.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           <a href="#/tts" className="btn-primary btn-primary--armed inline-flex items-center gap-2 px-6 py-3 text-base">
@@ -1043,7 +1043,7 @@ const SHORTCUTS = [
   { keys: 'Ctrl+Shift+F', desc: 'Focar campo de texto' },
   { keys: 'Enter', desc: 'Falar texto' },
   { keys: 'Shift+Enter', desc: 'Nova linha' },
-  { keys: 'Ctrl+Shift+1..9', desc: 'Frase rapida 1–9' },
+  { keys: 'Ctrl+Shift+1..9', desc: 'Atalho de voz 1–9' },
   { keys: 'Ctrl+Shift+M', desc: 'Ativar/desativar mic' },
   { keys: 'Ctrl+Shift+V', desc: 'Modo compacto' },
   { keys: 'Ctrl+Shift+S', desc: 'Parar audio' },
