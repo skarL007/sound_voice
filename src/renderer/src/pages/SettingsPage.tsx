@@ -3,9 +3,7 @@ import type { BackendStatus } from '../../../shared/types'
 import { useAppStore } from '../stores/appStore'
 import {
   BookOpen,
-  ChevronRight,
   Contrast,
-  Cpu,
   Eye,
   Mic,
   RefreshCw,
@@ -138,19 +136,6 @@ export default function SettingsPage() {
         <Settings className="w-7 h-7" style={{ color: 'var(--vl-state-ready)' }} />
         <h1 className="text-2xl font-bold text-ink-strong">Configuracoes</h1>
       </div>
-
-      <a
-        href="#/dashboard"
-        className="hud-frame card-hover p-5 flex items-center gap-4 group"
-        aria-label="Abrir informacoes de hardware"
-      >
-        <Cpu className="w-6 h-6" style={{ color: 'var(--vl-state-ready)' }} />
-        <div className="flex-1">
-          <p className="text-base font-medium text-ink-strong">Meu computador</p>
-          <p className="text-sm text-ink-soft">CPU, RAM, GPU detectados e classificacao da maquina.</p>
-        </div>
-        <ChevronRight className="w-5 h-5 text-ink-soft group-hover:translate-x-1 transition-transform" />
-      </a>
 
       <div className="hud-frame p-5">
         <div className="flex items-center justify-between mb-4">

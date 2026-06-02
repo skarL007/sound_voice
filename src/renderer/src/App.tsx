@@ -1,11 +1,10 @@
 import { useEffect, useState, useRef } from 'react'
-import { HashRouter, Routes, Route, NavLink } from 'react-router-dom'
+import { HashRouter, Routes, Route, NavLink, Navigate } from 'react-router-dom'
 import {
   AlertTriangle,
   Mic,
   Settings,
   Volume2,
-  Home,
   Minus,
   Square,
   X,
@@ -16,19 +15,15 @@ import {
   History,
   ChevronDown,
   MoreHorizontal,
-  Sparkles,
-  Activity,
   Keyboard,
 } from 'lucide-react'
 
-import DashboardPage from './pages/DashboardPage'
 import TTSPage from './pages/TTSPage'
 import SettingsPage from './pages/SettingsPage'
 import VoiceShortcutsPage from './pages/VoiceShortcutsPage'
 import { useAppStore } from './stores/appStore'
 import OnboardingTutorial from './components/OnboardingTutorial'
 import ToastContainer from './components/ToastContainer'
-import DiscordVRChatGuide from './components/DiscordVRChatGuide'
 import { useCommunicationSettings } from './hooks/useCommunicationSettings'
 import { buildHistoryItem, pushHistoryItem, sanitizeCommunicationState, serializeCommunicationState } from './utils/communicationState'
 import { getVisibleInstalledModels, resolveActiveModelForMvp } from './utils/modelSupport'
@@ -40,8 +35,7 @@ import type { BackendStatus, ModelInfo } from '../../shared/types'
 // App focado no online (Edge TTS): jornada começa → fala → atalho → ajustes.
 // As telas locais (instalar modelos, clonar voz) saem da navegacao.
 const navItems = [
-  { to: '/', icon: Home, label: 'Início' },
-  { to: '/tts', icon: Volume2, label: 'Falar' },
+  { to: '/', icon: Volume2, label: 'Falar' },
   { to: '/shortcuts', icon: Keyboard, label: 'Atalhos' },
   { to: '/settings', icon: Settings, label: 'Ajustes' },
 ]
@@ -285,145 +279,6 @@ function Sidebar() {
         </div>
       </div>
     </nav>
-  )
-}
-
-function HudStat({
-  icon: Icon,
-  label,
-  value,
-  tone,
-  hint,
-}: {
-  icon: typeof Mic
-  label: string
-  value: string
-  tone: 'ready' | 'live' | 'warn' | 'error'
-  hint?: string
-}) {
-  const toneVar = {
-    ready: 'var(--vl-state-ready)',
-    live: 'var(--vl-state-live)',
-    warn: 'var(--vl-state-warn)',
-    error: 'var(--vl-state-error)',
-  }[tone]
-  return (
-    <div className="hud-frame card-hover p-5 flex flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <span className="text-[11px] uppercase tracking-[0.22em] text-ink-soft">{label}</span>
-        <Icon className="h-5 w-5" style={{ color: toneVar }} />
-      </div>
-      <div className="text-2xl font-bold text-ink-strong leading-tight relative">{value}</div>
-      {hint && <p className="text-xs text-ink-soft leading-relaxed relative">{hint}</p>}
-    </div>
-  )
-}
-
-function HomePage({ backendStatus }: { backendStatus: BackendStatus }) {
-  const setCompactMode = useAppStore((state) => state.setCompactMode)
-  const [virtualMicEnabled, setVirtualMicEnabled] = useState(false)
-  const [vbCableDetected, setVbCableDetected] = useState<boolean | null>(null)
-
-  useEffect(() => {
-    const loadCounts = async () => {
-      try {
-        const [micStatus, audioDevices] = await Promise.all([
-          window.electronAPI.getVirtualMicStatus(),
-          window.electronAPI.listAudioDevices(),
-        ])
-        setVirtualMicEnabled(micStatus)
-        setVbCableDetected(audioDevices.some((device) => device.name.toLowerCase().includes('cable')))
-      } catch {
-        // Backend pode estar offline; mantemos valores defaults.
-      }
-    }
-    void loadCounts()
-    const syncMic = (event: Event) => {
-      setVirtualMicEnabled((event as CustomEvent<boolean>).detail)
-    }
-    window.addEventListener('voicelaunch:virtual-mic-changed', syncMic as EventListener)
-    return () => window.removeEventListener('voicelaunch:virtual-mic-changed', syncMic as EventListener)
-  }, [backendStatus.running])
-
-  const backendTone: 'ready' | 'live' | 'warn' | 'error' = backendStatus.running
-    ? 'live'
-    : backendStatus.phase === 'error'
-      ? 'error'
-      : 'warn'
-  const backendValue = backendStatus.running
-    ? 'Online'
-    : backendStatus.phase === 'starting'
-      ? 'Iniciando'
-      : backendStatus.phase === 'error'
-        ? 'Falha'
-        : 'Offline'
-
-  const micTone: 'ready' | 'live' | 'warn' | 'error' = virtualMicEnabled
-    ? 'live'
-    : vbCableDetected === false
-      ? 'warn'
-      : 'ready'
-  const micValue = virtualMicEnabled
-    ? 'Transmitindo'
-    : vbCableDetected === false
-      ? 'VB-Cable ausente'
-      : 'Pronto'
-
-  return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-6">
-      <section className="hud-frame hud-frame--hero animate-lift-in p-6 lg:p-8">
-        <div className="status-pill status-pill--ready w-fit">
-          <Sparkles className="h-3.5 w-3.5" />
-          Comunicacao assistiva
-        </div>
-        <h1 className="mt-4 text-hero font-bold tracking-tight text-ink-strong">
-          Uma estacao de voz para falar rapido, com clareza.
-        </h1>
-        <p className="mt-3 max-w-2xl text-ui leading-7 text-ink-body">
-          Vozes online (Edge TTS), microfone virtual para Discord e jogos, atalhos de voz com teclas globais e modo compacto sempre no topo.
-        </p>
-        <div className="mt-6 flex flex-wrap gap-3">
-          <a href="#/tts" className="btn-primary btn-primary--armed inline-flex items-center gap-2 px-6 py-3 text-base">
-            <Volume2 className="h-5 w-5" />
-            Falar agora
-          </a>
-          <button
-            onClick={() => setCompactMode(true)}
-            className="btn-secondary inline-flex items-center gap-2 px-5 py-3 text-base"
-          >
-            <PictureInPicture className="h-5 w-5" />
-            Modo compacto
-          </button>
-          <a href="#/settings" className="btn-ghost text-base">
-            <Keyboard className="h-5 w-5" />
-            Configurar atalhos
-          </a>
-        </div>
-      </section>
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <HudStat
-          icon={Activity}
-          label="Backend"
-          value={backendValue}
-          tone={backendTone}
-          hint={`Porta ${backendStatus.port}`}
-        />
-        <HudStat
-          icon={Mic}
-          label="Microfone virtual"
-          value={micValue}
-          tone={micTone}
-          hint={virtualMicEnabled ? 'CABLE Output ativo' : 'Selecione CABLE Output no Discord'}
-        />
-      </div>
-      <p className="flex items-center gap-2 text-caption text-ink-soft">
-        <Keyboard className="h-3.5 w-3.5" />
-        Atalho global <span className="badge-shortcut">Ctrl+Shift+F</span> foca o app de qualquer lugar.
-      </p>
-
-      <DiscordVRChatGuide />
-    </div>
   )
 }
 
@@ -979,9 +834,8 @@ export default function App() {
           <Sidebar />
           <main className="min-w-0 flex-1 overflow-auto px-4 py-4 lg:px-6 lg:py-5">
             <Routes>
-              <Route path="/" element={<HomePage backendStatus={backendStatus} />} />
-              <Route path="/dashboard" element={<DashboardPage />} />
-              <Route path="/tts" element={<TTSPage />} />
+              <Route path="/" element={<TTSPage />} />
+              <Route path="/tts" element={<Navigate to="/" replace />} />
               <Route path="/shortcuts" element={<VoiceShortcutsPage />} />
               <Route path="/settings" element={<SettingsPage />} />
             </Routes>
