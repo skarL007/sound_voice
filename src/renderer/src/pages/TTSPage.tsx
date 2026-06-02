@@ -39,6 +39,30 @@ import {
   type VBCableInstallState,
 } from '../utils/virtualMicSetup'
 
+/**
+ * Acha o dispositivo de saida "CABLE Input" para rotear a voz online (Edge TTS)
+ * pelo navegador (setSinkId). Pede permissao de microfone se os nomes vierem
+ * vazios. Retorna null se nao encontrar.
+ */
+async function autoSelectCableOutput(): Promise<{ id: string; label: string } | null> {
+  if (!navigator.mediaDevices?.enumerateDevices) return null
+  const pick = (list: MediaDeviceInfo[]) => {
+    const outs = list.filter((d) => d.kind === 'audiooutput')
+    return outs.find((d) => /cable input/i.test(d.label)) || outs.find((d) => /cable/i.test(d.label)) || null
+  }
+  let found = pick(await navigator.mediaDevices.enumerateDevices())
+  if (!found && navigator.mediaDevices.getUserMedia) {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      stream.getTracks().forEach((t) => t.stop())
+      found = pick(await navigator.mediaDevices.enumerateDevices())
+    } catch {
+      /* permissao negada — sem nomes nao da pra auto-selecionar */
+    }
+  }
+  return found ? { id: found.deviceId, label: found.label || 'CABLE Input' } : null
+}
+
 export default function TTSPage() {
   const {
     defaultModelId,
@@ -51,6 +75,7 @@ export default function TTSPage() {
     storedCloudVoiceShortName,
     setStoredCloudVoice,
     cableDeviceId,
+    setCableDevice,
   } = useAppStore(
     useShallow((s) => ({
       defaultModelId: s.defaultModelId,
@@ -63,6 +88,7 @@ export default function TTSPage() {
       storedCloudVoiceShortName: s.cloudVoice,
       setStoredCloudVoice: s.setCloudVoice,
       cableDeviceId: s.cableDeviceId,
+      setCableDevice: s.setCableDevice,
     })),
   )
   const {
@@ -351,6 +377,22 @@ export default function TTSPage() {
       return
     }
     const newState = !virtualMicEnabled
+    // No modo online a voz e roteada pelo NAVEGADOR (setSinkId), nao pelo backend.
+    // Se o usuario ainda nao escolheu a saida, auto-seleciona o CABLE Input — senao
+    // o audio cairia no alto-falante e nunca chegaria ao Discord.
+    if (newState && voiceSource === 'cloud' && !cableDeviceId) {
+      const cable = await autoSelectCableOutput()
+      if (cable) {
+        setCableDevice(cable.id, cable.label)
+        toast('Saida ajustada', `Voz online sera enviada para ${cable.label}.`, 'success')
+      } else {
+        toast(
+          'Escolha a saida de audio',
+          'Abra Ajustes > Microfone Virtual e selecione CABLE Input para o Discord ouvir a voz online.',
+          'warning',
+        )
+      }
+    }
     const success = await window.electronAPI.setVirtualMic(newState)
     if (success) {
       setVirtualMicEnabled(newState)
