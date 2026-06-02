@@ -160,12 +160,20 @@ export default function TTSPage() {
 
     window.addEventListener('voicelaunch:virtual-mic-changed', syncVirtualMic as EventListener)
 
+    // Re-detecta o cabo quando os dispositivos de audio mudam (VB-Cable instalado
+    // com o app aberto, ou backend subindo depois) — sem depender so do mount.
+    const onDeviceChange = () => {
+      void loadMicDevices()
+    }
+    navigator.mediaDevices?.addEventListener?.('devicechange', onDeviceChange)
+
     return () => {
       unsubFocus()
       unsubStop()
       offMicProgress()
       offMicComplete()
       window.removeEventListener('voicelaunch:virtual-mic-changed', syncVirtualMic as EventListener)
+      navigator.mediaDevices?.removeEventListener?.('devicechange', onDeviceChange)
       if (micPollRef.current) clearInterval(micPollRef.current)
     }
   }, [])
@@ -269,6 +277,7 @@ export default function TTSPage() {
             cableDeviceId: virtualMicEnabled ? cableDeviceId : undefined,
             monitorDeviceId,
           })
+          if (cancelRef.current) return
           addHistoryItem(
             buildHistoryItem({
               text: textToSpeak,
@@ -323,44 +332,63 @@ export default function TTSPage() {
   }
 
   const loadMicDevices = async () => {
+    // Deteccao primaria no renderer (online-first): nao depende do backend Python.
+    // Reforco pelo backend (nomes via sounddevice) quando disponivel.
+    let detected = false
     try {
-      const devices = await window.electronAPI.listAudioDevices()
-      const detected = detectVBCable(devices)
-      setVbCableDetected(detected)
-      if (detected) {
-        setMicInstallState('idle')
-        setMicInstallMessage(undefined)
+      if (navigator.mediaDevices?.enumerateDevices) {
+        const outputs = await navigator.mediaDevices.enumerateDevices()
+        detected = outputs.some((d) => d.kind === 'audiooutput' && /cable/i.test(d.label))
       }
-      return detected
     } catch {
-      setVbCableDetected(false)
-      return false
+      /* ignore — cai pro backend */
     }
+    if (!detected) {
+      try {
+        const devices = await window.electronAPI.listAudioDevices()
+        detected = detectVBCable(devices)
+      } catch {
+        /* ignore */
+      }
+    }
+    setVbCableDetected(detected)
+    if (detected) {
+      setMicInstallState('idle')
+      setMicInstallMessage(undefined)
+    }
+    return detected
   }
 
   // Liga o microfone virtual: garante uma saida de cabo (auto-seleciona o CABLE
   // Input se preciso) e ativa o roteamento. Reusado pelo toggle manual, pelo
   // "Verificar" e pela auto-ativacao apos a instalacao.
   const activateVirtualMic = async (announce = true): Promise<boolean> => {
-    if (voiceSource === 'cloud' && !cableDeviceId) {
+    let deviceId = cableDeviceId
+    if (!deviceId) {
       const cable = await autoSelectCableOutput()
       if (cable) {
         setCableDevice(cable.id, cable.label)
-      } else if (announce) {
+        deviceId = cable.id
+      }
+    }
+    if (!deviceId) {
+      if (announce) {
         toast(
           'Escolha a saida de audio',
           'Abra Ajustes > Microfone Virtual e selecione CABLE Input para o Discord ouvir a voz online.',
           'warning',
         )
       }
+      return false
     }
-    const success = await window.electronAPI.setVirtualMic(true)
-    if (success) {
-      setVirtualMicEnabled(true)
-      window.dispatchEvent(new CustomEvent('voicelaunch:virtual-mic-changed', { detail: true }))
-      setShowDiscordBanner(true)
-    }
-    return success
+    // No modo online a voz e roteada pelo NAVEGADOR (setSinkId), entao ter um cabo ja
+    // basta para o Discord ouvir. O backend e avisado em best-effort (usado por vozes
+    // locais), sem bloquear — antes, uma falha do /mic/route deixava o mic "mudo".
+    void window.electronAPI.setVirtualMic(true)
+    setVirtualMicEnabled(true)
+    window.dispatchEvent(new CustomEvent('voicelaunch:virtual-mic-changed', { detail: true }))
+    setShowDiscordBanner(true)
+    return true
   }
 
   const stopMicAutoPoll = () => {
@@ -383,8 +411,12 @@ export default function TTSPage() {
         stopMicAutoPoll()
         if (!micAutoActivatedRef.current) {
           micAutoActivatedRef.current = true
-          await activateVirtualMic(false)
-          toast('Microfone virtual pronto', 'Detectado e ativado. No Discord, escolha CABLE Output.', 'success')
+          const ok = await activateVirtualMic(false)
+          if (ok) {
+            toast('Microfone virtual pronto', 'Detectado e ativado. No Discord, escolha CABLE Output.', 'success')
+          } else {
+            toast('VB-Cable detectado', 'Abra Ajustes > Microfone Virtual para escolher a saida.', 'info')
+          }
         }
       } else if (elapsed >= 120000) {
         stopMicAutoPoll()
@@ -751,7 +783,7 @@ export default function TTSPage() {
             {shortcuts.sortedShortcuts.length === 0 ? (
               <p className="text-center text-xs text-ink-soft py-4">Nenhum atalho ainda. Crie o primeiro acima.</p>
             ) : (
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-1">
                 {shortcuts.sortedShortcuts.map((entry) => (
                   <ShortcutCard
                     key={entry.id}

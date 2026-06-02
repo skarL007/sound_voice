@@ -215,7 +215,7 @@ export function ShortcutCard({
       style={isActive ? { boxShadow: '0 0 0 2px var(--vl-state-ready)', borderColor: 'var(--vl-state-ready)' } : {}}
       aria-current={isActive ? 'true' : undefined}
     >
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <HotkeyCapture
           value={shortcut.hotkey}
           onChange={(hotkey) => onUpdate({ hotkey })}
@@ -259,7 +259,7 @@ export function ShortcutCard({
 
       <div className="flex flex-wrap items-center gap-2">
         <VoiceSelect voices={voices} value={shortcut.voice} onChange={(voice) => onUpdate({ voice })} ariaLabel="Voz do atalho" />
-        <button onClick={onTest} disabled={isTesting} className="btn-primary inline-flex items-center gap-1.5 text-xs ml-auto">
+        <button onClick={onTest} disabled={isTesting} className="btn-secondary inline-flex items-center gap-1.5 text-xs ml-auto">
           {isTesting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <PlayCircle className="h-3.5 w-3.5" />}
           {isTesting ? 'Tocando...' : 'Testar'}
         </button>

@@ -33,7 +33,7 @@ export default function VoiceShortcutsPage() {
           <Keyboard className="h-5 w-5" style={{ color: 'var(--vl-state-ready)' }} />
         </div>
         <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight text-ink-strong">Atalhos de voz</h1>
+          <h1 className="text-page font-bold tracking-tight text-ink-strong">Atalhos de voz</h1>
           <p className="max-w-2xl text-sm text-ink-soft">
             Lista completa dos seus atalhos. Voce tambem pode criar atalhos direto na tela <strong>Falar</strong>.
             Cada um dispara a frase com a tecla, em qualquer app (Discord, jogo).
