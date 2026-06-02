@@ -468,7 +468,7 @@ export function registerIpcHandlers(): void {
     if (launchError) {
       logMain('ERROR', `VB-Cable installer launch failed: ${launchError}`)
       sendComplete({ success: false, error: launchError })
-      shell.showItemInFolder(exePath)
+      void shell.openPath(workDir)
       return {
         success: true,
         launched: false,
@@ -593,18 +593,42 @@ export function registerIpcHandlers(): void {
 }
 
 /**
- * Lanca um instalador via ShellExecute (shell.openPath): respeita o manifesto
- * de elevacao do .exe e dispara o UAC quando o instalador exige administrador.
- * spawn() direto falha com EACCES (ERROR_ELEVATION_REQUIRED) e o erro chega de
- * forma assincrona (uncaught -> crash). Retorna '' em sucesso, ou a mensagem
- * de erro.
+ * Lanca um instalador elevado. spawn() direto falha com EACCES para .exe com
+ * manifesto requireAdministrator (e o erro chega assincrono -> crash), e o
+ * shell.openPath teve comportamento inconsistente nesses .exe (retornava
+ * "path does not exist" sem elevar). No Windows usamos Start-Process -Verb
+ * RunAs, que dispara o UAC de forma confiavel mesmo a partir de um processo
+ * nao-elevado (dev). Retorna '' em sucesso ou a mensagem de erro.
  */
 async function launchInstaller(exePath: string): Promise<string> {
-  try {
-    return await shell.openPath(exePath)
-  } catch (e) {
-    return e instanceof Error ? e.message : String(e)
+  if (!existsSync(exePath)) {
+    return `Arquivo do instalador nao encontrado: ${exePath}`
   }
+  if (process.platform !== 'win32') {
+    try {
+      return await shell.openPath(exePath)
+    } catch (e) {
+      return e instanceof Error ? e.message : String(e)
+    }
+  }
+  const system32 = join(process.env.SystemRoot || 'C:\\Windows', 'System32')
+  const powershell = join(system32, 'WindowsPowerShell', 'v1.0', 'powershell.exe')
+  const command = `Start-Process -FilePath '${exePath.replace(/'/g, "''")}' -Verb RunAs`
+  return await new Promise<string>((resolve) => {
+    const ps = spawn(existsSync(powershell) ? powershell : 'powershell.exe', ['-NoProfile', '-Command', command], {
+      shell: false,
+      windowsHide: true,
+    })
+    let stderr = ''
+    ps.stderr?.on('data', (d) => {
+      stderr += d.toString()
+    })
+    ps.on('error', (e) => resolve(e.message))
+    ps.on('close', (code) => {
+      if (code === 0) resolve('')
+      else resolve(stderr.trim() || `O instalador nao foi iniciado (codigo ${code}). Voce pode ter cancelado o pedido de permissao do Windows.`)
+    })
+  })
 }
 
 function runProcess(command: string, args: string[]): Promise<void> {
