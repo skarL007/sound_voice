@@ -977,7 +977,7 @@ export default function App() {
         <BackendBanner status={backendStatus} retrying={retryingBackend} onRetry={() => void retryBackend()} voiceSource={voiceSource} />
         <div className="flex-1 flex overflow-hidden">
           <Sidebar />
-          <main className="flex-1 overflow-auto px-4 py-4 lg:px-6 lg:py-5">
+          <main className="min-w-0 flex-1 overflow-auto px-4 py-4 lg:px-6 lg:py-5">
             <Routes>
               <Route path="/" element={<HomePage backendStatus={backendStatus} />} />
               <Route path="/dashboard" element={<DashboardPage />} />

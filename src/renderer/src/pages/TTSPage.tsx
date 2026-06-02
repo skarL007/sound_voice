@@ -577,7 +577,7 @@ export default function TTSPage() {
             selectedVoice={cloudVoice?.ShortName ?? storedCloudVoiceShortName ?? null}
             onSelect={handleCloudVoiceSelect}
           />
-          <div className="hud-frame p-4 space-y-3">
+          <div className="hud-frame p-4 space-y-3 min-w-0">
             <div className="flex items-center gap-2">
               <Volume2 className="h-4 w-4" style={{ color: 'var(--vl-state-ready)' }} />
               <h3 className="text-sm font-semibold text-ink-strong">Velocidade</h3>
@@ -611,8 +611,8 @@ export default function TTSPage() {
           </div>
         </div>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-4 xl:flex-row xl:items-stretch">
-        <div className="flex min-h-0 flex-1 flex-col gap-4">
+      <div className="flex min-h-0 flex-1 flex-col gap-4 2xl:flex-row 2xl:items-stretch">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
           <div className="terminal-textarea flex min-h-0 flex-1 flex-col p-5">
             <textarea
               ref={textAreaRef}
@@ -709,7 +709,7 @@ export default function TTSPage() {
             </div>
           </div>
 
-          <div className="hud-frame p-4">
+          <div className="hud-frame p-4 min-w-0 2xl:w-[380px] 2xl:shrink-0">
             <div className="flex items-center gap-2 mb-3">
               <Keyboard className="h-4 w-4" style={{ color: 'var(--vl-state-ready)' }} />
               <h3 className="text-sm font-semibold text-ink-strong">Atalhos rapidos</h3>
