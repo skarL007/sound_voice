@@ -4,7 +4,6 @@ import {
   AlertTriangle,
   Mic,
   Settings,
-  UserCircle,
   Volume2,
   Download,
   Home,
@@ -43,13 +42,12 @@ import { toast } from './utils/toast'
 import { playCloudAudio } from './utils/cloudAudio'
 import type { BackendStatus, ModelInfo } from '../../shared/types'
 
-// Ordem segue a jornada do usuário: começa → fala → escolhe voz → cria atalho → clona
+// App focado no online (Edge TTS): jornada começa → fala → atalho → ajustes.
+// As telas locais (instalar modelos, clonar voz) saem da navegacao.
 const navItems = [
   { to: '/', icon: Home, label: 'Início' },
   { to: '/tts', icon: Volume2, label: 'Falar' },
-  { to: '/models', icon: Download, label: 'Vozes' },
   { to: '/shortcuts', icon: Keyboard, label: 'Atalhos' },
-  { to: '/clone', icon: UserCircle, label: 'Clonar' },
   { to: '/settings', icon: Settings, label: 'Ajustes' },
   { to: '/logs', icon: Terminal, label: 'Logs' },
 ]

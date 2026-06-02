@@ -3,7 +3,6 @@ import {
   BookmarkPlus,
   Cloud,
   Download,
-  HardDrive,
   History,
   Keyboard,
   Loader2,
@@ -17,11 +16,10 @@ import {
   Volume2,
   Wrench,
 } from 'lucide-react'
-import type { CloudVoice, HardwareInfo, ModelInfo } from '../../../shared/types'
+import type { CloudVoice, ModelInfo } from '../../../shared/types'
 import VirtualKeyboard from '../components/VirtualKeyboard'
 import DiscordReadyBanner from '../components/DiscordReadyBanner'
 import CloudVoicePicker from '../components/CloudVoicePicker'
-import AlertBox from '../components/AlertBox'
 import { useCommunicationSettings } from '../hooks/useCommunicationSettings'
 import { useAppStore } from '../stores/appStore'
 import { useShallow } from 'zustand/react/shallow'
@@ -109,7 +107,6 @@ export default function TTSPage() {
   const [isSynthesizing, setIsSynthesizing] = useState(false)
   const [virtualMicEnabled, setVirtualMicEnabled] = useState(false)
   const [availableModels, setAvailableModels] = useState<ModelInfo[]>([])
-  const [hardware, setHardware] = useState<HardwareInfo | null>(null)
   const [showHistory, setShowHistory] = useState(false)
   const [showDiscordBanner, setShowDiscordBanner] = useState(false)
   const [cloudVoice, setLocalCloudVoice] = useState<CloudVoice | null>(null)
@@ -175,13 +172,16 @@ export default function TTSPage() {
     loadRuntimeState()
   }, [showExperimentalModels])
 
+  // App focado no online: a fonte de voz e sempre Edge TTS (sem caminho local).
+  useEffect(() => {
+    if (voiceSource !== 'cloud') setVoiceSource('cloud')
+  }, [voiceSource, setVoiceSource])
+
   const loadRuntimeState = async () => {
     const [registry, detectedHardware] = await Promise.all([
       window.electronAPI.getModelRegistry(),
       window.electronAPI.getHardwareInfo(),
     ])
-
-    setHardware(detectedHardware)
 
     const visibleInstalledModels = registry.filter(
       (model) => model.installed && isModelVisibleInMvp(model, detectedHardware, showExperimentalModels),
@@ -531,40 +531,7 @@ export default function TTSPage() {
         </div>
       )}
 
-      <div className="hud-frame mb-4 p-1.5 inline-flex items-center gap-1 self-start">
-        <button
-          onClick={() => setVoiceSource('cloud')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-            voiceSource === 'cloud' ? 'btn-primary' : 'text-ink-soft hover:text-ink-strong'
-          }`}
-          aria-pressed={voiceSource === 'cloud'}
-        >
-          <Cloud className="h-4 w-4" />
-          Online (Edge TTS)
-        </button>
-        <button
-          onClick={() => setVoiceSource('local')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-            voiceSource === 'local' ? 'btn-primary' : 'text-ink-soft hover:text-ink-strong'
-          }`}
-          aria-pressed={voiceSource === 'local'}
-        >
-          <HardDrive className="h-4 w-4" />
-          Local (Piper/Kokoro)
-        </button>
-      </div>
-
-      {voiceSource === 'local' && noReadyModel && (
-        <AlertBox severity="warn" title="Nenhum modelo local pronto para uso" className="mb-4">
-          Instale o Piper na aba Modelos para o fluxo offline, ou volte para{' '}
-          <strong>Online (Edge TTS)</strong> para falar agora sem instalacao.
-          {hardware?.gpuVendor?.trim().toLowerCase() === 'amd' && (
-            <p className="mt-2">Em AMD a trilha local recomendada continua sendo Piper e Kokoro.</p>
-          )}
-        </AlertBox>
-      )}
-
-      {voiceSource === 'local' ? (
+      {false ? (
         <div className="hud-frame mb-4 flex flex-wrap items-center gap-4 p-4">
           <div className="flex items-center gap-3">
             <label htmlFor="tts-model" className="text-xs uppercase tracking-[0.18em] text-ink-mute">Modelo</label>
