@@ -18,6 +18,10 @@ import type {
   ModelRuntimeResponse,
   CloudVoice,
   VoiceShortcut,
+  VBCableInstallResult,
+  VBCableDownloadProgress,
+  VBCableDownloadComplete,
+  VirtualMicStatus,
 } from '../shared/types'
 
 export type {
@@ -39,6 +43,10 @@ export type {
   ModelRuntimeResponse,
   CloudVoice,
   VoiceShortcut,
+  VBCableInstallResult,
+  VBCableDownloadProgress,
+  VBCableDownloadComplete,
+  VirtualMicStatus,
 }
 
 export interface Api {
@@ -67,7 +75,12 @@ export interface Api {
   setVirtualMic: (enabled: boolean) => Promise<boolean>
   getVirtualMicStatus: () => Promise<boolean>
   listAudioDevices: () => Promise<AudioDevice[]>
-  installVBCable: () => Promise<{ success: boolean; launched?: boolean; message?: string; error?: string }>
+  installVBCable: () => Promise<VBCableInstallResult>
+  downloadVBCable: () => Promise<VBCableInstallResult>
+  cancelVBCableDownload: () => Promise<boolean>
+  refreshVirtualMic: () => Promise<VirtualMicStatus & { success: boolean }>
+  onVBCableDownloadProgress: (callback: (data: VBCableDownloadProgress) => void) => () => void
+  onVBCableDownloadComplete: (callback: (data: VBCableDownloadComplete) => void) => () => void
   listCloudVoices: (forceRefresh?: boolean) => Promise<{ success: boolean; voices: CloudVoice[]; error?: string }>
   synthesizeCloud: (payload: { text: string; voice: string; speed?: number; pitch?: number }) => Promise<{ success: boolean; audioBase64?: string; mimeType?: string; error?: string }>
   minimizeWindow: () => void
@@ -146,6 +159,19 @@ const api: Api = {
   getVirtualMicStatus: () => ipcRenderer.invoke('mic:status'),
   listAudioDevices: () => ipcRenderer.invoke('audio:devices'),
   installVBCable: () => ipcRenderer.invoke('mic:install-vb-cable'),
+  downloadVBCable: () => ipcRenderer.invoke('mic:download-vb-cable'),
+  cancelVBCableDownload: () => ipcRenderer.invoke('mic:cancel-vb-cable-download'),
+  refreshVirtualMic: () => ipcRenderer.invoke('mic:refresh'),
+  onVBCableDownloadProgress: (callback) => {
+    const handler = (_: unknown, data: VBCableDownloadProgress) => callback(data)
+    ipcRenderer.on('mic:vbcable:download:progress', handler)
+    return () => ipcRenderer.removeListener('mic:vbcable:download:progress', handler)
+  },
+  onVBCableDownloadComplete: (callback) => {
+    const handler = (_: unknown, data: VBCableDownloadComplete) => callback(data)
+    ipcRenderer.on('mic:vbcable:download:complete', handler)
+    return () => ipcRenderer.removeListener('mic:vbcable:download:complete', handler)
+  },
   listCloudVoices: (forceRefresh) => ipcRenderer.invoke('cloud:list-voices', forceRefresh),
   synthesizeCloud: (payload) => ipcRenderer.invoke('cloud:synthesize', payload),
 

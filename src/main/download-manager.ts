@@ -5,6 +5,21 @@ import { createHash } from 'crypto'
 import https from 'https'
 import http from 'http'
 
+export interface FileDownloadTask {
+  /** Chave usada para progresso e cancelamento (modelId, 'vbcable', etc.). */
+  id: string
+  url: string
+  destination: string
+  checksum?: string
+  redirectDepth?: number
+}
+
+export interface DownloadProgressInfo {
+  percent: number
+  speed: string
+  eta: string
+}
+
 export interface ModelDownloadTask {
   modelId: string
   url: string
@@ -25,110 +40,97 @@ interface DownloadState {
 
 const activeDownloads = new Map<string, DownloadState>()
 
-export async function downloadModelWithProgress(
-  task: ModelDownloadTask,
-  window: BrowserWindow
-): Promise<boolean> {
-  const { modelId, url, destination, checksum } = task
+/**
+ * Core de download generico e agnostico de UI: HTTPS-only (anti-SSRF), trata
+ * redirects (<= 5), reporta progresso via callback e valida checksum SHA-256
+ * opcional. Lanca em erro. Cancelavel via cancelDownload(task.id).
+ */
+export async function downloadFileWithProgress(
+  task: FileDownloadTask,
+  onProgress: (info: DownloadProgressInfo) => void,
+): Promise<void> {
+  const { id, destination, checksum } = task
 
-  // Ensure directory exists
   const dir = join(destination, '..')
   if (!existsSync(dir)) {
     mkdirSync(dir, { recursive: true })
   }
 
-  const controller = new AbortController()
-  const startTime = Date.now()
-
-  activeDownloads.set(modelId, {
-    controller,
-    startTime,
+  const state: DownloadState = {
+    controller: new AbortController(),
+    startTime: Date.now(),
     downloaded: 0,
     totalSize: 0,
-  })
-
-  const redirectDepth = task.redirectDepth ?? 0
-  if (redirectDepth > MAX_REDIRECTS) {
-    activeDownloads.delete(modelId)
-    const err = new Error(`Excedido limite de ${MAX_REDIRECTS} redirects (possivel SSRF)`)
-    window.webContents.send('model:download:complete', { modelId, success: false, error: err.message })
-    return false
   }
+  activeDownloads.set(id, state)
 
   try {
-    // Apenas https eh aceito pra evitar SSRF/downgrade. http vira erro.
-    if (url.startsWith('http://')) {
-      const allowLocalhost = /^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?\//i.test(url)
-      if (!allowLocalhost) {
-        activeDownloads.delete(modelId)
-        const err = new Error('Apenas https eh permitido em downloads externos')
-        window.webContents.send('model:download:complete', { modelId, success: false, error: err.message })
-        return false
+    await doDownload(task.url, task.redirectDepth ?? 0)
+    if (checksum) {
+      const fileHash = await hashFile(destination)
+      if (fileHash !== checksum) {
+        throw new Error('Checksum mismatch')
       }
     }
-    const protocol = url.startsWith('https:') ? https : http
+  } finally {
+    activeDownloads.delete(id)
+  }
 
-    await new Promise<boolean>((resolve, reject) => {
-      const request = protocol.get(url, { signal: controller.signal as any }, (response) => {
-        if (response.statusCode === 301 || response.statusCode === 302 || response.statusCode === 303 || response.statusCode === 307 || response.statusCode === 308) {
-          if (response.headers.location) {
-            activeDownloads.delete(modelId)
-            // Mantemos o usuario no mesmo modelId mas incrementamos depth.
-            downloadModelWithProgress(
-              { ...task, url: response.headers.location, redirectDepth: redirectDepth + 1 },
-              window,
-            )
-              .then(resolve)
-              .catch(reject)
-            return
-          }
+  function doDownload(url: string, depth: number): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      if (depth > MAX_REDIRECTS) {
+        reject(new Error(`Excedido limite de ${MAX_REDIRECTS} redirects (possivel SSRF)`))
+        return
+      }
+
+      // Apenas https eh aceito pra evitar SSRF/downgrade (localhost http e ok).
+      if (url.startsWith('http://')) {
+        const allowLocalhost = /^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?\//i.test(url)
+        if (!allowLocalhost) {
+          reject(new Error('Apenas https eh permitido em downloads externos'))
+          return
+        }
+      }
+
+      const protocol = url.startsWith('https:') ? https : http
+      const request = protocol.get(url, { signal: state.controller.signal as any }, (response) => {
+        const status = response.statusCode ?? 0
+        if ([301, 302, 303, 307, 308].includes(status) && response.headers.location) {
+          doDownload(response.headers.location, depth + 1).then(resolve).catch(reject)
+          return
         }
 
-        if (response.statusCode !== 200) {
-          reject(new Error(`HTTP ${response.statusCode}`))
+        if (status !== 200) {
+          reject(new Error(`HTTP ${status}`))
           return
         }
 
         const totalSize = parseInt(response.headers['content-length'] || '0', 10)
-        const state = activeDownloads.get(modelId)
-        if (state) state.totalSize = totalSize
+        state.totalSize = totalSize
 
         const fileStream = createWriteStream(destination)
         let downloaded = 0
         let lastPercent = -1
-        let lastReportTime = startTime
+        let lastReportTime = state.startTime
         let lastReportedBytes = 0
 
         response.on('data', (chunk: Buffer) => {
           downloaded += chunk.length
           const now = Date.now()
-          // const elapsed = (now - startTime) / 1000
-
-          if (state) {
-            state.downloaded = downloaded
-          }
+          state.downloaded = downloaded
 
           if (totalSize > 0) {
             const percent = Math.floor((downloaded / totalSize) * 100)
             if (percent !== lastPercent || now - lastReportTime > 500) {
               lastPercent = percent
 
-              // Calculate speed (bytes/sec) over last window
               const windowElapsed = (now - lastReportTime) / 1000
               const windowBytes = downloaded - lastReportedBytes
               const speedBps = windowElapsed > 0 ? windowBytes / windowElapsed : 0
-              const speed = formatSpeed(speedBps)
-
-              // Calculate ETA
               const remainingBytes = totalSize - downloaded
               const eta = speedBps > 0 ? formatTime(remainingBytes / speedBps) : 'N/A'
 
-              window.webContents.send('model:download:progress', {
-                modelId,
-                percent,
-                speed,
-                eta,
-              })
+              onProgress({ percent, speed: formatSpeed(speedBps), eta })
 
               lastReportTime = now
               lastReportedBytes = downloaded
@@ -139,7 +141,7 @@ export async function downloadModelWithProgress(
         response.pipe(fileStream)
         fileStream.on('finish', () => {
           fileStream.close()
-          resolve(true)
+          resolve()
         })
         fileStream.on('error', reject)
       })
@@ -152,31 +154,42 @@ export async function downloadModelWithProgress(
         }
       })
     })
-
-    // Validate checksum if provided
-    if (checksum) {
-      const fileHash = await hashFile(destination)
-      if (fileHash !== checksum) {
-        throw new Error('Checksum mismatch')
-      }
-    }
-
-    window.webContents.send('model:download:complete', { modelId, success: true })
-    return true
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error)
-    window.webContents.send('model:download:complete', { modelId, success: false, error: message })
-    return false
-  } finally {
-    activeDownloads.delete(modelId)
   }
 }
 
-export function cancelDownload(modelId: string): boolean {
-  const state = activeDownloads.get(modelId)
+/**
+ * Wrapper de compatibilidade para modelos: emite os eventos `model:download:*`
+ * que a ModelsPage ja consome.
+ */
+export async function downloadModelWithProgress(
+  task: ModelDownloadTask,
+  window: BrowserWindow,
+): Promise<boolean> {
+  try {
+    await downloadFileWithProgress(
+      {
+        id: task.modelId,
+        url: task.url,
+        destination: task.destination,
+        checksum: task.checksum,
+        redirectDepth: task.redirectDepth,
+      },
+      (info) => window.webContents.send('model:download:progress', { modelId: task.modelId, ...info }),
+    )
+    window.webContents.send('model:download:complete', { modelId: task.modelId, success: true })
+    return true
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    window.webContents.send('model:download:complete', { modelId: task.modelId, success: false, error: message })
+    return false
+  }
+}
+
+export function cancelDownload(id: string): boolean {
+  const state = activeDownloads.get(id)
   if (state) {
     state.controller.abort()
-    activeDownloads.delete(modelId)
+    activeDownloads.delete(id)
     return true
   }
   return false

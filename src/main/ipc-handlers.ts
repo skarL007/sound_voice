@@ -3,13 +3,13 @@ import { autoUpdater } from 'electron-updater'
 import { spawn } from 'child_process'
 import { getMainWindow, getBackendManager } from './index'
 import { detectHardware } from './hardware-detector'
-import { downloadModelWithProgress, cancelDownload } from './download-manager'
+import { downloadModelWithProgress, downloadFileWithProgress, cancelDownload } from './download-manager'
 import { loadSettings, saveSettings } from './settings-store'
 import { logMain, getLogs, clearLogs } from './logger'
 import { join, relative, isAbsolute, resolve } from 'path'
 import { existsSync, readdirSync, statSync, unlinkSync, rmdirSync, readFileSync, mkdirSync, writeFileSync } from 'fs'
 import { validateModelId, validateAudioExtension, isHttpUrl } from './security-utils'
-import { getBundledVBCableInstallerCandidates, isAutoUpdateEnabled } from './app-config'
+import { getBundledVBCableInstallerCandidates, isAutoUpdateEnabled, VBCABLE_DOWNLOAD } from './app-config'
 import { listEdgeVoices, synthesizeEdgeTTS } from './edge-tts-client'
 
 const USER_DATA = app.getPath('userData')
@@ -341,6 +341,17 @@ export function registerIpcHandlers(): void {
     }
   })
 
+  // Re-escaneia os dispositivos no backend para detectar um VB-Cable recem-instalado
+  // sem precisar reiniciar o app.
+  ipcMain.handle('mic:refresh', async () => {
+    try {
+      const response = await fetch(`${getBackendUrl()}/mic/refresh`, { method: 'POST' })
+      return await response.json()
+    } catch (error) {
+      return { success: false, enabled: false, available: false, deviceName: null, error: String(error) }
+    }
+  })
+
   ipcMain.handle('audio:devices', async () => {
     try {
       const response = await fetch(`${getBackendUrl()}/audio/devices`)
@@ -369,6 +380,106 @@ export function registerIpcHandlers(): void {
       launched: false,
       message: 'O instalador do pacote nao esta disponivel. O site oficial foi aberto para download manual.',
     }
+  })
+
+  // Fluxo automatico: usa o instalador embutido se existir; senao baixa o ZIP
+  // oficial da VB-Audio, extrai e lanca o instalador (o usuario confirma 1 vez).
+  ipcMain.handle('mic:download-vb-cable', async () => {
+    const window = getMainWindow()
+    const sendComplete = (payload: { success: boolean; error?: string }) =>
+      window?.webContents.send('mic:vbcable:download:complete', payload)
+
+    // 1. Prefere o instalador embutido (offline, sem depender de rede).
+    const bundled = getBundledVBCableInstallerCandidates().find((candidate) => existsSync(candidate))
+    if (bundled) {
+      try {
+        spawn(bundled, [], { detached: true, shell: false })
+        sendComplete({ success: true })
+        return { success: true, launched: true, downloaded: false }
+      } catch (e) {
+        logMain('WARN', `Bundled VB-Cable launch failed, will try download: ${e}`)
+      }
+    }
+
+    // 2. Baixa o ZIP oficial para userData/temp/vbcable.
+    const workDir = join(USER_DATA, 'temp', 'vbcable')
+    try {
+      if (!existsSync(workDir)) mkdirSync(workDir, { recursive: true })
+    } catch (e) {
+      const error = `Nao foi possivel criar a pasta temporaria: ${e}`
+      sendComplete({ success: false, error })
+      return { success: false, error }
+    }
+    const zipPath = join(workDir, 'VBCABLE_Driver_Pack.zip')
+
+    try {
+      logMain('INFO', `Downloading VB-Cable from ${VBCABLE_DOWNLOAD.url}`)
+      await downloadFileWithProgress(
+        {
+          id: 'vbcable',
+          url: VBCABLE_DOWNLOAD.url,
+          destination: zipPath,
+          checksum: VBCABLE_DOWNLOAD.sha256 || undefined,
+        },
+        (info) => window?.webContents.send('mic:vbcable:download:progress', info),
+      )
+    } catch (e) {
+      const error = e instanceof Error ? e.message : String(e)
+      logMain('ERROR', `VB-Cable download failed: ${error}`)
+      sendComplete({ success: false, error })
+      shell.openExternal(VBCABLE_DOWNLOAD.officialSite)
+      return {
+        success: true,
+        launched: false,
+        downloaded: false,
+        message: 'Nao foi possivel baixar automaticamente. O site oficial foi aberto.',
+      }
+    }
+
+    // 3. Extrai o ZIP (tar.exe nativo, com fallback para PowerShell).
+    try {
+      await extractZip(zipPath, workDir)
+    } catch (e) {
+      const error = e instanceof Error ? e.message : String(e)
+      logMain('ERROR', `VB-Cable extract failed: ${error}`)
+      sendComplete({ success: false, error })
+      shell.openExternal(VBCABLE_DOWNLOAD.officialSite)
+      return {
+        success: true,
+        launched: false,
+        downloaded: true,
+        message: 'Baixado, mas nao consegui extrair o pacote. O site oficial foi aberto.',
+      }
+    }
+
+    // 4. Seleciona o instalador certo para a arquitetura.
+    const order =
+      process.arch === 'x64'
+        ? [VBCABLE_DOWNLOAD.setupExeX64, VBCABLE_DOWNLOAD.setupExe]
+        : [VBCABLE_DOWNLOAD.setupExe, VBCABLE_DOWNLOAD.setupExeX64]
+    const exePath = order.map((name) => join(workDir, name)).find((p) => existsSync(p))
+    if (!exePath) {
+      const error = 'Instalador nao encontrado no pacote baixado.'
+      sendComplete({ success: false, error })
+      return { success: false, downloaded: true, error }
+    }
+
+    // 5. Lanca o instalador oficial (o usuario clica "Install Driver").
+    try {
+      logMain('INFO', `Launching downloaded VB-Cable installer: ${exePath}`)
+      spawn(exePath, [], { detached: true, shell: false })
+      sendComplete({ success: true })
+      return { success: true, launched: true, downloaded: true }
+    } catch (e) {
+      const error = e instanceof Error ? e.message : String(e)
+      logMain('ERROR', `VB-Cable installer launch failed: ${error}`)
+      sendComplete({ success: false, error })
+      return { success: false, downloaded: true, error }
+    }
+  })
+
+  ipcMain.handle('mic:cancel-vb-cable-download', async () => {
+    return cancelDownload('vbcable')
   })
 
   // Voice cloning: save audio blob to disk so Python backend can read it
@@ -476,6 +587,44 @@ export function registerIpcHandlers(): void {
   ipcMain.handle('updater:version', () => {
     return app.getVersion()
   })
+}
+
+function runProcess(command: string, args: string[]): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, { shell: false, windowsHide: true })
+    let stderr = ''
+    child.stderr?.on('data', (d) => {
+      stderr += d.toString()
+    })
+    child.on('error', reject)
+    child.on('close', (code) => {
+      if (code === 0) resolve()
+      else reject(new Error(`${command} saiu com codigo ${code}: ${stderr.slice(0, 500)}`))
+    })
+  })
+}
+
+/**
+ * Extrai um ZIP usando o tar.exe nativo do Windows (10 17063+); cai para o
+ * Expand-Archive do PowerShell se o tar nao estiver disponivel. Evita
+ * dependencias de runtime (yauzl/extract-zip nao sao empacotados).
+ */
+async function extractZip(zipPath: string, destDir: string): Promise<void> {
+  const system32 = join(process.env.SystemRoot || 'C:\\Windows', 'System32')
+  const tar = join(system32, 'tar.exe')
+  try {
+    await runProcess(existsSync(tar) ? tar : 'tar', ['-xf', zipPath, '-C', destDir])
+    return
+  } catch (e) {
+    logMain('WARN', `tar extract failed, trying PowerShell: ${e}`)
+  }
+  const powershell = join(system32, 'WindowsPowerShell', 'v1.0', 'powershell.exe')
+  await runProcess(existsSync(powershell) ? powershell : 'powershell', [
+    '-NoProfile',
+    '-NonInteractive',
+    '-Command',
+    `Expand-Archive -LiteralPath '${zipPath}' -DestinationPath '${destDir}' -Force`,
+  ])
 }
 
 function getFolderSize(dir: string): number {

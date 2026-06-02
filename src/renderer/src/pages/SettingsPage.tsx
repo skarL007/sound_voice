@@ -2,23 +2,26 @@ import { useEffect, useState } from 'react'
 import type { BackendStatus } from '../../../shared/types'
 import { useAppStore } from '../stores/appStore'
 import {
-  AlertTriangle,
   BookOpen,
   ChevronRight,
   Contrast,
   Cpu,
-  ExternalLink,
   Eye,
   Headphones,
-  Info,
   Mic,
   RefreshCw,
   Settings,
   Type,
-  Wrench,
 } from 'lucide-react'
 import { toast } from '../utils/toast'
 import AudioOutputPicker from '../components/AudioOutputPicker'
+import VirtualMicSetupPanel from '../components/VirtualMicSetupPanel'
+import {
+  detectVBCable,
+  resolveVBCableInstallState,
+  type VBCableDownloadProgress,
+  type VBCableInstallState,
+} from '../utils/virtualMicSetup'
 
 export default function SettingsPage() {
   const {
@@ -39,10 +42,25 @@ export default function SettingsPage() {
   })
   const [audioDevices, setAudioDevices] = useState<any[]>([])
   const [vbCableInstalled, setVbCableInstalled] = useState(false)
+  const [installState, setInstallState] = useState<VBCableInstallState>('idle')
+  const [installMessage, setInstallMessage] = useState<string | undefined>(undefined)
+  const [installing, setInstalling] = useState(false)
+  const [downloadProgress, setDownloadProgress] = useState<VBCableDownloadProgress | null>(null)
 
   useEffect(() => {
     loadStatus()
     loadAudioDevices()
+    const offProgress = window.electronAPI.onVBCableDownloadProgress((data) => {
+      setInstallState('downloading')
+      setDownloadProgress(data)
+    })
+    const offComplete = window.electronAPI.onVBCableDownloadComplete(() => {
+      setDownloadProgress(null)
+    })
+    return () => {
+      offProgress()
+      offComplete()
+    }
   }, [])
 
   const loadStatus = async () => {
@@ -53,13 +71,54 @@ export default function SettingsPage() {
   const loadAudioDevices = async () => {
     const devices = await window.electronAPI.listAudioDevices()
     setAudioDevices(devices)
-    const hasVbCable = devices.some((device: any) => device.name.toLowerCase().includes('cable'))
+    const hasVbCable = detectVBCable(devices)
     setVbCableInstalled(hasVbCable)
+    if (hasVbCable) {
+      setInstallState('idle')
+      setInstallMessage(undefined)
+    }
   }
 
   const restartBackend = async () => {
     await window.electronAPI.restartBackend()
     setTimeout(loadStatus, 3000)
+  }
+
+  const installVirtualMic = async () => {
+    setInstalling(true)
+    setInstallState('launching')
+    setInstallMessage(undefined)
+    try {
+      const result = await window.electronAPI.downloadVBCable()
+      const resolved = resolveVBCableInstallState(result)
+      setInstallState(resolved.state)
+      setInstallMessage(resolved.message)
+      if (resolved.state === 'launched') {
+        toast('Instalador aberto', 'Clique em "Install Driver" no VB-Cable. Depois clique em Verificar instalacao.', 'success')
+      } else if (resolved.state === 'manual') {
+        toast('Download manual', resolved.message, 'info')
+      } else {
+        toast('Erro', resolved.message, 'error')
+      }
+    } finally {
+      setInstalling(false)
+      setDownloadProgress(null)
+    }
+  }
+
+  const verifyVirtualMic = async () => {
+    await window.electronAPI.refreshVirtualMic()
+    const devices = await window.electronAPI.listAudioDevices()
+    setAudioDevices(devices)
+    const detected = detectVBCable(devices)
+    setVbCableInstalled(detected)
+    if (detected) {
+      setInstallState('idle')
+      setInstallMessage(undefined)
+      toast('VB-Cable detectado', 'Agora selecione CABLE Output como microfone no Discord, Zoom ou jogo.', 'success')
+    } else {
+      toast('Ainda nao detectado', 'Se o instalador terminou, reinicie o Windows e clique em Verificar instalacao.', 'warning')
+    }
   }
 
   const backendLabel =
@@ -135,60 +194,15 @@ export default function SettingsPage() {
           <h2 className="text-lg font-medium text-ink-strong">Microfone Virtual</h2>
         </div>
 
-        {!vbCableInstalled ? (
-          <div
-            className="flex items-start gap-3 p-4 rounded-2xl"
-            style={{ background: 'var(--vl-state-warn-bg)', border: '1px solid var(--vl-state-warn-border)' }}
-          >
-            <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--vl-state-warn)' }} />
-            <div>
-              <p className="text-sm font-medium" style={{ color: 'var(--vl-state-warn-text)' }}>VB-Audio Virtual Cable nao detectado</p>
-              <p className="text-sm mt-1 text-ink-body">
-                Para usar o microfone virtual, instale o VB-Audio Virtual Cable. Se o instalador nao estiver embutido neste pacote, o site oficial sera aberto.
-              </p>
-              <div className="flex gap-3 mt-3">
-                <button
-                  onClick={async () => {
-                    const result = await window.electronAPI.installVBCable()
-                    if (result.success && result.launched) {
-                      toast('Instalador iniciado', 'Siga as instrucoes na tela para instalar o VB-Cable.', 'success')
-                    } else if (result.message) {
-                      toast('Download manual', result.message, 'info')
-                    } else {
-                      toast('Erro', result.error || 'Nao foi possivel iniciar a instalacao.', 'error')
-                    }
-                  }}
-                  className="btn-ghost text-sm"
-                  aria-label="Tentar abrir o instalador do VB-Audio Virtual Cable"
-                >
-                  <Wrench className="w-3 h-3" />
-                  Tentar instalador do pacote
-                </button>
-                <button
-                  onClick={() => window.electronAPI.openExternal('https://vb-audio.com/Cable/')}
-                  className="btn-ghost text-sm"
-                  aria-label="Abrir site oficial do VB-Audio Virtual Cable"
-                >
-                  <ExternalLink className="w-3 h-3" />
-                  Site oficial
-                </button>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div
-            className="flex items-start gap-3 p-4 rounded-2xl"
-            style={{ background: 'var(--vl-state-success-bg)', border: '1px solid var(--vl-state-success-border)' }}
-          >
-            <Info className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--vl-state-success)' }} />
-            <div>
-              <p className="text-sm font-medium" style={{ color: 'var(--vl-state-success-text)' }}>VB-Audio Virtual Cable detectado</p>
-              <p className="text-sm mt-1 text-ink-body">
-                O dispositivo &quot;CABLE Output&quot; esta disponivel como microfone em seus aplicativos.
-              </p>
-            </div>
-          </div>
-        )}
+        <VirtualMicSetupPanel
+          detected={vbCableInstalled}
+          installState={installState}
+          message={installMessage}
+          progress={downloadProgress}
+          installing={installing}
+          onInstall={() => void installVirtualMic()}
+          onVerify={() => void verifyVirtualMic()}
+        />
 
         <div className="mt-4 space-y-3">
           <AudioOutputPicker />

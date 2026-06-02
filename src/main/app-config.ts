@@ -35,6 +35,20 @@ export function getBundledVBCableInstallerCandidates(): string[] {
   ]
 }
 
+/**
+ * VB-Cable (VB-Audio) — donationware; baixar/redistribuir e permitido desde que
+ * a origem permaneca visivel ao usuario. Distribuido como ZIP; a VB-Audio nao
+ * publica SHA-256 oficial. Ao sair um novo driver pack, atualize a URL (e o
+ * checksum, se for fixar: baixe o ZIP e rode `Get-FileHash -Algorithm SHA256`).
+ */
+export const VBCABLE_DOWNLOAD = {
+  url: 'https://download.vb-audio.com/Download_CABLE/VBCABLE_Driver_Pack45.zip',
+  sha256: 'b950e39f01af1d04ea623c8f6d8eb9b6ea5c477c637295fabf20631c85116bfb', // VBCABLE_Driver_Pack45.zip (1.29 MB)
+  setupExeX64: 'VBCABLE_Setup_x64.exe',
+  setupExe: 'VBCABLE_Setup.exe',
+  officialSite: 'https://vb-audio.com/Cable/',
+} as const
+
 export function isAutoUpdateEnabled(): boolean {
   return app.isPackaged && process.env.VOICELAUNCH_ENABLE_AUTO_UPDATE === 'true'
 }

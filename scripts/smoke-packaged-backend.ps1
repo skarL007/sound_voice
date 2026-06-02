@@ -95,8 +95,22 @@ try {
         throw "Unexpected install-deps error payload: $($installDepsResponse | ConvertTo-Json -Compress)"
     }
 
+    $devicesUri = "http://127.0.0.1:$Port/audio/devices"
+    $devices = Invoke-RestMethod -Uri $devicesUri -TimeoutSec 5
+    if ($devices -isnot [System.Array]) {
+        throw "Unexpected /audio/devices payload: $($devices | ConvertTo-Json -Compress)"
+    }
+
+    $micStatusUri = "http://127.0.0.1:$Port/mic/status"
+    $micStatus = Invoke-RestMethod -Uri $micStatusUri -TimeoutSec 5
+    if ($null -eq $micStatus.enabled) {
+        throw "Unexpected /mic/status payload: $($micStatus | ConvertTo-Json -Compress)"
+    }
+
     Write-Host "Health OK:" ($health | ConvertTo-Json -Compress)
     Write-Host "Models OK:" (($modelIds -join ", "))
+    Write-Host "Audio devices OK:" "$($devices.Count) device(s)"
+    Write-Host "Mic status OK:" ($micStatus | ConvertTo-Json -Compress)
     Write-Host "Install-deps blocked:" ($installDepsResponse | ConvertTo-Json -Compress)
 } finally {
     if ($process -and -not $process.HasExited) {

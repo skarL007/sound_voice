@@ -16,6 +16,10 @@ import type {
   ModelRuntimeResponse,
   CloudVoice,
   VoiceShortcut,
+  VBCableInstallResult,
+  VBCableDownloadProgress,
+  VBCableDownloadComplete,
+  VirtualMicStatus,
 } from '../../../shared/types'
 
 export interface Api {
@@ -44,7 +48,12 @@ export interface Api {
   setVirtualMic: (enabled: boolean) => Promise<boolean>
   getVirtualMicStatus: () => Promise<boolean>
   listAudioDevices: () => Promise<AudioDevice[]>
-  installVBCable: () => Promise<{ success: boolean; launched?: boolean; message?: string; error?: string }>
+  installVBCable: () => Promise<VBCableInstallResult>
+  downloadVBCable: () => Promise<VBCableInstallResult>
+  cancelVBCableDownload: () => Promise<boolean>
+  refreshVirtualMic: () => Promise<VirtualMicStatus & { success: boolean }>
+  onVBCableDownloadProgress: (callback: (data: VBCableDownloadProgress) => void) => () => void
+  onVBCableDownloadComplete: (callback: (data: VBCableDownloadComplete) => void) => () => void
   listCloudVoices: (forceRefresh?: boolean) => Promise<{ success: boolean; voices: CloudVoice[]; error?: string }>
   synthesizeCloud: (payload: { text: string; voice: string; speed?: number; pitch?: number }) => Promise<{ success: boolean; audioBase64?: string; mimeType?: string; error?: string }>
   minimizeWindow: () => void
