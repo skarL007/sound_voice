@@ -9,9 +9,10 @@ exports.default = async function beforePack() {
   const exe = join(__dirname, '..', 'assets', 'vbcable', 'VBCABLE_Setup_x64.exe')
   if (existsSync(exe)) return
   console.log('[before-pack] VB-Cable ausente; baixando via scripts/fetch-vbcable.ps1...')
+  // 'powershell.exe' explicito: execFileSync nao resolve 'powershell' sem extensao no Windows.
   execFileSync(
-    'powershell',
+    'powershell.exe',
     ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', join(__dirname, 'fetch-vbcable.ps1')],
-    { stdio: 'inherit' },
+    { stdio: 'inherit', shell: true },
   )
 }

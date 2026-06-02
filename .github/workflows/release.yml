@@ -43,6 +43,10 @@ jobs:
       - name: Build Electron
         run: npm run build
 
+      - name: Baixar VB-Cable (microfone virtual embutido)
+        shell: pwsh
+        run: ./scripts/fetch-vbcable.ps1
+
       - name: Build instalador Windows
         run: npm run dist:win
         env:
