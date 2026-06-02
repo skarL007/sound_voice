@@ -1,6 +1,6 @@
 # Changelog
 
-## [Nao lancado] - branch `feat/virtual-mic-auto-install` (pivo online-first + mic facil + simplificacao)
+## [1.2.0] - 2026-06-02 (pivo online-first + mic facil + simplificacao)
 
 ### Adicionado
 
