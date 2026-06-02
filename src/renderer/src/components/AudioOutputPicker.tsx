@@ -148,6 +148,23 @@ export default function AudioOutputPicker({ showTestButton = true }: AudioOutput
         </button>
       </div>
 
+      <div
+        className="rounded-xl p-3 text-xs flex items-start gap-2"
+        style={{ background: 'var(--vl-state-live-bg)', border: '1px solid var(--vl-state-live-border)' }}
+      >
+        <Mic className="h-4 w-4 flex-shrink-0 mt-0.5" style={{ color: 'var(--vl-state-live)' }} />
+        <p className="text-ink-body">
+          No <strong>Discord, Zoom ou jogo</strong>, escolha{' '}
+          <span
+            className="font-mono px-1 rounded"
+            style={{ background: 'var(--vl-surface-overlay)', color: 'var(--vl-state-live-text)' }}
+          >
+            CABLE Output
+          </span>{' '}
+          como microfone. Aqui no app, a voz sai pelo <strong>CABLE Input</strong> (abaixo).
+        </p>
+      </div>
+
       {needsPermission && (
         <div
           className="rounded-2xl p-3 text-xs flex items-start gap-2"
@@ -170,8 +187,7 @@ export default function AudioOutputPicker({ showTestButton = true }: AudioOutput
           <h4 className="text-sm font-semibold text-ink-strong">1. Microfone virtual (o Discord ouve)</h4>
         </div>
         <p className="text-xs text-ink-soft leading-relaxed">
-          A voz <strong>entra</strong> aqui — escolha <strong>CABLE Input (VB-Audio Virtual Cable)</strong>. No
-          Discord/Zoom/jogo, selecione <strong>CABLE Output</strong> como microfone.
+          A voz <strong>entra</strong> aqui. Escolha <strong>CABLE Input</strong> (ja vem marcado como recomendado).
         </p>
         <div className="space-y-1.5 max-h-[170px] overflow-auto pr-1">
           <SelectRow

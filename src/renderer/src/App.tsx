@@ -5,18 +5,17 @@ import {
   Mic,
   Settings,
   Volume2,
-  Download,
   Home,
   Minus,
   Square,
   X,
   Pin,
-  Terminal,
   PictureInPicture,
   RefreshCw,
   Send,
   History,
   ChevronDown,
+  MoreHorizontal,
   Sparkles,
   Activity,
   Keyboard,
@@ -25,13 +24,11 @@ import {
 import DashboardPage from './pages/DashboardPage'
 import TTSPage from './pages/TTSPage'
 import SettingsPage from './pages/SettingsPage'
-import LogsPage from './pages/LogsPage'
 import VoiceShortcutsPage from './pages/VoiceShortcutsPage'
 import { useAppStore } from './stores/appStore'
 import OnboardingTutorial from './components/OnboardingTutorial'
 import ToastContainer from './components/ToastContainer'
 import DiscordVRChatGuide from './components/DiscordVRChatGuide'
-import ProfileSwitcher from './components/ProfileSwitcher'
 import { useCommunicationSettings } from './hooks/useCommunicationSettings'
 import { buildHistoryItem, pushHistoryItem, sanitizeCommunicationState, serializeCommunicationState } from './utils/communicationState'
 import { getVisibleInstalledModels, resolveActiveModelForMvp } from './utils/modelSupport'
@@ -47,7 +44,6 @@ const navItems = [
   { to: '/tts', icon: Volume2, label: 'Falar' },
   { to: '/shortcuts', icon: Keyboard, label: 'Atalhos' },
   { to: '/settings', icon: Settings, label: 'Ajustes' },
-  { to: '/logs', icon: Terminal, label: 'Logs' },
 ]
 
 const INITIAL_BACKEND_STATUS: BackendStatus = {
@@ -75,7 +71,7 @@ function BackendBanner({
   const userOnCloud = voiceSource === 'cloud'
 
   // Quando o usuario esta na trilha cloud e o backend nao subiu, o banner cheio assusta
-  // sem motivo. Mostramos um chip discreto e deixamos o detalhe nos logs/ajustes.
+  // sem motivo. Mostramos um chip discreto e deixamos o detalhe em Ajustes.
   if (userOnCloud && !isStarting) {
     return null
   }
@@ -84,7 +80,7 @@ function BackendBanner({
   const description = isStarting
     ? 'A interface ja esta pronta. As vozes locais ficam disponiveis quando o backend terminar de subir. As vozes online (Edge TTS) ja podem ser usadas em "Falar".'
     : (status.lastError ? `${status.lastError}. ` : '') +
-      'Voce ainda pode usar vozes online (Edge TTS) sem instalacao em "Falar". Para liberar Piper/Kokoro, tente reiniciar o backend ou veja os logs.'
+      'Voce ainda pode usar vozes online (Edge TTS) sem instalacao em "Falar". Para liberar Piper/Kokoro, use Tentar novamente ou abra Ajustes.'
 
   const containerStyle = isStarting
     ? { borderBottomColor: 'var(--vl-state-warn-border)', background: 'var(--vl-state-warn-bg)' }
@@ -140,14 +136,6 @@ function BackendBanner({
             <RefreshCw className={`h-4 w-4 ${retrying ? 'animate-spin' : ''}`} />
             Tentar novamente
           </button>
-          <a
-            href="#/logs"
-            className="btn-ghost text-sm"
-            aria-label="Abrir logs do app"
-          >
-            <Terminal className="h-4 w-4" />
-            Abrir logs
-          </a>
         </div>
       </div>
     </div>
@@ -291,9 +279,6 @@ function Sidebar() {
       ))}
 
       <div className="mt-auto px-1 py-3 space-y-3">
-        <div className="hidden lg:block">
-          <ProfileSwitcher />
-        </div>
         <div className="hidden lg:block text-xs text-ink-mute px-3">
           <p>VoiceLaunch TTS v1.0</p>
           <p>Voz online (Edge TTS) · Open Source</p>
@@ -323,12 +308,8 @@ function HudStat({
     error: 'var(--vl-state-error)',
   }[tone]
   return (
-    <div className="hud-frame card-hover p-5 flex flex-col gap-3 overflow-hidden relative">
-      <div
-        className="absolute -top-8 -right-8 w-24 h-24 rounded-full pointer-events-none"
-        style={{ background: `radial-gradient(circle, ${toneVar}33 0%, transparent 70%)` }}
-      />
-      <div className="flex items-center justify-between relative">
+    <div className="hud-frame card-hover p-5 flex flex-col gap-3">
+      <div className="flex items-center justify-between">
         <span className="text-[11px] uppercase tracking-[0.22em] text-ink-soft">{label}</span>
         <Icon className="h-5 w-5" style={{ color: toneVar }} />
       </div>
@@ -340,19 +321,16 @@ function HudStat({
 
 function HomePage({ backendStatus }: { backendStatus: BackendStatus }) {
   const setCompactMode = useAppStore((state) => state.setCompactMode)
-  const [installedModelCount, setInstalledModelCount] = useState(0)
   const [virtualMicEnabled, setVirtualMicEnabled] = useState(false)
   const [vbCableDetected, setVbCableDetected] = useState<boolean | null>(null)
 
   useEffect(() => {
     const loadCounts = async () => {
       try {
-        const [registry, micStatus, audioDevices] = await Promise.all([
-          window.electronAPI.getModelRegistry(),
+        const [micStatus, audioDevices] = await Promise.all([
           window.electronAPI.getVirtualMicStatus(),
           window.electronAPI.listAudioDevices(),
         ])
-        setInstalledModelCount(registry.filter((model) => model.installed).length)
         setVirtualMicEnabled(micStatus)
         setVbCableDetected(audioDevices.some((device) => device.name.toLowerCase().includes('cable')))
       } catch {
@@ -393,18 +371,18 @@ function HomePage({ backendStatus }: { backendStatus: BackendStatus }) {
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6">
-      <section className="hud-frame hud-frame--hero animate-lift-in p-8 lg:p-10">
+      <section className="hud-frame hud-frame--hero animate-lift-in p-6 lg:p-8">
         <div className="status-pill status-pill--ready w-fit">
           <Sparkles className="h-3.5 w-3.5" />
           Comunicacao assistiva
         </div>
-        <h1 className="mt-6 text-3xl lg:text-4xl font-bold tracking-tight text-ink-strong">
+        <h1 className="mt-4 text-hero font-bold tracking-tight text-ink-strong">
           Uma estacao de voz para falar rapido, com clareza.
         </h1>
-        <p className="mt-4 max-w-2xl text-base lg:text-lg leading-7 text-ink-body">
+        <p className="mt-3 max-w-2xl text-ui leading-7 text-ink-body">
           Vozes online (Edge TTS), microfone virtual para Discord e jogos, atalhos de voz com teclas globais e modo compacto sempre no topo.
         </p>
-        <div className="mt-8 flex flex-wrap gap-3">
+        <div className="mt-6 flex flex-wrap gap-3">
           <a href="#/tts" className="btn-primary btn-primary--armed inline-flex items-center gap-2 px-6 py-3 text-base">
             <Volume2 className="h-5 w-5" />
             Falar agora
@@ -423,7 +401,7 @@ function HomePage({ backendStatus }: { backendStatus: BackendStatus }) {
         </div>
       </section>
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <HudStat
           icon={Activity}
           label="Backend"
@@ -432,27 +410,17 @@ function HomePage({ backendStatus }: { backendStatus: BackendStatus }) {
           hint={`Porta ${backendStatus.port}`}
         />
         <HudStat
-          icon={Download}
-          label="Modelos prontos"
-          value={String(installedModelCount)}
-          tone={installedModelCount > 0 ? 'live' : 'warn'}
-          hint={installedModelCount > 0 ? 'Piper/Kokoro disponiveis' : 'Instale Piper para comecar'}
-        />
-        <HudStat
           icon={Mic}
           label="Microfone virtual"
           value={micValue}
           tone={micTone}
           hint={virtualMicEnabled ? 'CABLE Output ativo' : 'Selecione CABLE Output no Discord'}
         />
-        <HudStat
-          icon={Keyboard}
-          label="Atalho aberto"
-          value="Ctrl+Shift+F"
-          tone="ready"
-          hint="Foca o app de qualquer lugar"
-        />
       </div>
+      <p className="flex items-center gap-2 text-caption text-ink-soft">
+        <Keyboard className="h-3.5 w-3.5" />
+        Atalho global <span className="badge-shortcut">Ctrl+Shift+F</span> foca o app de qualquer lugar.
+      </p>
 
       <DiscordVRChatGuide />
     </div>
@@ -610,7 +578,7 @@ function CompactView({ backendStatus }: { backendStatus: BackendStatus }) {
           aria-label="Mais opcoes"
           title="Velocidade e ajustes"
         >
-          •••
+          <MoreHorizontal className="h-4 w-4" />
         </button>
       </div>
 
@@ -665,7 +633,7 @@ function CompactView({ backendStatus }: { backendStatus: BackendStatus }) {
                 void speak(phrase)
               }}
               disabled={!canSpeak}
-              className="hud-frame relative px-3 py-2 text-left text-[11px] text-ink-body transition-colors hover:bg-brand-500/10 disabled:opacity-50"
+              className="hud-frame relative px-3 py-2 text-left text-caption text-ink-body transition-colors hover:bg-brand-500/10 disabled:opacity-50"
             >
               <span className="badge-shortcut absolute top-1 right-1">{index + 1}</span>
               <span className="block pr-6 line-clamp-2">{phrase}</span>
@@ -1016,7 +984,6 @@ export default function App() {
               <Route path="/tts" element={<TTSPage />} />
               <Route path="/shortcuts" element={<VoiceShortcutsPage />} />
               <Route path="/settings" element={<SettingsPage />} />
-              <Route path="/logs" element={<LogsPage />} />
             </Routes>
           </main>
         </div>

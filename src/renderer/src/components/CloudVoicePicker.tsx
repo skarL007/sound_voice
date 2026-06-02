@@ -121,8 +121,8 @@ export default function CloudVoicePicker({ selectedVoice, onSelect }: CloudVoice
                   <span
                     className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded"
                     style={{
-                      background: voice.Gender === 'Female' ? 'rgba(255,107,125,0.16)' : 'var(--vl-surface-overlay)',
-                      color: voice.Gender === 'Female' ? '#FFC1CB' : 'var(--vl-state-live-text)',
+                      background: 'var(--vl-surface-overlay)',
+                      color: 'var(--vl-state-live-text)',
                     }}
                   >
                     {voice.Gender === 'Female' ? 'F' : 'M'}

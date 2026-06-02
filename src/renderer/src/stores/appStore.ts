@@ -81,29 +81,15 @@ const saveToDisk = (state: Partial<AppSettings>) => {
 }
 
 const DEFAULT_PROFILE_ID = 'padrao'
-const GAMING_PROFILE_ID = 'jogo'
 
-const GAMING_DEFAULT_PHRASES = [
-  'GG!',
-  'WP, bem jogado.',
-  'Cuidado, inimigo se aproximando.',
-  'Preciso de ajuda aqui.',
-  'Estou indo te dar suporte.',
-  'Vamos juntos.',
-  'Em cima, vai!',
-  'Recue, recue!',
-  'Estou sem municao.',
-  'Reagrupar agora.',
-]
-
+// Perfil unico: o app deixou de separar "padrao" e "jogo". buildDefaultProfiles
+// so cria o perfil padrao; perfis salvos antigos (incl. 'jogo' custom) continuam
+// validos pela migracao — apenas nao ha mais UI para troca-los.
 function buildDefaultProfiles(carriedQuickPhrases?: string[]): Profile[] {
   const padraoPhrases = carriedQuickPhrases && carriedQuickPhrases.length > 0
     ? carriedQuickPhrases.slice(0, MAX_QUICK_PHRASES)
     : DEFAULT_QUICK_PHRASES
-  return [
-    { id: DEFAULT_PROFILE_ID, name: 'Padrao', quickPhrases: padraoPhrases },
-    { id: GAMING_PROFILE_ID, name: 'Jogo', quickPhrases: GAMING_DEFAULT_PHRASES },
-  ]
+  return [{ id: DEFAULT_PROFILE_ID, name: 'Padrao', quickPhrases: padraoPhrases }]
 }
 
 export function migrateSettings(saved: Partial<AppSettings> | null | undefined): Partial<AppSettings> {

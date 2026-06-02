@@ -126,6 +126,8 @@ export default function TTSPage() {
   const textAreaRef = useRef<HTMLTextAreaElement>(null)
   const cancelRef = useRef(false)
   const isSpeakingRef = useRef(false)
+  const micPollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const micAutoActivatedRef = useRef(false)
 
   useEffect(() => {
     window.electronAPI.getVirtualMicStatus().then((enabled) => {
@@ -164,6 +166,7 @@ export default function TTSPage() {
       offMicProgress()
       offMicComplete()
       window.removeEventListener('voicelaunch:virtual-mic-changed', syncVirtualMic as EventListener)
+      if (micPollRef.current) clearInterval(micPollRef.current)
     }
   }, [])
 
@@ -335,17 +338,74 @@ export default function TTSPage() {
     }
   }
 
+  // Liga o microfone virtual: garante uma saida de cabo (auto-seleciona o CABLE
+  // Input se preciso) e ativa o roteamento. Reusado pelo toggle manual, pelo
+  // "Verificar" e pela auto-ativacao apos a instalacao.
+  const activateVirtualMic = async (announce = true): Promise<boolean> => {
+    if (voiceSource === 'cloud' && !cableDeviceId) {
+      const cable = await autoSelectCableOutput()
+      if (cable) {
+        setCableDevice(cable.id, cable.label)
+      } else if (announce) {
+        toast(
+          'Escolha a saida de audio',
+          'Abra Ajustes > Microfone Virtual e selecione CABLE Input para o Discord ouvir a voz online.',
+          'warning',
+        )
+      }
+    }
+    const success = await window.electronAPI.setVirtualMic(true)
+    if (success) {
+      setVirtualMicEnabled(true)
+      window.dispatchEvent(new CustomEvent('voicelaunch:virtual-mic-changed', { detail: true }))
+      setShowDiscordBanner(true)
+    }
+    return success
+  }
+
+  const stopMicAutoPoll = () => {
+    if (micPollRef.current) {
+      clearInterval(micPollRef.current)
+      micPollRef.current = null
+    }
+  }
+
+  // Apos abrir o instalador, verifica sozinho (a cada 3s, ate ~2min) ate o driver
+  // aparecer; quando aparece, ativa o mic automaticamente — sem clique manual.
+  const startMicAutoDetect = () => {
+    if (micPollRef.current) return
+    let elapsed = 0
+    const tick = async () => {
+      elapsed += 3000
+      await window.electronAPI.refreshVirtualMic().catch(() => undefined)
+      const detected = await loadMicDevices()
+      if (detected) {
+        stopMicAutoPoll()
+        if (!micAutoActivatedRef.current) {
+          micAutoActivatedRef.current = true
+          await activateVirtualMic(false)
+          toast('Microfone virtual pronto', 'Detectado e ativado. No Discord, escolha CABLE Output.', 'success')
+        }
+      } else if (elapsed >= 120000) {
+        stopMicAutoPoll()
+      }
+    }
+    micPollRef.current = setInterval(() => void tick(), 3000)
+  }
+
   const installVirtualMic = async () => {
     setInstallingMic(true)
     setMicInstallState('launching')
     setMicInstallMessage(undefined)
+    micAutoActivatedRef.current = false
     try {
       const result = await window.electronAPI.downloadVBCable()
       const resolved = resolveVBCableInstallState(result)
       setMicInstallState(resolved.state)
       setMicInstallMessage(resolved.message)
       if (resolved.state === 'launched') {
-        toast('Instalador aberto', 'Clique em "Install Driver" no VB-Cable. Depois clique em Verificar instalacao.', 'success')
+        toast('Instalador aberto', 'Clique em "Install Driver". Eu detecto e ativo sozinho quando terminar.', 'success')
+        startMicAutoDetect()
       } else if (resolved.state === 'manual') {
         toast('Download manual', resolved.message, 'info')
       } else {
@@ -361,9 +421,11 @@ export default function TTSPage() {
     await window.electronAPI.refreshVirtualMic()
     const detected = await loadMicDevices()
     if (detected) {
-      toast('VB-Cable detectado', 'Agora voce pode ativar o microfone virtual.', 'success')
+      stopMicAutoPoll()
+      toast('VB-Cable detectado', 'Ativando o microfone virtual...', 'success')
+      await activateVirtualMic()
     } else {
-      toast('Ainda nao detectado', 'Se o instalador terminou, reinicie o Windows e clique em Verificar instalacao.', 'warning')
+      toast('Ainda nao detectado', 'Se o instalador terminou, reinicie o Windows e tente de novo.', 'warning')
     }
   }
 
@@ -372,29 +434,16 @@ export default function TTSPage() {
       await installVirtualMic()
       return
     }
-    const newState = !virtualMicEnabled
-    // No modo online a voz e roteada pelo NAVEGADOR (setSinkId), nao pelo backend.
-    // Se o usuario ainda nao escolheu a saida, auto-seleciona o CABLE Input — senao
-    // o audio cairia no alto-falante e nunca chegaria ao Discord.
-    if (newState && voiceSource === 'cloud' && !cableDeviceId) {
-      const cable = await autoSelectCableOutput()
-      if (cable) {
-        setCableDevice(cable.id, cable.label)
-        toast('Saida ajustada', `Voz online sera enviada para ${cable.label}.`, 'success')
-      } else {
-        toast(
-          'Escolha a saida de audio',
-          'Abra Ajustes > Microfone Virtual e selecione CABLE Input para o Discord ouvir a voz online.',
-          'warning',
-        )
+    if (virtualMicEnabled) {
+      const success = await window.electronAPI.setVirtualMic(false)
+      if (success) {
+        setVirtualMicEnabled(false)
+        window.dispatchEvent(new CustomEvent('voicelaunch:virtual-mic-changed', { detail: false }))
       }
+      return
     }
-    const success = await window.electronAPI.setVirtualMic(newState)
-    if (success) {
-      setVirtualMicEnabled(newState)
-      window.dispatchEvent(new CustomEvent('voicelaunch:virtual-mic-changed', { detail: newState }))
-      if (newState) setShowDiscordBanner(true)
-    }
+    // No modo online a voz e roteada pelo NAVEGADOR (setSinkId), nao pelo backend.
+    await activateVirtualMic()
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -414,7 +463,7 @@ export default function TTSPage() {
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-start gap-3">
             <div
-              className="flex h-11 w-11 items-center justify-center rounded-2xl"
+              className="flex h-11 w-11 items-center justify-center rounded-xl"
               style={{
                 border: '1px solid var(--vl-hud-border-strong)',
                 background: 'var(--vl-surface-raised)',
@@ -424,7 +473,7 @@ export default function TTSPage() {
               <Volume2 className="h-5 w-5" style={{ color: 'var(--vl-state-ready)' }} />
             </div>
             <div className="space-y-1">
-              <h1 className="text-3xl font-bold tracking-tight text-ink-strong">Falar</h1>
+              <h1 className="text-page font-bold tracking-tight text-ink-strong">Falar</h1>
               <p className="max-w-2xl text-sm text-ink-soft">
                 Console principal para composicao, repeticao e disparo rapido de voz.
               </p>
@@ -435,7 +484,7 @@ export default function TTSPage() {
             {vbCableDetected ? (
               <button
                 onClick={toggleVirtualMic}
-                className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-medium transition-all ${
+                className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition-all ${
                   virtualMicEnabled ? 'status-pill--live' : 'btn-secondary'
                 }`}
                 title="Envia a voz gerada como microfone virtual para outros aplicativos"
@@ -447,7 +496,7 @@ export default function TTSPage() {
               <button
                 onClick={() => void installVirtualMic()}
                 disabled={installingMic || micInstallState === 'downloading'}
-                className="btn-primary inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-medium"
+                className="btn-secondary inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium"
                 title="Baixa e instala o VB-Cable para Discord, Zoom e jogos ouvirem a voz como microfone"
               >
                 <Wrench className="h-4 w-4" />
@@ -479,24 +528,22 @@ export default function TTSPage() {
         </div>
 
         <div className="hud-frame flex flex-wrap items-center gap-3 p-3">
-          <span className="status-pill status-pill--ready">
+          <span className="status-pill">
             <Cloud className="h-3.5 w-3.5" />
             {cloudVoice
               ? cloudVoice.FriendlyName.replace(/^Microsoft\s+/i, '').replace(/\s+Online\s+\(Natural\).*$/i, '')
               : 'Escolha uma voz'}
           </span>
-          <span className={`status-pill ${virtualMicEnabled ? 'status-pill--live' : 'status-pill--ready'}`}>
+          <span className={`status-pill ${virtualMicEnabled ? 'status-pill--live' : ''}`}>
             <Mic className="h-3.5 w-3.5" />
             {virtualMicEnabled ? 'Mic virtual ligado' : 'Mic virtual desligado'}
           </span>
-          <span className={`status-pill ${isSynthesizing ? 'status-pill--live' : isSpeaking ? 'status-pill--warn' : 'status-pill--ready'}`}>
-            {isSynthesizing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MonitorUp className="h-3.5 w-3.5" />}
-            {isSynthesizing ? 'Gerando audio...' : isSpeaking ? 'Falando agora' : canSpeak ? 'Pronto para falar' : 'Aguardando voz'}
-          </span>
-          <span className={`status-pill ${keepTextAfterSpeak ? 'status-pill--live' : 'status-pill--ready'}`}>
-            <Pin className="h-3.5 w-3.5" />
-            {keepTextAfterSpeak ? 'Manter texto ligado' : 'Manter texto desligado'}
-          </span>
+          {(isSynthesizing || isSpeaking) && (
+            <span className="status-pill status-pill--live">
+              {isSynthesizing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MonitorUp className="h-3.5 w-3.5" />}
+              {isSynthesizing ? 'Gerando audio...' : 'Falando agora'}
+            </span>
+          )}
         </div>
       </div>
 

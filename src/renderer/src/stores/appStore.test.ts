@@ -90,12 +90,11 @@ describe('appStore persistence batching', () => {
 })
 
 describe('migrateSettings', () => {
-  it('creates default profiles when settings are empty', () => {
+  it('creates a single default profile when settings are empty', () => {
     const result = migrateSettings(null)
     expect(result.schemaVersion).toBe(SCHEMA_VERSION)
-    expect(result.profiles).toHaveLength(2)
+    expect(result.profiles).toHaveLength(1)
     expect(result.profiles?.[0].id).toBe('padrao')
-    expect(result.profiles?.[1].id).toBe('jogo')
     expect(result.activeProfileId).toBe('padrao')
   })
 

@@ -7,7 +7,6 @@ import {
   Contrast,
   Cpu,
   Eye,
-  Headphones,
   Mic,
   RefreshCw,
   Settings,
@@ -40,7 +39,6 @@ export default function SettingsPage() {
     uptime: 0,
     phase: 'starting',
   })
-  const [audioDevices, setAudioDevices] = useState<any[]>([])
   const [vbCableInstalled, setVbCableInstalled] = useState(false)
   const [installState, setInstallState] = useState<VBCableInstallState>('idle')
   const [installMessage, setInstallMessage] = useState<string | undefined>(undefined)
@@ -70,7 +68,6 @@ export default function SettingsPage() {
 
   const loadAudioDevices = async () => {
     const devices = await window.electronAPI.listAudioDevices()
-    setAudioDevices(devices)
     const hasVbCable = detectVBCable(devices)
     setVbCableInstalled(hasVbCable)
     if (hasVbCable) {
@@ -109,7 +106,6 @@ export default function SettingsPage() {
   const verifyVirtualMic = async () => {
     await window.electronAPI.refreshVirtualMic()
     const devices = await window.electronAPI.listAudioDevices()
-    setAudioDevices(devices)
     const detected = detectVBCable(devices)
     setVbCableInstalled(detected)
     if (detected) {
@@ -206,35 +202,6 @@ export default function SettingsPage() {
 
         <div className="mt-4 space-y-3">
           <AudioOutputPicker />
-
-          {audioDevices.length > 0 && (
-            <details className="text-xs">
-              <summary className="cursor-pointer text-ink-soft hover:text-ink-strong select-none">
-                Dispositivos detectados pelo backend Python ({audioDevices.length})
-              </summary>
-              <div className="mt-2 space-y-1 max-h-48 overflow-auto">
-                {audioDevices.map((device) => (
-                  <div
-                    key={device.id}
-                    className={`flex items-center gap-2 text-sm p-2 rounded ${
-                      device.name.toLowerCase().includes('cable') ? 'status-pill status-pill--live' : 'text-ink-soft'
-                    }`}
-                  >
-                    {device.isInput ? <Mic className="w-3 h-3" /> : <Headphones className="w-3 h-3" />}
-                    <span>{device.name}</span>
-                    {device.isDefault && (
-                      <span
-                        className="text-xs px-1.5 rounded text-ink-soft"
-                        style={{ background: 'var(--vl-surface-overlay)' }}
-                      >
-                        padrao
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </details>
-          )}
         </div>
       </div>
 
