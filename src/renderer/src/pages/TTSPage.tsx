@@ -410,7 +410,6 @@ export default function TTSPage() {
   }
 
   const noReadyModel = availableModels.length === 0
-  const activeModel = availableModels.find((model) => model.id === modelId)
   const canSpeak = voiceSource === 'cloud' ? Boolean(cloudVoice) : !noReadyModel
   const speakDisabled = !canSpeak || (voiceSource === 'local' && noReadyModel)
 
@@ -486,10 +485,10 @@ export default function TTSPage() {
 
         <div className="hud-frame flex flex-wrap items-center gap-3 p-3">
           <span className="status-pill status-pill--ready">
-            {voiceSource === 'cloud' ? <Cloud className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
-            {voiceSource === 'cloud'
-              ? `Voz online: ${cloudVoice ? cloudVoice.ShortName : 'nenhuma selecionada'}`
-              : `Modelo: ${activeModel?.name ?? 'Nenhum modelo pronto'}`}
+            <Cloud className="h-3.5 w-3.5" />
+            {cloudVoice
+              ? cloudVoice.FriendlyName.replace(/^Microsoft\s+/i, '').replace(/\s+Online\s+\(Natural\).*$/i, '')
+              : 'Escolha uma voz'}
           </span>
           <span className={`status-pill ${virtualMicEnabled ? 'status-pill--live' : 'status-pill--ready'}`}>
             <Mic className="h-3.5 w-3.5" />
@@ -645,12 +644,6 @@ export default function TTSPage() {
                 <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
                   <span className="rounded-full border px-3 py-1 text-ink-soft" style={{ borderColor: 'var(--vl-hud-border)', background: 'var(--vl-surface-sunken)' }}>
                     {text.length} caracteres
-                  </span>
-                  <span className="rounded-full border px-3 py-1 text-ink-soft" style={{ borderColor: 'var(--vl-hud-border)', background: 'var(--vl-surface-sunken)' }}>
-                    {availableModels.length} modelos prontos
-                  </span>
-                  <span className="rounded-full border px-3 py-1 text-ink-soft" style={{ borderColor: 'var(--vl-hud-border)', background: 'var(--vl-surface-sunken)' }}>
-                    {voiceId.trim() ? `Voz ${voiceId}` : 'Voz padrao'}
                   </span>
                 </div>
 
