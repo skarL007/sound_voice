@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { VoiceShortcut } from '../../../shared/types'
 import {
+  acceleratorFromEvent,
   HOTKEY_SLOTS,
   formatHotkeyDisplay,
   generateShortcutId,
@@ -9,6 +10,7 @@ import {
   suggestNextHotkey,
   validateVoiceShortcut,
 } from './voiceShortcuts'
+import type { HotkeyEventLike } from './voiceShortcuts'
 
 function makeShortcut(overrides: Partial<VoiceShortcut> = {}): VoiceShortcut {
   return {
@@ -75,5 +77,68 @@ describe('voiceShortcuts utilities', () => {
       'Atalho reservado pelo sistema.',
     )
     expect(validateVoiceShortcut(makeShortcut())).toHaveLength(0)
+  })
+})
+
+describe('acceleratorFromEvent', () => {
+  const ev = (overrides: Partial<HotkeyEventLike>): HotkeyEventLike => ({
+    ctrlKey: false,
+    altKey: false,
+    shiftKey: false,
+    metaKey: false,
+    code: '',
+    key: '',
+    ...overrides,
+  })
+
+  it('builds a Ctrl+Shift+letter accelerator', () => {
+    const result = acceleratorFromEvent(ev({ ctrlKey: true, shiftKey: true, code: 'KeyG' }))
+    expect(result.accelerator).toBe('CommandOrControl+Shift+G')
+    expect(result.pending).toBe(false)
+  })
+
+  it('matches the canonical legacy slot format for Ctrl+Shift+digit', () => {
+    const result = acceleratorFromEvent(ev({ ctrlKey: true, shiftKey: true, code: 'Digit1' }))
+    expect(result.accelerator).toBe('CommandOrControl+Shift+1')
+    expect(result.accelerator).toBe(HOTKEY_SLOTS[0])
+  })
+
+  it('supports Ctrl+Alt, function keys and arrows', () => {
+    expect(acceleratorFromEvent(ev({ ctrlKey: true, altKey: true, code: 'KeyM' })).accelerator).toBe(
+      'CommandOrControl+Alt+M',
+    )
+    expect(acceleratorFromEvent(ev({ ctrlKey: true, code: 'F5' })).accelerator).toBe('CommandOrControl+F5')
+    expect(acceleratorFromEvent(ev({ altKey: true, code: 'ArrowUp' })).accelerator).toBe('Alt+Up')
+  })
+
+  it('keeps canonical modifier order Ctrl, Alt, Shift', () => {
+    const result = acceleratorFromEvent(ev({ ctrlKey: true, altKey: true, shiftKey: true, code: 'KeyK' }))
+    expect(result.accelerator).toBe('CommandOrControl+Alt+Shift+K')
+  })
+
+  it('is pending while only modifiers are held', () => {
+    const result = acceleratorFromEvent(ev({ ctrlKey: true, code: 'ControlLeft' }))
+    expect(result.pending).toBe(true)
+    expect(result.accelerator).toBeNull()
+    expect(result.preview).toContain('Ctrl')
+  })
+
+  it('requires a strong modifier (rejects bare key and Shift-only)', () => {
+    expect(acceleratorFromEvent(ev({ code: 'KeyG' })).accelerator).toBeNull()
+    const shiftOnly = acceleratorFromEvent(ev({ shiftKey: true, code: 'KeyG' }))
+    expect(shiftOnly.accelerator).toBeNull()
+    expect(shiftOnly.error).toBeTruthy()
+  })
+
+  it('rejects unsupported keys', () => {
+    const result = acceleratorFromEvent(ev({ ctrlKey: true, code: 'IntlBackslash' }))
+    expect(result.accelerator).toBeNull()
+    expect(result.error).toBeTruthy()
+  })
+
+  it('produces an accelerator that round-trips through formatHotkeyDisplay', () => {
+    const result = acceleratorFromEvent(ev({ ctrlKey: true, altKey: true, code: 'KeyZ' }))
+    expect(result.accelerator).toBe('CommandOrControl+Alt+Z')
+    expect(formatHotkeyDisplay(result.accelerator!)).toBe('Ctrl + Alt + Z')
   })
 })

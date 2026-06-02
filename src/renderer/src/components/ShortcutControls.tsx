@@ -1,12 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Loader2, PlayCircle, Trash2 } from 'lucide-react'
-import { toast } from '../utils/toast'
-import {
-  HOTKEY_SLOTS,
-  formatHotkeyDisplay,
-  isHotkeyTaken,
-  isReservedHotkey,
-} from '../utils/voiceShortcuts'
+import { Keyboard, Loader2, PlayCircle, Trash2 } from 'lucide-react'
+import { acceleratorFromEvent, formatHotkeyDisplay, isHotkeyTaken } from '../utils/voiceShortcuts'
 import type { CloudVoice, VoiceShortcut } from '../../../shared/types'
 
 // Helpers compartilhados entre a tela Falar (cards) e a tela Atalhos (lista).
@@ -27,7 +21,12 @@ export function deriveName(text: string): string {
   return t.slice(0, 40) || 'Atalho'
 }
 
-export function HotkeySelect({
+/**
+ * Capturador de tecla livre: a pessoa clica e aperta a combinacao que quiser
+ * (Ctrl/Alt/Win + tecla). Valida contra atalhos em uso e teclas reservadas e
+ * so confirma quando a combinacao e valida. Esc cancela.
+ */
+export function HotkeyCapture({
   value,
   onChange,
   shortcuts,
@@ -40,31 +39,85 @@ export function HotkeySelect({
   excludeId?: string
   ariaLabel: string
 }) {
+  const [capturing, setCapturing] = useState(false)
+  const [preview, setPreview] = useState('')
+  const [hint, setHint] = useState<string | null>(null)
+
+  const stop = () => {
+    setCapturing(false)
+    setPreview('')
+    setHint(null)
+  }
+
+  useEffect(() => {
+    if (!capturing) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      event.preventDefault()
+      event.stopPropagation()
+      if (event.repeat) return
+      if (event.key === 'Escape') {
+        stop()
+        return
+      }
+      const result = acceleratorFromEvent(event)
+      setPreview(result.preview)
+      if (result.pending) {
+        setHint(null)
+        return
+      }
+      if (!result.accelerator) {
+        setHint(result.error ?? 'Combinacao invalida.')
+        return
+      }
+      if (isHotkeyTaken(result.accelerator, shortcuts, excludeId)) {
+        setHint('Essa tecla ja esta em uso. Tente outra.')
+        return
+      }
+      onChange(result.accelerator)
+      stop()
+    }
+    window.addEventListener('keydown', onKeyDown, true)
+    return () => window.removeEventListener('keydown', onKeyDown, true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [capturing, shortcuts, excludeId, onChange])
+
+  if (capturing) {
+    return (
+      <span className="inline-flex flex-col gap-1">
+        <button
+          type="button"
+          onClick={stop}
+          className="input-field font-mono text-xs inline-flex items-center gap-2"
+          style={{ width: 'auto', borderColor: 'var(--vl-state-live-border)', color: 'var(--vl-state-live-text)' }}
+          aria-label={`${ariaLabel}: aperte a combinacao desejada, Esc cancela`}
+          aria-live="polite"
+        >
+          <span className="inline-block h-2 w-2 rounded-full animate-pulse" style={{ background: 'var(--vl-state-live)' }} />
+          {preview || 'Aperte as teclas...'}
+        </button>
+        <span className="text-[10px]" style={hint ? { color: 'var(--vl-state-warn-text)' } : undefined}>
+          {hint ?? 'Esc cancela'}
+        </span>
+      </span>
+    )
+  }
+
   return (
-    <select
-      value={value}
-      onChange={(event) => {
-        const next = event.target.value
-        if (isHotkeyTaken(next, shortcuts, excludeId)) {
-          toast('Tecla em uso', 'Essa combinacao ja esta ocupada ou e reservada.', 'warning')
-          return
-        }
-        onChange(next)
+    <button
+      type="button"
+      onClick={() => {
+        setCapturing(true)
+        setPreview('')
+        setHint(null)
       }}
-      className="input-field font-mono text-xs"
+      className="input-field font-mono text-xs inline-flex items-center gap-1.5"
       style={{ width: 'auto' }}
       aria-label={ariaLabel}
+      title="Clique e aperte a combinacao de teclas que quiser"
     >
-      {HOTKEY_SLOTS.map((slot) => {
-        const taken = isHotkeyTaken(slot, shortcuts, excludeId) || isReservedHotkey(slot)
-        return (
-          <option key={slot} value={slot} disabled={taken && slot !== value}>
-            {formatHotkeyDisplay(slot)}
-            {taken && slot !== value ? ' (em uso)' : ''}
-          </option>
-        )
-      })}
-    </select>
+      <Keyboard className="h-3.5 w-3.5 opacity-70" />
+      {value ? formatHotkeyDisplay(value) : 'Definir tecla'}
+    </button>
   )
 }
 
@@ -163,7 +216,7 @@ export function ShortcutCard({
       aria-current={isActive ? 'true' : undefined}
     >
       <div className="flex items-center gap-2">
-        <HotkeySelect
+        <HotkeyCapture
           value={shortcut.hotkey}
           onChange={(hotkey) => onUpdate({ hotkey })}
           shortcuts={allShortcuts}

@@ -272,7 +272,15 @@ export function registerVoiceShortcuts(shortcuts: VoiceShortcut[]): { ok: boolea
 
 function setupShortcutsIpc(): void {
   ipcMain.handle('shortcuts:reregister', (_, shortcuts: VoiceShortcut[]) => {
-    return registerVoiceShortcuts(Array.isArray(shortcuts) ? shortcuts : [])
+    const result = registerVoiceShortcuts(Array.isArray(shortcuts) ? shortcuts : [])
+    // Avisa o renderer quando uma tecla escolhida pelo usuario nao pode ser
+    // registrada (outro app do sistema ja a usa). Reaproveita o mesmo canal/toast
+    // dos conflitos de boot. So no caminho de runtime — no boot a janela pode
+    // ainda nao estar pronta.
+    if (result.conflicted.length > 0) {
+      mainWindow?.webContents.send('global:shortcut-conflict', result.conflicted)
+    }
+    return result
   })
 }
 

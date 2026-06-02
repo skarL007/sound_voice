@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Keyboard, Plus } from 'lucide-react'
 import DiscordVRChatGuide from '../components/DiscordVRChatGuide'
-import { HotkeySelect, ShortcutCard, VoiceSelect } from '../components/ShortcutControls'
+import { HotkeyCapture, ShortcutCard, VoiceSelect } from '../components/ShortcutControls'
 import { useVoiceShortcuts } from '../hooks/useVoiceShortcuts'
 import { toast } from '../utils/toast'
 
@@ -70,7 +70,7 @@ export default function VoiceShortcutsPage() {
         />
         <div className="flex flex-wrap items-center gap-2">
           <VoiceSelect voices={sc.cloudVoices} value={draftVoice} onChange={setDraftVoice} ariaLabel="Voz do novo atalho" />
-          <HotkeySelect value={draftHotkey} onChange={setDraftHotkey} shortcuts={sc.voiceShortcuts} ariaLabel="Tecla do novo atalho" />
+          <HotkeyCapture value={draftHotkey} onChange={setDraftHotkey} shortcuts={sc.voiceShortcuts} ariaLabel="Tecla do novo atalho" />
           <button onClick={handleAdd} className="btn-primary btn-primary--armed inline-flex items-center gap-2 text-sm ml-auto">
             <Plus className="h-4 w-4" />
             Adicionar

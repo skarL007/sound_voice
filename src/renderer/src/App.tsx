@@ -38,6 +38,7 @@ import { buildHistoryItem, pushHistoryItem, sanitizeCommunicationState, serializ
 import { getVisibleInstalledModels, resolveActiveModelForMvp } from './utils/modelSupport'
 import { toast } from './utils/toast'
 import { playCloudAudio } from './utils/cloudAudio'
+import { formatHotkeyDisplay } from './utils/voiceShortcuts'
 import type { BackendStatus, ModelInfo } from '../../shared/types'
 
 // App focado no online (Edge TTS): jornada começa → fala → atalho → ajustes.
@@ -909,7 +910,7 @@ export default function App() {
     })
     const unsubShortcutConflict = window.electronAPI.onGlobalShortcutConflict((conflicted) => {
       if (!conflicted || conflicted.length === 0) return
-      const conflictList = conflicted.slice(0, 3).join(', ') + (conflicted.length > 3 ? '...' : '')
+      const conflictList = conflicted.slice(0, 3).map(formatHotkeyDisplay).join(', ') + (conflicted.length > 3 ? '...' : '')
       toast(
         `${conflicted.length} atalho(s) bloqueado(s)`,
         `Outro app ja usa: ${conflictList}. Tente combinacoes Ctrl+Alt ou F-keys em "Atalhos".`,
