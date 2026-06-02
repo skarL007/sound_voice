@@ -126,14 +126,14 @@ export default function VirtualMicSetupPanel({
         </p>
 
         <div className="mt-3 flex flex-wrap gap-2">
-          {(installState === 'idle' || isError) && (
+          {(installState === 'idle' || isError || isManual) && (
             <button
               onClick={onInstall}
               disabled={isBusy}
               className="btn-primary inline-flex items-center gap-2 text-sm"
             >
               {isBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-              {isError ? 'Tentar de novo' : 'Baixar e instalar microfone virtual'}
+              {isError || isManual ? 'Tentar de novo' : 'Baixar e instalar microfone virtual'}
             </button>
           )}
           {(isDownloading || isLaunching) && (

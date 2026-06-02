@@ -365,13 +365,12 @@ export function registerIpcHandlers(): void {
     const installerPath = getBundledVBCableInstallerCandidates().find((candidate) => existsSync(candidate))
     if (installerPath) {
       logMain('INFO', `Launching VB-Cable installer: ${installerPath}`)
-      try {
-        spawn(installerPath, [], { detached: true, shell: false })
+      const openError = await launchInstaller(installerPath)
+      if (!openError) {
         return { success: true, launched: true }
-      } catch (e) {
-        logMain('ERROR', `Failed to launch VB-Cable installer: ${e}`)
-        return { success: false, error: String(e) }
       }
+      logMain('ERROR', `Failed to launch VB-Cable installer: ${openError}`)
+      return { success: false, error: openError }
     }
     // Fallback: open official website
     shell.openExternal('https://vb-audio.com/Cable/')
@@ -392,13 +391,12 @@ export function registerIpcHandlers(): void {
     // 1. Prefere o instalador embutido (offline, sem depender de rede).
     const bundled = getBundledVBCableInstallerCandidates().find((candidate) => existsSync(candidate))
     if (bundled) {
-      try {
-        spawn(bundled, [], { detached: true, shell: false })
+      const openError = await launchInstaller(bundled)
+      if (!openError) {
         sendComplete({ success: true })
         return { success: true, launched: true, downloaded: false }
-      } catch (e) {
-        logMain('WARN', `Bundled VB-Cable launch failed, will try download: ${e}`)
       }
+      logMain('WARN', `Bundled VB-Cable launch failed (${openError}), will try download`)
     }
 
     // 2. Baixa o ZIP oficial para userData/temp/vbcable.
@@ -464,18 +462,23 @@ export function registerIpcHandlers(): void {
       return { success: false, downloaded: true, error }
     }
 
-    // 5. Lanca o instalador oficial (o usuario clica "Install Driver").
-    try {
-      logMain('INFO', `Launching downloaded VB-Cable installer: ${exePath}`)
-      spawn(exePath, [], { detached: true, shell: false })
-      sendComplete({ success: true })
-      return { success: true, launched: true, downloaded: true }
-    } catch (e) {
-      const error = e instanceof Error ? e.message : String(e)
-      logMain('ERROR', `VB-Cable installer launch failed: ${error}`)
-      sendComplete({ success: false, error })
-      return { success: false, downloaded: true, error }
+    // 5. Lanca o instalador oficial via ShellExecute (dispara o UAC se necessario).
+    logMain('INFO', `Launching downloaded VB-Cable installer: ${exePath}`)
+    const launchError = await launchInstaller(exePath)
+    if (launchError) {
+      logMain('ERROR', `VB-Cable installer launch failed: ${launchError}`)
+      sendComplete({ success: false, error: launchError })
+      shell.showItemInFolder(exePath)
+      return {
+        success: true,
+        launched: false,
+        downloaded: true,
+        message:
+          'Baixei o instalador, mas o Windows pediu permissao. Abri a pasta — execute o VBCABLE_Setup_x64.exe (botao direito > Executar como administrador) e depois clique em Verificar instalacao.',
+      }
     }
+    sendComplete({ success: true })
+    return { success: true, launched: true, downloaded: true }
   })
 
   ipcMain.handle('mic:cancel-vb-cable-download', async () => {
@@ -587,6 +590,21 @@ export function registerIpcHandlers(): void {
   ipcMain.handle('updater:version', () => {
     return app.getVersion()
   })
+}
+
+/**
+ * Lanca um instalador via ShellExecute (shell.openPath): respeita o manifesto
+ * de elevacao do .exe e dispara o UAC quando o instalador exige administrador.
+ * spawn() direto falha com EACCES (ERROR_ELEVATION_REQUIRED) e o erro chega de
+ * forma assincrona (uncaught -> crash). Retorna '' em sucesso, ou a mensagem
+ * de erro.
+ */
+async function launchInstaller(exePath: string): Promise<string> {
+  try {
+    return await shell.openPath(exePath)
+  } catch (e) {
+    return e instanceof Error ? e.message : String(e)
+  }
 }
 
 function runProcess(command: string, args: string[]): Promise<void> {
