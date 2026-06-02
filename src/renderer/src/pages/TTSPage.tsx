@@ -12,7 +12,6 @@ import {
   Plus,
   Send,
   Square,
-  Trash2,
   Volume2,
   Wrench,
 } from 'lucide-react'
@@ -36,6 +35,9 @@ import {
   type VBCableDownloadProgress,
   type VBCableInstallState,
 } from '../utils/virtualMicSetup'
+import { ShortcutCard } from '../components/ShortcutControls'
+import { useVoiceShortcuts } from '../hooks/useVoiceShortcuts'
+import { formatHotkeyDisplay } from '../utils/voiceShortcuts'
 
 /**
  * Acha o dispositivo de saida "CABLE Input" para rotear a voz online (Edge TTS)
@@ -93,12 +95,9 @@ export default function TTSPage() {
     text,
     setText,
     history,
-    quickPhrases,
     keepTextAfterSpeak,
     setKeepTextAfterSpeak,
     addHistoryItem,
-    addQuickPhrase,
-    deleteQuickPhrase,
   } = useCommunicationSettings()
   const [modelId, setModelId] = useState(defaultModelId)
   const [voiceId, setVoiceId] = useState('')
@@ -115,6 +114,8 @@ export default function TTSPage() {
   const [micInstallMessage, setMicInstallMessage] = useState<string | undefined>(undefined)
   const [installingMic, setInstallingMic] = useState(false)
   const [micDownloadProgress, setMicDownloadProgress] = useState<VBCableDownloadProgress | null>(null)
+  const shortcuts = useVoiceShortcuts()
+  const [shortcutDraft, setShortcutDraft] = useState('')
 
   const handleCloudVoiceSelect = useCallback((voice: CloudVoice) => {
     setLocalCloudVoice(voice)
@@ -212,9 +213,8 @@ export default function TTSPage() {
 
   const saveCurrentPhrase = useCallback(() => {
     if (!text.trim()) return
-    addQuickPhrase(text)
-    toast('Frase salva', 'A frase atual foi adicionada aos atalhos rapidos.', 'success')
-  }, [text, addQuickPhrase])
+    shortcuts.createShortcut(text)
+  }, [text, shortcuts])
 
   const exportHistory = useCallback(() => {
     if (history.length === 0) {
@@ -726,58 +726,61 @@ export default function TTSPage() {
           <div className="hud-frame p-4">
             <div className="flex items-center gap-2 mb-3">
               <Keyboard className="h-4 w-4" style={{ color: 'var(--vl-state-ready)' }} />
-              <h3 className="text-sm font-semibold text-ink-strong">Frases rapidas</h3>
+              <h3 className="text-sm font-semibold text-ink-strong">Atalhos rapidos</h3>
             </div>
             <p className="mb-3 text-xs text-ink-soft">
-              As 9 primeiras tem atalho global <span className="font-mono">Ctrl+Shift+1..9</span>.
+              Escreva a frase, clique em <strong>Criar atalho</strong> e dispare com a tecla em qualquer lugar (Discord, jogo).
             </p>
-            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-              {quickPhrases.length === 0 && (
-                <div className="col-span-full hud-frame flex flex-col items-center gap-2 py-8 text-center"
-                  style={{ borderStyle: 'dashed' }}>
-                  <Plus className="w-6 h-6 text-ink-mute" aria-hidden="true" />
-                  <p className="text-sm font-medium text-ink-strong">Nenhuma frase salva ainda</p>
-                  <p className="text-xs text-ink-soft max-w-[240px]">
-                    Digite algo no editor e clique em <strong>Salvar frase</strong> para fixar aqui.
-                  </p>
-                </div>
-              )}
-              {quickPhrases.map((phrase, index) => (
-                <div
-                  key={phrase}
-                  className="hud-frame group relative flex min-h-[88px] flex-col justify-between p-3 transition-all hover:bg-brand-500/8"
+
+            {/* Criar atalho no card — escreva e crie, sem sair da tela */}
+            <div className="hud-frame p-3 mb-3 space-y-2" style={{ background: 'var(--vl-surface-raised)' }}>
+              <textarea
+                value={shortcutDraft}
+                onChange={(e) => setShortcutDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                    e.preventDefault()
+                    if (shortcuts.createShortcut(shortcutDraft)) setShortcutDraft('')
+                  }
+                }}
+                placeholder="O que dizer ao apertar o atalho? (ex: GG, partida excelente!)"
+                className="terminal-textarea w-full p-3 text-sm min-h-[60px] font-mono"
+                maxLength={500}
+              />
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-ink-soft">
+                  Tecla: <span className="font-mono text-ink-body">{formatHotkeyDisplay(shortcuts.suggestedHotkey)}</span>
+                </span>
+                <button
+                  onClick={() => { if (shortcuts.createShortcut(shortcutDraft)) setShortcutDraft('') }}
+                  disabled={!shortcutDraft.trim()}
+                  className="btn-primary btn-primary--armed inline-flex items-center gap-2 text-sm ml-auto"
                 >
-                  {index < 9 && (
-                    <span className="badge-shortcut absolute top-2 right-2" aria-label={`Atalho ${index + 1}`}>
-                      {index + 1}
-                    </span>
-                  )}
-                  <button
-                    onClick={() => {
-                      setText(phrase)
-                      void speak(phrase)
-                    }}
-                    disabled={!canSpeak}
-                    className="flex-1 text-left text-sm font-medium text-ink-body transition-colors disabled:opacity-50 group-hover:text-ink-strong pr-7"
-                  >
-                    <span className="line-clamp-3">{phrase}</span>
-                  </button>
-                  <div className="mt-3 flex items-center justify-between gap-2 pt-3" style={{ borderTop: '1px solid var(--vl-hud-border)' }}>
-                    <span className="text-[11px] uppercase tracking-[0.18em] text-ink-mute">Command pad</span>
-                    <button
-                      onClick={() => deleteQuickPhrase(phrase)}
-                      className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs text-ink-soft transition-colors hover:text-ink-strong"
-                      style={{ borderColor: 'var(--vl-hud-border)' }}
-                      aria-label={`Remover frase rapida: ${phrase}`}
-                      title="Remover frase rapida"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                      Remover
-                    </button>
-                  </div>
-                </div>
-              ))}
+                  <Plus className="h-4 w-4" />
+                  Criar atalho
+                </button>
+              </div>
             </div>
+
+            {shortcuts.sortedShortcuts.length === 0 ? (
+              <p className="text-center text-xs text-ink-soft py-4">Nenhum atalho ainda. Crie o primeiro acima.</p>
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {shortcuts.sortedShortcuts.map((entry) => (
+                  <ShortcutCard
+                    key={entry.id}
+                    shortcut={entry}
+                    voices={shortcuts.cloudVoices}
+                    allShortcuts={shortcuts.voiceShortcuts}
+                    isTesting={shortcuts.testingId === entry.id}
+                    isActive={shortcuts.activeId === entry.id}
+                    onUpdate={(patch) => shortcuts.updateShortcut(entry.id, patch)}
+                    onDelete={() => shortcuts.deleteShortcut(entry.id)}
+                    onTest={() => void shortcuts.testShortcut(entry)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -832,8 +835,7 @@ export default function TTSPage() {
                       </button>
                       <button
                         onClick={() => {
-                          addQuickPhrase(item.text)
-                          toast('Frase fixada', 'A frase do historico foi adicionada aos atalhos rapidos.', 'success')
+                          shortcuts.createShortcut(item.text)
                         }}
                         className="btn-secondary flex items-center gap-1 text-xs"
                       >

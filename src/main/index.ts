@@ -221,12 +221,10 @@ function setupGlobalShortcuts(): void {
     mainWindow?.webContents.send('global:toggle-virtual-mic')
   })
 
-  for (let index = 1; index <= 9; index += 1) {
-    const quickPhraseShortcut = process.platform === 'darwin' ? `Cmd+Shift+${index}` : `Ctrl+Shift+${index}`
-    tryRegister(quickPhraseShortcut, () => {
-      mainWindow?.webContents.send('global:speak-quick-phrase', index - 1)
-    })
-  }
+  // Ctrl+Shift+1..9 NAO sao mais registrados aqui: agora pertencem aos atalhos
+  // de voz (registerVoiceShortcuts), registrados conforme o usuario cria. Isso
+  // elimina a colisao em que as frases rapidas tomavam esses slots primeiro e os
+  // atalhos de voz nesses slots nunca disparavam.
 
   if (conflicted.length > 0) {
     const notifyRenderer = () => {

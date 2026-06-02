@@ -1,9 +1,28 @@
 import { create } from 'zustand'
 import type { AppSettings, BackendStatus, Profile, VoiceShortcut, VoiceSource } from '../../../shared/types'
 import { DEFAULT_QUICK_PHRASES, MAX_QUICK_PHRASES } from '../utils/communicationState'
-import { defaultShortcuts, generateShortcutId } from '../utils/voiceShortcuts'
+import { HOTKEY_SLOTS, defaultShortcuts, generateShortcutId } from '../utils/voiceShortcuts'
 
-export const SCHEMA_VERSION = 3
+export const SCHEMA_VERSION = 4
+
+// Converte frases rapidas legadas (string[]) em atalhos de voz, atribuindo as
+// teclas em ordem (Ctrl+Shift+1..9 etc). A voz vai vazia quando ainda nao ha
+// voz online escolhida — o disparo resolve pela voz global nesse caso.
+function quickPhrasesToShortcuts(phrases: string[], cloudVoice: string | null): VoiceShortcut[] {
+  return phrases
+    .map((raw, index) => ({ text: (raw ?? '').trim(), index }))
+    .filter((entry) => entry.text.length > 0 && entry.index < HOTKEY_SLOTS.length)
+    .map((entry) => ({
+      id: generateShortcutId(),
+      name: entry.text.slice(0, 40),
+      hotkey: HOTKEY_SLOTS[entry.index],
+      enabled: true,
+      voiceSource: 'cloud' as VoiceSource,
+      voice: cloudVoice ?? '',
+      text: entry.text,
+      speed: 1.0,
+    }))
+}
 
 interface AppState {
   alwaysOnTop: boolean
@@ -115,7 +134,19 @@ export function migrateSettings(saved: Partial<AppSettings> | null | undefined):
     saved.activeProfileId && profiles.some((profile) => profile.id === saved.activeProfileId)
       ? saved.activeProfileId
       : DEFAULT_PROFILE_ID
-  const voiceShortcuts = Array.isArray(saved.voiceShortcuts) ? saved.voiceShortcuts : []
+  let voiceShortcuts = Array.isArray(saved.voiceShortcuts) ? saved.voiceShortcuts : []
+  // Upgrade: se ainda nao ha atalhos de voz, converte as frases rapidas legadas
+  // (de settings ou do perfil ativo) em atalhos — sem apagar as quickPhrases.
+  if (voiceShortcuts.length === 0) {
+    const activeProfile = profiles.find((profile) => profile.id === activeProfileId)
+    const phrases =
+      saved.quickPhrases && saved.quickPhrases.length > 0
+        ? saved.quickPhrases
+        : activeProfile?.quickPhrases ?? []
+    if (phrases.length > 0) {
+      voiceShortcuts = quickPhrasesToShortcuts(phrases, saved.cloudVoice ?? null)
+    }
+  }
   return ensureMvpDefaults({
     ...saved,
     schemaVersion: SCHEMA_VERSION,

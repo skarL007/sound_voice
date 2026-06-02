@@ -934,9 +934,16 @@ export default function App() {
 
       try {
         if (shortcut.voiceSource === 'cloud') {
+          // Atalhos migrados de frases rapidas podem nao ter voz propria — cai
+          // para a voz online global nesse caso.
+          const voice = shortcut.voice || settings.cloudVoice
+          if (!voice) {
+            toast('Sem voz online', 'Escolha uma voz no atalho ou na tela Falar.', 'warning')
+            return
+          }
           const response = await window.electronAPI.synthesizeCloud({
             text: shortcut.text,
-            voice: shortcut.voice,
+            voice,
             speed: shortcut.speed,
             pitch: shortcut.pitch,
           })
@@ -948,6 +955,7 @@ export default function App() {
             response.audioBase64,
             response.mimeType ?? 'audio/webm',
             virtualMicOn && cableDeviceId ? cableDeviceId : undefined,
+            { monitor: virtualMicOn && Boolean(cableDeviceId) },
           )
           return
         }
