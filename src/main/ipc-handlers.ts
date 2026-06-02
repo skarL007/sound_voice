@@ -19,6 +19,14 @@ const VOICES_DIR = join(USER_DATA, 'voices')
 if (!existsSync(MODELS_DIR)) mkdirSync(MODELS_DIR, { recursive: true })
 if (!existsSync(VOICES_DIR)) mkdirSync(VOICES_DIR, { recursive: true })
 
+// Cache em memoria de audio Edge TTS por (voz|speed|pitch|texto). Frases
+// repetidas (atalhos, frases rapidas) tocam na hora, sem reabrir o WebSocket.
+const CLOUD_TTS_CACHE_MAX = 60
+const cloudTtsCache = new Map<string, string>()
+function cloudCacheKey(p: { text: string; voice: string; speed?: number; pitch?: number }): string {
+  return `${p.voice}|${p.speed ?? 1}|${p.pitch ?? 0}|${p.text.trim()}`
+}
+
 // Registry de modelos
 const MODEL_REGISTRY_PATH = join(__dirname, '../../assets/model-registry.json')
 
@@ -524,9 +532,24 @@ export function registerIpcHandlers(): void {
   })
 
   ipcMain.handle('cloud:synthesize', async (_, payload: { text: string; voice: string; speed?: number; pitch?: number }) => {
+    const key = cloudCacheKey(payload)
+    const hit = cloudTtsCache.get(key)
+    if (hit) {
+      // Move para o fim (LRU) e devolve na hora — sem ida ao Edge TTS.
+      cloudTtsCache.delete(key)
+      cloudTtsCache.set(key, hit)
+      return { success: true, audioBase64: hit, mimeType: 'audio/webm', cached: true }
+    }
     try {
       const buffer = await synthesizeEdgeTTS(payload)
-      return { success: true, audioBase64: buffer.toString('base64'), mimeType: 'audio/webm' }
+      const audioBase64 = buffer.toString('base64')
+      cloudTtsCache.set(key, audioBase64)
+      while (cloudTtsCache.size > CLOUD_TTS_CACHE_MAX) {
+        const oldest = cloudTtsCache.keys().next().value
+        if (oldest === undefined) break
+        cloudTtsCache.delete(oldest)
+      }
+      return { success: true, audioBase64, mimeType: 'audio/webm' }
     } catch (error) {
       logMain('WARN', `Edge TTS synthesize failed: ${error instanceof Error ? error.message : String(error)}`)
       return { success: false, error: error instanceof Error ? error.message : String(error) }

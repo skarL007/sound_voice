@@ -91,6 +91,28 @@ export default function VoiceShortcutsPage() {
     }
   }, [])
 
+  // Pre-aquece o cache do Edge TTS: sintetiza os atalhos online em segundo plano
+  // para que disparem instantaneamente (cache hit no main, sem reabrir o WebSocket).
+  useEffect(() => {
+    let cancelled = false
+    const targets = voiceShortcuts.filter(
+      (s) => s.enabled && s.voiceSource === 'cloud' && s.text.trim().length > 0 && Boolean(s.voice),
+    )
+    void (async () => {
+      for (const s of targets) {
+        if (cancelled) break
+        try {
+          await window.electronAPI.synthesizeCloud({ text: s.text, voice: s.voice, speed: s.speed, pitch: s.pitch })
+        } catch {
+          /* aquecimento e best-effort */
+        }
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [voiceShortcuts])
+
   const handleNew = () => {
     setEditing(emptyShortcut(suggestNextHotkey(voiceShortcuts), cloudVoiceDefault))
     setIsNew(true)
