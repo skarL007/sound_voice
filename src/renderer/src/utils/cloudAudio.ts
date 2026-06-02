@@ -55,7 +55,12 @@ async function tryPlayWithUrl(url: string, deviceId: string | undefined, token: 
   }
 }
 
-async function tryPlayWithWebAudio(bytes: Uint8Array, deviceId: string | undefined, token: number): Promise<boolean> {
+async function tryPlayWithWebAudio(
+  bytes: Uint8Array,
+  deviceId: string | undefined,
+  token: number,
+  monitor = false,
+): Promise<boolean> {
   // Web Audio API decodifica o container sem precisar passar pelo CSP media-src.
   // Erros sao especificos (EncodingError) em vez do generico NotSupportedError.
   const ctx = new AudioContext()
@@ -79,6 +84,11 @@ async function tryPlayWithWebAudio(bytes: Uint8Array, deviceId: string | undefin
     // Para rotear pro CABLE Input precisa criar MediaStream e atribuir num <audio>.
     const dest = ctx.createMediaStreamDestination()
     source.connect(dest)
+    if (monitor) {
+      // Monitoramento: o mesmo source tambem toca no alto-falante padrao,
+      // sincronizado, para o usuario ouvir a propria voz enquanto ela vai ao cabo.
+      source.connect(ctx.destination)
+    }
     const audio = new Audio()
     audio.srcObject = dest.stream
     audio.preload = 'auto'
@@ -122,10 +132,27 @@ async function tryPlayWithWebAudio(bytes: Uint8Array, deviceId: string | undefin
   return true
 }
 
-export async function playCloudAudio(audioBase64: string, mimeType = 'audio/webm', deviceId?: string): Promise<void> {
+export async function playCloudAudio(
+  audioBase64: string,
+  mimeType = 'audio/webm',
+  deviceId?: string,
+  opts?: { monitor?: boolean },
+): Promise<void> {
   stopCloudAudio()
   const token = ++playbackToken
   const bytes = base64ToBytes(audioBase64)
+  // monitor = tocar no cabo E no alto-falante (ouvir a propria voz). So faz
+  // sentido quando ha um device (cabo); sem device ja vai pro default.
+  const monitor = Boolean(opts?.monitor && deviceId)
+
+  // Com monitor, Web Audio e a via principal: 1 decode, 2 saidas sincronizadas
+  // (MediaStreamDestination->cabo + ctx.destination->alto-falante). O blob URL
+  // toca em um unico sink, entao nao serve para monitorar.
+  if (monitor) {
+    if (await tryPlayWithWebAudio(bytes, deviceId, token, true)) return
+    if (token !== playbackToken) return
+  }
+
   // Tentativa 1: <audio> com blob URL
   const blob = new Blob([bytes], { type: mimeType })
   const blobUrl = URL.createObjectURL(blob)
@@ -136,7 +163,7 @@ export async function playCloudAudio(audioBase64: string, mimeType = 'audio/webm
   if (token !== playbackToken) return
 
   // Tentativa 2: Web Audio API — bypassa CSP media-src e da erro especifico se falhar
-  if (await tryPlayWithWebAudio(bytes, deviceId, token)) {
+  if (await tryPlayWithWebAudio(bytes, deviceId, token, monitor)) {
     return
   }
 

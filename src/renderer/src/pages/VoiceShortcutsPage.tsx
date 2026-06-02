@@ -151,6 +151,7 @@ export default function VoiceShortcutsPage() {
           response.audioBase64,
           response.mimeType ?? 'audio/webm',
           cableDeviceId ?? undefined,
+          { monitor: Boolean(cableDeviceId) },
         )
       } else {
         const response = await window.electronAPI.synthesize({

@@ -51,6 +51,7 @@ export default function DiscordReadyBanner({ visible, onClose, modelId, speed = 
           response.audioBase64,
           response.mimeType ?? 'audio/webm',
           cableDeviceId ?? undefined,
+          { monitor: Boolean(cableDeviceId) },
         )
         return
       }

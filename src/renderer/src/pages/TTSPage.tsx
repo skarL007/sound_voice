@@ -269,6 +269,7 @@ export default function TTSPage() {
             response.audioBase64,
             response.mimeType ?? 'audio/webm',
             virtualMicEnabled && cableDeviceId ? cableDeviceId : undefined,
+            { monitor: virtualMicEnabled && Boolean(cableDeviceId) },
           )
           addHistoryItem(
             buildHistoryItem({
