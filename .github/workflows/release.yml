@@ -9,7 +9,7 @@ jobs:
   release:
     name: Build instalador e publicar release
     runs-on: windows-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     permissions:
       contents: write
 
@@ -26,22 +26,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # ---------------------------------------------------------------
-      # Backend Python: o python_dist/ pré-compilado deve ser fornecido.
-      #
-      # Opção A (recomendada para v1.0.0): build localmente, depois faça
-      # upload do diretório python_dist como artefato via build-python.yml
-      # e baixe aqui.
-      #
-      # Opção B (v1.1+): use um self-hosted runner Windows que já tem
-      # python_dist/ cacheado de um step anterior.
-      # ---------------------------------------------------------------
-      - name: Download backend Python pré-compilado
-        uses: actions/download-artifact@v4
+      # Backend Python compilado no proprio job (autossuficiente) — sem depender
+      # de artefato externo. Usa o mesmo script validado localmente (venv isolado).
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
         with:
-          name: python-backend
-          path: python_dist/
-        continue-on-error: true
+          python-version: '3.12'
+
+      - name: Build backend Python (PyInstaller)
+        run: scripts\build-python-venv.bat
+        shell: cmd
 
       - name: Rodar testes
         run: npm test
