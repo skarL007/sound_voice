@@ -37,7 +37,7 @@ jobs:
           python-version: '3.12'
 
       - name: Install backend test dependencies
-        run: pip install fastapi "httpx<0.28" pytest psutil numpy soundfile sounddevice
+        run: pip install fastapi "httpx<0.28" pytest psutil numpy soundfile sounddevice requests
 
       - name: Run Python API tests
         run: python -m pytest src/python/tests src/python/test_security_validators.py -q
