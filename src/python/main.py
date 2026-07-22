@@ -238,8 +238,13 @@ def play_audio(request: PlayRequest):
         data, sr = sf.read(request.audioPath)
         if data.ndim > 1:
             data = data.mean(axis=1)
-        virtual_mic.play_to_virtual_mic(data, sr)
-        return {"success": True}
+        routing = virtual_mic.play_to_virtual_mic(data, sr)
+        return {
+            "success": True,
+            "routedToVirtualMic": routing["routed_to_virtual_mic"],
+            "fallbackReason": routing["fallback_reason"],
+            "deviceName": routing["device_name"],
+        }
     except Exception as e:
         return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
 
@@ -339,12 +344,21 @@ def delete_cloned_voice(request: DeleteVoiceRequest):
 @app.post("/mic/route")
 def set_mic_route(request: MicRouteRequest):
     virtual_mic.enabled = request.enabled
-    return {"success": True, "enabled": request.enabled}
+    # Ao ligar, re-escaneia para pegar um VB-Cable recem-instalado.
+    if request.enabled:
+        virtual_mic.refresh()
+    return {"success": True, **virtual_mic.status()}
 
 
 @app.get("/mic/status")
 def get_mic_status():
-    return {"enabled": virtual_mic.enabled}
+    return virtual_mic.status()
+
+
+@app.post("/mic/refresh")
+def refresh_mic():
+    """Re-escaneia os dispositivos para detectar o VB-Cable sem reiniciar o backend."""
+    return {"success": True, **virtual_mic.refresh()}
 
 
 # ============== Audio Devices ==============
@@ -354,11 +368,14 @@ def list_audio_devices():
     devices = []
     try:
         for i, dev in enumerate(sd.query_devices()):
+            name = dev["name"]
+            lname = name.lower()
             devices.append({
                 "id": str(i),
-                "name": dev["name"],
+                "name": name,
                 "isInput": dev["max_input_channels"] > 0,
-                "isDefault": dev.get("default_samplerate", 0) > 0
+                "isDefault": dev.get("default_samplerate", 0) > 0,
+                "isVirtualCable": "cable" in lname or "vb-audio" in lname,
             })
     except Exception as e:
         print(f"Error listing audio devices: {e}")

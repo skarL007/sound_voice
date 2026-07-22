@@ -1,9 +1,28 @@
 import { create } from 'zustand'
 import type { AppSettings, BackendStatus, Profile, VoiceShortcut, VoiceSource } from '../../../shared/types'
 import { DEFAULT_QUICK_PHRASES, MAX_QUICK_PHRASES } from '../utils/communicationState'
-import { defaultShortcuts, generateShortcutId } from '../utils/voiceShortcuts'
+import { HOTKEY_SLOTS, defaultShortcuts, generateShortcutId } from '../utils/voiceShortcuts'
 
-export const SCHEMA_VERSION = 3
+export const SCHEMA_VERSION = 4
+
+// Converte frases rapidas legadas (string[]) em atalhos de voz, atribuindo as
+// teclas em ordem (Ctrl+Shift+1..9 etc). A voz vai vazia quando ainda nao ha
+// voz online escolhida — o disparo resolve pela voz global nesse caso.
+function quickPhrasesToShortcuts(phrases: string[], cloudVoice: string | null): VoiceShortcut[] {
+  return phrases
+    .map((raw, index) => ({ text: (raw ?? '').trim(), index }))
+    .filter((entry) => entry.text.length > 0 && entry.index < HOTKEY_SLOTS.length)
+    .map((entry) => ({
+      id: generateShortcutId(),
+      name: entry.text.slice(0, 40),
+      hotkey: HOTKEY_SLOTS[entry.index],
+      enabled: true,
+      voiceSource: 'cloud' as VoiceSource,
+      voice: cloudVoice ?? '',
+      text: entry.text,
+      speed: 1.0,
+    }))
+}
 
 interface AppState {
   alwaysOnTop: boolean
@@ -34,6 +53,9 @@ interface AppState {
   cableDeviceId: string | null
   cableDeviceLabel: string | null
   setCableDevice: (deviceId: string | null, deviceLabel: string | null) => void
+  monitorDeviceId: string | null
+  monitorDeviceLabel: string | null
+  setMonitorDevice: (deviceId: string | null, deviceLabel: string | null) => void
   voiceShortcuts: VoiceShortcut[]
   addVoiceShortcut: (shortcut: VoiceShortcut) => void
   updateVoiceShortcut: (id: string, patch: Partial<VoiceShortcut>) => void
@@ -59,29 +81,15 @@ const saveToDisk = (state: Partial<AppSettings>) => {
 }
 
 const DEFAULT_PROFILE_ID = 'padrao'
-const GAMING_PROFILE_ID = 'jogo'
 
-const GAMING_DEFAULT_PHRASES = [
-  'GG!',
-  'WP, bem jogado.',
-  'Cuidado, inimigo se aproximando.',
-  'Preciso de ajuda aqui.',
-  'Estou indo te dar suporte.',
-  'Vamos juntos.',
-  'Em cima, vai!',
-  'Recue, recue!',
-  'Estou sem municao.',
-  'Reagrupar agora.',
-]
-
+// Perfil unico: o app deixou de separar "padrao" e "jogo". buildDefaultProfiles
+// so cria o perfil padrao; perfis salvos antigos (incl. 'jogo' custom) continuam
+// validos pela migracao — apenas nao ha mais UI para troca-los.
 function buildDefaultProfiles(carriedQuickPhrases?: string[]): Profile[] {
   const padraoPhrases = carriedQuickPhrases && carriedQuickPhrases.length > 0
     ? carriedQuickPhrases.slice(0, MAX_QUICK_PHRASES)
     : DEFAULT_QUICK_PHRASES
-  return [
-    { id: DEFAULT_PROFILE_ID, name: 'Padrao', quickPhrases: padraoPhrases },
-    { id: GAMING_PROFILE_ID, name: 'Jogo', quickPhrases: GAMING_DEFAULT_PHRASES },
-  ]
+  return [{ id: DEFAULT_PROFILE_ID, name: 'Padrao', quickPhrases: padraoPhrases }]
 }
 
 export function migrateSettings(saved: Partial<AppSettings> | null | undefined): Partial<AppSettings> {
@@ -89,6 +97,8 @@ export function migrateSettings(saved: Partial<AppSettings> | null | undefined):
     voiceSource: 'cloud',
     cableDeviceId: null,
     cableDeviceLabel: null,
+    monitorDeviceId: 'default',
+    monitorDeviceLabel: null,
     voiceShortcuts: [],
     ...base,
   })
@@ -115,7 +125,19 @@ export function migrateSettings(saved: Partial<AppSettings> | null | undefined):
     saved.activeProfileId && profiles.some((profile) => profile.id === saved.activeProfileId)
       ? saved.activeProfileId
       : DEFAULT_PROFILE_ID
-  const voiceShortcuts = Array.isArray(saved.voiceShortcuts) ? saved.voiceShortcuts : []
+  let voiceShortcuts = Array.isArray(saved.voiceShortcuts) ? saved.voiceShortcuts : []
+  // Upgrade: se ainda nao ha atalhos de voz, converte as frases rapidas legadas
+  // (de settings ou do perfil ativo) em atalhos — sem apagar as quickPhrases.
+  if (voiceShortcuts.length === 0) {
+    const activeProfile = profiles.find((profile) => profile.id === activeProfileId)
+    const phrases =
+      saved.quickPhrases && saved.quickPhrases.length > 0
+        ? saved.quickPhrases
+        : activeProfile?.quickPhrases ?? []
+    if (phrases.length > 0) {
+      voiceShortcuts = quickPhrasesToShortcuts(phrases, saved.cloudVoice ?? null)
+    }
+  }
   return ensureMvpDefaults({
     ...saved,
     schemaVersion: SCHEMA_VERSION,
@@ -188,6 +210,12 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ cableDeviceId: deviceId, cableDeviceLabel: deviceLabel })
     saveToDisk({ cableDeviceId: deviceId, cableDeviceLabel: deviceLabel })
   },
+  monitorDeviceId: 'default',
+  monitorDeviceLabel: null,
+  setMonitorDevice: (deviceId, deviceLabel) => {
+    set({ monitorDeviceId: deviceId, monitorDeviceLabel: deviceLabel })
+    saveToDisk({ monitorDeviceId: deviceId, monitorDeviceLabel: deviceLabel })
+  },
   voiceShortcuts: [],
   addVoiceShortcut: (shortcut) => {
     const next = [...get().voiceShortcuts, shortcut]
@@ -257,6 +285,8 @@ if (typeof window !== 'undefined') {
       cloudVoice: migrated.cloudVoice ?? null,
       cableDeviceId: migrated.cableDeviceId ?? null,
       cableDeviceLabel: migrated.cableDeviceLabel ?? null,
+      monitorDeviceId: migrated.monitorDeviceId ?? 'default',
+      monitorDeviceLabel: migrated.monitorDeviceLabel ?? null,
       voiceShortcuts: migrated.voiceShortcuts ?? [],
       _hydrated: true,
     })

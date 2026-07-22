@@ -52,3 +52,6 @@ tmp*/
 # Companion workspaces (brainstorm only, nao sao parte do produto)
 .axon/
 .axon_builder/
+
+# VB-Cable redistributable (donationware) — baixado no build, nao versionado
+assets/vbcable/*.exe

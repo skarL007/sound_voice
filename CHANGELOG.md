@@ -1,5 +1,35 @@
 # Changelog
 
+## [1.2.0] - 2026-06-02 (pivo online-first + mic facil + simplificacao)
+
+### Adicionado
+
+- **Microfone virtual com instalacao assistida**: o launcher baixa o VB-Cable, abre o instalador e, ao detectar o driver, **ativa o mic sozinho** (auto-deteccao por poll + auto-ativacao). Download/extracao em `%ProgramData%` para funcionar em conta padrao + UAC.
+- **Monitor de audio**: a voz online toca no cabo (Discord ouve) **e** no seu fone ao mesmo tempo, com seletor "Voce escuta em" (padrao do sistema, um dispositivo, ou mudo). Funcao pura `buildAudioOutputs` decide os destinos.
+- **Captura de tecla livre** para atalhos de voz: grave qualquer combinacao (Ctrl/Alt/Win + tecla) em vez de escolher de uma lista fixa; aviso quando outro app ja usa a tecla.
+- **Latencia**: cache LRU de audio Edge TTS + pre-aquecimento dos atalhos.
+- **Agentes de design** (`.claude/agents/launcher-designer.md`, `app-flow-designer.md`) e um workflow de auditoria de design.
+
+### Alterado
+
+- **Pivo online-first**: tela Falar e navegacao focadas no Microsoft Edge TTS (roteado no renderer via `setSinkId`).
+- **Atalhos unificados** (`voiceShortcuts`, schema v4) com criacao/edicao inline na tela Falar e na aba Atalhos.
+- **Perfil unico**: removido o perfil "Jogo" e o seletor de perfil (settings legados continuam validos, sem bump de schema).
+- **Redesign v2**: Inicio e Falar mais sobrios e simples — CTA primario unico, barra de estado enxuta (4->2 chips), tokens de tipografia/raio/cor consistentes, sem glow.
+- **Layout responsivo**: sem overflow horizontal em janelas menores (`min-w-0` no main e nos filhos flex/grid; split de duas colunas so em `2xl`).
+- **Dependencias**: Electron 36 -> 42, electron-builder 25 -> 26.
+
+### Removido
+
+- Aba e pagina **Logs** da navegacao.
+- Caminho local morto da navegacao (rotas `/models`, `/clone`; card "Setup local recomendado").
+
+### Corrigido
+
+- **Mic "mudo"**: a voz ia so para o cabo; agora ha monitor para o usuario se ouvir; o chime de teste toca nos dois caminhos.
+- **Colisao de hotkeys** `Ctrl+Shift+1..9` (passaram a pertencer aos atalhos de voz).
+- **Backend em dev** usa o standalone empacotado quando o `python.exe` da maquina e um stub da Microsoft Store.
+
 ## [1.1.0] - 2026-05-26 (Auditoria completa + qualidade + novas funcionalidades)
 
 ### Adicionado

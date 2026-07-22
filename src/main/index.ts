@@ -221,12 +221,10 @@ function setupGlobalShortcuts(): void {
     mainWindow?.webContents.send('global:toggle-virtual-mic')
   })
 
-  for (let index = 1; index <= 9; index += 1) {
-    const quickPhraseShortcut = process.platform === 'darwin' ? `Cmd+Shift+${index}` : `Ctrl+Shift+${index}`
-    tryRegister(quickPhraseShortcut, () => {
-      mainWindow?.webContents.send('global:speak-quick-phrase', index - 1)
-    })
-  }
+  // Ctrl+Shift+1..9 NAO sao mais registrados aqui: agora pertencem aos atalhos
+  // de voz (registerVoiceShortcuts), registrados conforme o usuario cria. Isso
+  // elimina a colisao em que as frases rapidas tomavam esses slots primeiro e os
+  // atalhos de voz nesses slots nunca disparavam.
 
   if (conflicted.length > 0) {
     const notifyRenderer = () => {
@@ -274,7 +272,15 @@ export function registerVoiceShortcuts(shortcuts: VoiceShortcut[]): { ok: boolea
 
 function setupShortcutsIpc(): void {
   ipcMain.handle('shortcuts:reregister', (_, shortcuts: VoiceShortcut[]) => {
-    return registerVoiceShortcuts(Array.isArray(shortcuts) ? shortcuts : [])
+    const result = registerVoiceShortcuts(Array.isArray(shortcuts) ? shortcuts : [])
+    // Avisa o renderer quando uma tecla escolhida pelo usuario nao pode ser
+    // registrada (outro app do sistema ja a usa). Reaproveita o mesmo canal/toast
+    // dos conflitos de boot. So no caminho de runtime — no boot a janela pode
+    // ainda nao estar pronta.
+    if (result.conflicted.length > 0) {
+      mainWindow?.webContents.send('global:shortcut-conflict', result.conflicted)
+    }
+    return result
   })
 }
 

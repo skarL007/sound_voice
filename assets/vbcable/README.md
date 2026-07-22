@@ -1,12 +1,22 @@
 # VB-Audio Virtual Cable
 
-Para habilitar a instalação automática do VB-Cable no VoiceLaunch TTS:
+O VoiceLaunch TTS instala o VB-Cable de duas formas, nesta ordem de preferencia:
 
-1. Baixe o **VBCABLE_Setup.exe** em: https://vb-audio.com/Cable/
-2. Coloque o arquivo `VBCABLE_Setup.exe` nesta pasta (`assets/vbcable/`)
-3. Rebuild o app com `npm run dist:win`
+1. **Embutido (opcional, offline):** se `VBCABLE_Setup_x64.exe` (e/ou `VBCABLE_Setup.exe`)
+   estiver nesta pasta, o launcher o usa direto, sem baixar nada.
+2. **Download automatico (padrao):** se nao houver instalador embutido, o launcher baixa
+   o pacote oficial da VB-Audio com barra de progresso, extrai e abre o instalador. O usuario
+   clica em **Instalar microfone virtual** na tela **Falar** ou em **Configuracoes > Microfone Virtual**.
 
-O instalador será incluído no pacote final e poderá ser executado automaticamente
-pelo usuário através do botão "Instalar Automaticamente" em Configurações > Microfone Virtual.
+## Para embutir o instalador (opcional)
 
-> Nota: A instalação do driver requer privilégios de administrador no Windows.
+1. Baixe o pacote em: https://vb-audio.com/Cable/
+2. Extraia o ZIP e coloque `VBCABLE_Setup_x64.exe` (e/ou `VBCABLE_Setup.exe`) nesta pasta.
+3. Rebuild com `npm run dist:win` — o `electron-builder.yml` ja copia esta pasta para `resources/vbcable/`.
+
+A URL e a versao usadas no download automatico ficam em `src/main/app-config.ts` (`VBCABLE_DOWNLOAD`).
+Ao sair um novo driver pack, atualize a URL la (e o `sha256`, se quiser fixar a verificacao de integridade).
+
+> VB-Cable da VB-Audio e **donationware** (https://vb-audio.com/Cable/); baixar/redistribuir e
+> permitido mantendo a origem visivel ao usuario. A instalacao do driver requer privilegios de
+> administrador no Windows (o app ja roda elevado).

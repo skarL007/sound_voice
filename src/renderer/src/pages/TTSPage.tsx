@@ -3,7 +3,6 @@ import {
   BookmarkPlus,
   Cloud,
   Download,
-  HardDrive,
   History,
   Keyboard,
   Loader2,
@@ -13,14 +12,12 @@ import {
   Plus,
   Send,
   Square,
-  Trash2,
   Volume2,
 } from 'lucide-react'
-import type { CloudVoice, HardwareInfo, ModelInfo } from '../../../shared/types'
+import type { CloudVoice, ModelInfo } from '../../../shared/types'
 import VirtualKeyboard from '../components/VirtualKeyboard'
 import DiscordReadyBanner from '../components/DiscordReadyBanner'
 import CloudVoicePicker from '../components/CloudVoicePicker'
-import AlertBox from '../components/AlertBox'
 import { useCommunicationSettings } from '../hooks/useCommunicationSettings'
 import { useAppStore } from '../stores/appStore'
 import { useShallow } from 'zustand/react/shallow'
@@ -30,6 +27,34 @@ import { buildHistoryItem } from '../utils/communicationState'
 import { isModelVisibleInMvp } from '../utils/modelSupport'
 import { playCloudAudio, stopCloudAudio } from '../utils/cloudAudio'
 import { buildCsv, downloadCsv } from '../utils/historyExport'
+import { detectVBCable } from '../utils/virtualMicSetup'
+import { ShortcutCard } from '../components/ShortcutControls'
+import { useVoiceShortcuts } from '../hooks/useVoiceShortcuts'
+import { formatHotkeyDisplay } from '../utils/voiceShortcuts'
+
+/**
+ * Acha o dispositivo de saida "CABLE Input" para rotear a voz online (Edge TTS)
+ * pelo navegador (setSinkId). Pede permissao de microfone se os nomes vierem
+ * vazios. Retorna null se nao encontrar.
+ */
+async function autoSelectCableOutput(): Promise<{ id: string; label: string } | null> {
+  if (!navigator.mediaDevices?.enumerateDevices) return null
+  const pick = (list: MediaDeviceInfo[]) => {
+    const outs = list.filter((d) => d.kind === 'audiooutput')
+    return outs.find((d) => /cable input/i.test(d.label)) || outs.find((d) => /cable/i.test(d.label)) || null
+  }
+  let found = pick(await navigator.mediaDevices.enumerateDevices())
+  if (!found && navigator.mediaDevices.getUserMedia) {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      stream.getTracks().forEach((t) => t.stop())
+      found = pick(await navigator.mediaDevices.enumerateDevices())
+    } catch {
+      /* permissao negada — sem nomes nao da pra auto-selecionar */
+    }
+  }
+  return found ? { id: found.deviceId, label: found.label || 'CABLE Input' } : null
+}
 
 export default function TTSPage() {
   const {
@@ -43,6 +68,8 @@ export default function TTSPage() {
     storedCloudVoiceShortName,
     setStoredCloudVoice,
     cableDeviceId,
+    setCableDevice,
+    monitorDeviceId,
   } = useAppStore(
     useShallow((s) => ({
       defaultModelId: s.defaultModelId,
@@ -55,18 +82,17 @@ export default function TTSPage() {
       storedCloudVoiceShortName: s.cloudVoice,
       setStoredCloudVoice: s.setCloudVoice,
       cableDeviceId: s.cableDeviceId,
+      setCableDevice: s.setCableDevice,
+      monitorDeviceId: s.monitorDeviceId,
     })),
   )
   const {
     text,
     setText,
     history,
-    quickPhrases,
     keepTextAfterSpeak,
     setKeepTextAfterSpeak,
     addHistoryItem,
-    addQuickPhrase,
-    deleteQuickPhrase,
   } = useCommunicationSettings()
   const [modelId, setModelId] = useState(defaultModelId)
   const [voiceId, setVoiceId] = useState('')
@@ -75,10 +101,12 @@ export default function TTSPage() {
   const [isSynthesizing, setIsSynthesizing] = useState(false)
   const [virtualMicEnabled, setVirtualMicEnabled] = useState(false)
   const [availableModels, setAvailableModels] = useState<ModelInfo[]>([])
-  const [hardware, setHardware] = useState<HardwareInfo | null>(null)
   const [showHistory, setShowHistory] = useState(false)
   const [showDiscordBanner, setShowDiscordBanner] = useState(false)
   const [cloudVoice, setLocalCloudVoice] = useState<CloudVoice | null>(null)
+  const [vbCableDetected, setVbCableDetected] = useState(false)
+  const shortcuts = useVoiceShortcuts()
+  const [shortcutDraft, setShortcutDraft] = useState('')
 
   const handleCloudVoiceSelect = useCallback((voice: CloudVoice) => {
     setLocalCloudVoice(voice)
@@ -92,6 +120,7 @@ export default function TTSPage() {
     window.electronAPI.getVirtualMicStatus().then((enabled) => {
       setVirtualMicEnabled(enabled)
     })
+    void loadMicDevices()
 
     const unsubFocus = window.electronAPI.onGlobalFocusTTS(() => {
       textAreaRef.current?.focus()
@@ -104,17 +133,24 @@ export default function TTSPage() {
         setIsSpeaking(false)
       }
     })
-
     const syncVirtualMic = (event: Event) => {
       setVirtualMicEnabled((event as CustomEvent<boolean>).detail)
     }
 
     window.addEventListener('voicelaunch:virtual-mic-changed', syncVirtualMic as EventListener)
 
+    // Re-detecta o cabo quando os dispositivos de audio mudam (VB-Cable instalado
+    // com o app aberto, ou backend subindo depois) — sem depender so do mount.
+    const onDeviceChange = () => {
+      void loadMicDevices()
+    }
+    navigator.mediaDevices?.addEventListener?.('devicechange', onDeviceChange)
+
     return () => {
       unsubFocus()
       unsubStop()
       window.removeEventListener('voicelaunch:virtual-mic-changed', syncVirtualMic as EventListener)
+      navigator.mediaDevices?.removeEventListener?.('devicechange', onDeviceChange)
     }
   }, [])
 
@@ -126,13 +162,16 @@ export default function TTSPage() {
     loadRuntimeState()
   }, [showExperimentalModels])
 
+  // App focado no online: a fonte de voz e sempre Edge TTS (sem caminho local).
+  useEffect(() => {
+    if (voiceSource !== 'cloud') setVoiceSource('cloud')
+  }, [voiceSource, setVoiceSource])
+
   const loadRuntimeState = async () => {
     const [registry, detectedHardware] = await Promise.all([
       window.electronAPI.getModelRegistry(),
       window.electronAPI.getHardwareInfo(),
     ])
-
-    setHardware(detectedHardware)
 
     const visibleInstalledModels = registry.filter(
       (model) => model.installed && isModelVisibleInMvp(model, detectedHardware, showExperimentalModels),
@@ -151,11 +190,6 @@ export default function TTSPage() {
     }
   }
 
-  const handleModelChange = useCallback((newModelId: string) => {
-    setModelId(newModelId)
-    setDefaultModelId(newModelId)
-  }, [setDefaultModelId])
-
   const handleSpeedChange = useCallback((newSpeed: number) => {
     setSpeed(newSpeed)
     setDefaultSpeed(newSpeed)
@@ -163,9 +197,8 @@ export default function TTSPage() {
 
   const saveCurrentPhrase = useCallback(() => {
     if (!text.trim()) return
-    addQuickPhrase(text)
-    toast('Frase salva', 'A frase atual foi adicionada aos atalhos rapidos.', 'success')
-  }, [text, addQuickPhrase])
+    shortcuts.createShortcut(text)
+  }, [text, shortcuts])
 
   const exportHistory = useCallback(() => {
     if (history.length === 0) {
@@ -216,11 +249,11 @@ export default function TTSPage() {
         if (cancelRef.current) return
         setIsSynthesizing(false)
         if (response.success && response.audioBase64) {
-          await playCloudAudio(
-            response.audioBase64,
-            response.mimeType ?? 'audio/webm',
-            virtualMicEnabled && cableDeviceId ? cableDeviceId : undefined,
-          )
+          await playCloudAudio(response.audioBase64, response.mimeType ?? 'audio/webm', {
+            cableDeviceId: virtualMicEnabled ? cableDeviceId : undefined,
+            monitorDeviceId,
+          })
+          if (cancelRef.current) return
           addHistoryItem(
             buildHistoryItem({
               text: textToSpeak,
@@ -274,14 +307,84 @@ export default function TTSPage() {
     }
   }
 
-  const toggleVirtualMic = async () => {
-    const newState = !virtualMicEnabled
-    const success = await window.electronAPI.setVirtualMic(newState)
-    if (success) {
-      setVirtualMicEnabled(newState)
-      window.dispatchEvent(new CustomEvent('voicelaunch:virtual-mic-changed', { detail: newState }))
-      if (newState) setShowDiscordBanner(true)
+  const loadMicDevices = async () => {
+    // Deteccao primaria no renderer (online-first): nao depende do backend Python.
+    // Reforco pelo backend (nomes via sounddevice) quando disponivel.
+    let detected = false
+    try {
+      if (navigator.mediaDevices?.enumerateDevices) {
+        const outputs = await navigator.mediaDevices.enumerateDevices()
+        detected = outputs.some((d) => d.kind === 'audiooutput' && /cable/i.test(d.label))
+      }
+    } catch {
+      /* ignore — cai pro backend */
     }
+    if (!detected) {
+      try {
+        const devices = await window.electronAPI.listAudioDevices()
+        detected = detectVBCable(devices)
+      } catch {
+        /* ignore */
+      }
+    }
+    setVbCableDetected(detected)
+    return detected
+  }
+
+  // Liga o microfone virtual: garante uma saida de cabo (auto-seleciona o CABLE
+  // Input se preciso) e ativa o roteamento. Reusado pelo toggle manual, pelo
+  // "Verificar" e pela auto-ativacao apos a instalacao.
+  const activateVirtualMic = async (announce = true): Promise<boolean> => {
+    let deviceId = cableDeviceId
+    if (!deviceId) {
+      const cable = await autoSelectCableOutput()
+      if (cable) {
+        setCableDevice(cable.id, cable.label)
+        deviceId = cable.id
+      }
+    }
+    if (!deviceId) {
+      if (announce) {
+        toast(
+          'Escolha a saida de audio',
+          'Abra Ajustes > Microfone Virtual e selecione CABLE Input para o Discord ouvir a voz online.',
+          'warning',
+        )
+      }
+      return false
+    }
+    // No modo online a voz e roteada pelo NAVEGADOR (setSinkId), entao ter um cabo ja
+    // basta para o Discord ouvir. O backend e avisado em best-effort (usado por vozes
+    // locais), sem bloquear — antes, uma falha do /mic/route deixava o mic "mudo".
+    void window.electronAPI.setVirtualMic(true)
+    setVirtualMicEnabled(true)
+    window.dispatchEvent(new CustomEvent('voicelaunch:virtual-mic-changed', { detail: true }))
+    setShowDiscordBanner(true)
+    return true
+  }
+
+  const toggleVirtualMic = async () => {
+    if (!vbCableDetected) {
+      // O VB-Cable vem junto com o instalador do app. Re-detecta (caso tenha acabado
+      // de instalar/reiniciar) e, se ainda nao aparecer, orienta — sem instalar nada.
+      const ok = await loadMicDevices()
+      if (!ok) {
+        toast(
+          'Microfone virtual nao encontrado',
+          'Ele vem com o instalador do app. Se voce acabou de instalar, reinicie o Windows.',
+          'warning',
+        )
+        return
+      }
+    }
+    if (virtualMicEnabled) {
+      setVirtualMicEnabled(false)
+      void window.electronAPI.setVirtualMic(false)
+      window.dispatchEvent(new CustomEvent('voicelaunch:virtual-mic-changed', { detail: false }))
+      return
+    }
+    // No modo online a voz e roteada pelo NAVEGADOR (setSinkId), nao pelo backend.
+    await activateVirtualMic()
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -292,7 +395,6 @@ export default function TTSPage() {
   }
 
   const noReadyModel = availableModels.length === 0
-  const activeModel = availableModels.find((model) => model.id === modelId)
   const canSpeak = voiceSource === 'cloud' ? Boolean(cloudVoice) : !noReadyModel
   const speakDisabled = !canSpeak || (voiceSource === 'local' && noReadyModel)
 
@@ -302,7 +404,7 @@ export default function TTSPage() {
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-start gap-3">
             <div
-              className="flex h-11 w-11 items-center justify-center rounded-2xl"
+              className="flex h-11 w-11 items-center justify-center rounded-xl"
               style={{
                 border: '1px solid var(--vl-hud-border-strong)',
                 background: 'var(--vl-surface-raised)',
@@ -312,7 +414,7 @@ export default function TTSPage() {
               <Volume2 className="h-5 w-5" style={{ color: 'var(--vl-state-ready)' }} />
             </div>
             <div className="space-y-1">
-              <h1 className="text-3xl font-bold tracking-tight text-ink-strong">Falar</h1>
+              <h1 className="text-page font-bold tracking-tight text-ink-strong">Falar</h1>
               <p className="max-w-2xl text-sm text-ink-soft">
                 Console principal para composicao, repeticao e disparo rapido de voz.
               </p>
@@ -322,10 +424,10 @@ export default function TTSPage() {
           <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={toggleVirtualMic}
-              className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-medium transition-all ${
+              className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition-all ${
                 virtualMicEnabled ? 'status-pill--live' : 'btn-secondary'
               }`}
-              title="Envia a voz gerada como microfone virtual para outros aplicativos"
+              title="Envia a voz como microfone virtual para Discord, Zoom e jogos"
             >
               <Mic className="h-4 w-4" />
               {virtualMicEnabled ? 'Microfone virtual ativo' : 'Ativar microfone virtual'}
@@ -355,24 +457,22 @@ export default function TTSPage() {
         </div>
 
         <div className="hud-frame flex flex-wrap items-center gap-3 p-3">
-          <span className="status-pill status-pill--ready">
-            {voiceSource === 'cloud' ? <Cloud className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
-            {voiceSource === 'cloud'
-              ? `Voz online: ${cloudVoice ? cloudVoice.ShortName : 'nenhuma selecionada'}`
-              : `Modelo: ${activeModel?.name ?? 'Nenhum modelo pronto'}`}
+          <span className="status-pill">
+            <Cloud className="h-3.5 w-3.5" />
+            {cloudVoice
+              ? cloudVoice.FriendlyName.replace(/^Microsoft\s+/i, '').replace(/\s+Online\s+\(Natural\).*$/i, '')
+              : 'Escolha uma voz'}
           </span>
-          <span className={`status-pill ${virtualMicEnabled ? 'status-pill--live' : 'status-pill--ready'}`}>
+          <span className={`status-pill ${virtualMicEnabled ? 'status-pill--live' : ''}`}>
             <Mic className="h-3.5 w-3.5" />
             {virtualMicEnabled ? 'Mic virtual ligado' : 'Mic virtual desligado'}
           </span>
-          <span className={`status-pill ${isSynthesizing ? 'status-pill--live' : isSpeaking ? 'status-pill--warn' : 'status-pill--ready'}`}>
-            {isSynthesizing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MonitorUp className="h-3.5 w-3.5" />}
-            {isSynthesizing ? 'Gerando audio...' : isSpeaking ? 'Falando agora' : canSpeak ? 'Pronto para falar' : 'Aguardando voz'}
-          </span>
-          <span className={`status-pill ${keepTextAfterSpeak ? 'status-pill--live' : 'status-pill--ready'}`}>
-            <Pin className="h-3.5 w-3.5" />
-            {keepTextAfterSpeak ? 'Manter texto ligado' : 'Manter texto desligado'}
-          </span>
+          {(isSynthesizing || isSpeaking) && (
+            <span className="status-pill status-pill--live">
+              {isSynthesizing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MonitorUp className="h-3.5 w-3.5" />}
+              {isSynthesizing ? 'Gerando audio...' : 'Falando agora'}
+            </span>
+          )}
         </div>
       </div>
 
@@ -383,100 +483,12 @@ export default function TTSPage() {
         speed={speed}
       />
 
-      <div className="hud-frame mb-4 p-1.5 inline-flex items-center gap-1 self-start">
-        <button
-          onClick={() => setVoiceSource('cloud')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-            voiceSource === 'cloud' ? 'btn-primary' : 'text-ink-soft hover:text-ink-strong'
-          }`}
-          aria-pressed={voiceSource === 'cloud'}
-        >
-          <Cloud className="h-4 w-4" />
-          Online (Edge TTS)
-        </button>
-        <button
-          onClick={() => setVoiceSource('local')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-            voiceSource === 'local' ? 'btn-primary' : 'text-ink-soft hover:text-ink-strong'
-          }`}
-          aria-pressed={voiceSource === 'local'}
-        >
-          <HardDrive className="h-4 w-4" />
-          Local (Piper/Kokoro)
-        </button>
-      </div>
-
-      {voiceSource === 'local' && noReadyModel && (
-        <AlertBox severity="warn" title="Nenhum modelo local pronto para uso" className="mb-4">
-          Instale o Piper na aba Modelos para o fluxo offline, ou volte para{' '}
-          <strong>Online (Edge TTS)</strong> para falar agora sem instalacao.
-          {hardware?.gpuVendor?.trim().toLowerCase() === 'amd' && (
-            <p className="mt-2">Em AMD a trilha local recomendada continua sendo Piper e Kokoro.</p>
-          )}
-        </AlertBox>
-      )}
-
-      {voiceSource === 'local' ? (
-        <div className="hud-frame mb-4 flex flex-wrap items-center gap-4 p-4">
-          <div className="flex items-center gap-3">
-            <label htmlFor="tts-model" className="text-xs uppercase tracking-[0.18em] text-ink-mute">Modelo</label>
-            <select
-              id="tts-model"
-              value={modelId}
-              onChange={(e) => handleModelChange(e.target.value)}
-              className="input-field w-56 py-2 text-sm"
-              disabled={noReadyModel}
-            >
-              {noReadyModel && <option value="">Nenhum modelo pronto</option>}
-              {availableModels.map((model) => (
-                <option key={model.id} value={model.id}>
-                  {model.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <label htmlFor="tts-speed" className="text-xs uppercase tracking-[0.18em] text-ink-mute">Velocidade</label>
-            <input
-              id="tts-speed"
-              type="range"
-              min={0.5}
-              max={2.0}
-              step={0.1}
-              value={speed}
-              onChange={(e) => handleSpeedChange(parseFloat(e.target.value))}
-              className="w-28 accent-brand-400"
-              aria-label="Velocidade de fala"
-              aria-valuemin={0.5}
-              aria-valuemax={2.0}
-              aria-valuenow={speed}
-              aria-valuetext={`${speed.toFixed(1)}x`}
-            />
-            <span className="w-10 text-sm text-ink-body font-mono">{speed.toFixed(1)}x</span>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <label htmlFor="tts-voice-id" className="text-xs uppercase tracking-[0.18em] text-ink-mute">Voz</label>
-            <input
-              id="tts-voice-id"
-              type="text"
-              value={voiceId}
-              onChange={(e) => setVoiceId(e.target.value)}
-              placeholder="Padrao"
-              className="input-field w-40 py-2 text-sm"
-              disabled={noReadyModel}
-              aria-label="ID de voz (opcional)"
-            />
-          </div>
-        </div>
-      ) : (
-        <div className="mb-4 grid gap-4 lg:grid-cols-[1.6fr_1fr]">
+      <div className="mb-4 grid gap-4 lg:grid-cols-[1.6fr_1fr]">
           <CloudVoicePicker
             selectedVoice={cloudVoice?.ShortName ?? storedCloudVoiceShortName ?? null}
             onSelect={handleCloudVoiceSelect}
           />
-          <div className="hud-frame p-4 space-y-3">
+          <div className="hud-frame p-4 space-y-3 min-w-0">
             <div className="flex items-center gap-2">
               <Volume2 className="h-4 w-4" style={{ color: 'var(--vl-state-ready)' }} />
               <h3 className="text-sm font-semibold text-ink-strong">Velocidade</h3>
@@ -509,10 +521,9 @@ export default function TTSPage() {
             )}
           </div>
         </div>
-      )}
 
-      <div className="flex min-h-0 flex-1 flex-col gap-4 xl:flex-row xl:items-stretch">
-        <div className="flex min-h-0 flex-1 flex-col gap-4">
+      <div className="flex min-h-0 flex-1 flex-col gap-4 2xl:flex-row 2xl:items-stretch">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
           <div className="terminal-textarea flex min-h-0 flex-1 flex-col p-5">
             <textarea
               ref={textAreaRef}
@@ -530,12 +541,6 @@ export default function TTSPage() {
                 <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
                   <span className="rounded-full border px-3 py-1 text-ink-soft" style={{ borderColor: 'var(--vl-hud-border)', background: 'var(--vl-surface-sunken)' }}>
                     {text.length} caracteres
-                  </span>
-                  <span className="rounded-full border px-3 py-1 text-ink-soft" style={{ borderColor: 'var(--vl-hud-border)', background: 'var(--vl-surface-sunken)' }}>
-                    {availableModels.length} modelos prontos
-                  </span>
-                  <span className="rounded-full border px-3 py-1 text-ink-soft" style={{ borderColor: 'var(--vl-hud-border)', background: 'var(--vl-surface-sunken)' }}>
-                    {voiceId.trim() ? `Voz ${voiceId}` : 'Voz padrao'}
                   </span>
                 </div>
 
@@ -615,61 +620,64 @@ export default function TTSPage() {
             </div>
           </div>
 
-          <div className="hud-frame p-4">
+          <div className="hud-frame p-4 min-w-0 2xl:w-[380px] 2xl:shrink-0">
             <div className="flex items-center gap-2 mb-3">
               <Keyboard className="h-4 w-4" style={{ color: 'var(--vl-state-ready)' }} />
-              <h3 className="text-sm font-semibold text-ink-strong">Frases rapidas</h3>
+              <h3 className="text-sm font-semibold text-ink-strong">Atalhos rapidos</h3>
             </div>
             <p className="mb-3 text-xs text-ink-soft">
-              As 9 primeiras tem atalho global <span className="font-mono">Ctrl+Shift+1..9</span>.
+              Escreva a frase, clique em <strong>Criar atalho</strong> e dispare com a tecla em qualquer lugar (Discord, jogo).
             </p>
-            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-              {quickPhrases.length === 0 && (
-                <div className="col-span-full hud-frame flex flex-col items-center gap-2 py-8 text-center"
-                  style={{ borderStyle: 'dashed' }}>
-                  <Plus className="w-6 h-6 text-ink-mute" aria-hidden="true" />
-                  <p className="text-sm font-medium text-ink-strong">Nenhuma frase salva ainda</p>
-                  <p className="text-xs text-ink-soft max-w-[240px]">
-                    Digite algo no editor e clique em <strong>Salvar frase</strong> para fixar aqui.
-                  </p>
-                </div>
-              )}
-              {quickPhrases.map((phrase, index) => (
-                <div
-                  key={phrase}
-                  className="hud-frame group relative flex min-h-[88px] flex-col justify-between p-3 transition-all hover:bg-brand-500/8"
+
+            {/* Criar atalho no card — escreva e crie, sem sair da tela */}
+            <div className="hud-frame p-3 mb-3 space-y-2" style={{ background: 'var(--vl-surface-raised)' }}>
+              <textarea
+                value={shortcutDraft}
+                onChange={(e) => setShortcutDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                    e.preventDefault()
+                    if (shortcuts.createShortcut(shortcutDraft)) setShortcutDraft('')
+                  }
+                }}
+                placeholder="O que dizer ao apertar o atalho? (ex: GG, partida excelente!)"
+                className="terminal-textarea w-full p-3 text-sm min-h-[60px] font-mono"
+                maxLength={500}
+              />
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-ink-soft">
+                  Tecla: <span className="font-mono text-ink-body">{formatHotkeyDisplay(shortcuts.suggestedHotkey)}</span>
+                </span>
+                <button
+                  onClick={() => { if (shortcuts.createShortcut(shortcutDraft)) setShortcutDraft('') }}
+                  disabled={!shortcutDraft.trim()}
+                  className="btn-primary btn-primary--armed inline-flex items-center gap-2 text-sm ml-auto"
                 >
-                  {index < 9 && (
-                    <span className="badge-shortcut absolute top-2 right-2" aria-label={`Atalho ${index + 1}`}>
-                      {index + 1}
-                    </span>
-                  )}
-                  <button
-                    onClick={() => {
-                      setText(phrase)
-                      void speak(phrase)
-                    }}
-                    disabled={!canSpeak}
-                    className="flex-1 text-left text-sm font-medium text-ink-body transition-colors disabled:opacity-50 group-hover:text-ink-strong pr-7"
-                  >
-                    <span className="line-clamp-3">{phrase}</span>
-                  </button>
-                  <div className="mt-3 flex items-center justify-between gap-2 pt-3" style={{ borderTop: '1px solid var(--vl-hud-border)' }}>
-                    <span className="text-[11px] uppercase tracking-[0.18em] text-ink-mute">Command pad</span>
-                    <button
-                      onClick={() => deleteQuickPhrase(phrase)}
-                      className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs text-ink-soft transition-colors hover:text-ink-strong"
-                      style={{ borderColor: 'var(--vl-hud-border)' }}
-                      aria-label={`Remover frase rapida: ${phrase}`}
-                      title="Remover frase rapida"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                      Remover
-                    </button>
-                  </div>
-                </div>
-              ))}
+                  <Plus className="h-4 w-4" />
+                  Criar atalho
+                </button>
+              </div>
             </div>
+
+            {shortcuts.sortedShortcuts.length === 0 ? (
+              <p className="text-center text-xs text-ink-soft py-4">Nenhum atalho ainda. Crie o primeiro acima.</p>
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-1">
+                {shortcuts.sortedShortcuts.map((entry) => (
+                  <ShortcutCard
+                    key={entry.id}
+                    shortcut={entry}
+                    voices={shortcuts.cloudVoices}
+                    allShortcuts={shortcuts.voiceShortcuts}
+                    isTesting={shortcuts.testingId === entry.id}
+                    isActive={shortcuts.activeId === entry.id}
+                    onUpdate={(patch) => shortcuts.updateShortcut(entry.id, patch)}
+                    onDelete={() => shortcuts.deleteShortcut(entry.id)}
+                    onTest={() => void shortcuts.testShortcut(entry)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -724,8 +732,7 @@ export default function TTSPage() {
                       </button>
                       <button
                         onClick={() => {
-                          addQuickPhrase(item.text)
-                          toast('Frase fixada', 'A frase do historico foi adicionada aos atalhos rapidos.', 'success')
+                          shortcuts.createShortcut(item.text)
                         }}
                         className="btn-secondary flex items-center gap-1 text-xs"
                       >

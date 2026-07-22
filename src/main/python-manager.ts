@@ -308,9 +308,21 @@ export class PythonBackendManager {
     const configuredPython = process.env[VOICELAUNCH_ENV.pythonPath] || process.env.PYTHON
     if (configuredPython) return configuredPython
 
-    if (!this.isDev()) {
-      const prodPath = join(process.resourcesPath, 'python_dist', 'voicelaunch-backend', 'voicelaunch-backend.exe')
-      if (existsSync(prodPath)) return prodPath
+    // Prefere o backend standalone (PyInstaller) quando presente — dispensa um
+    // Python instalado. No pacote fica em resources/; em dev fica na raiz do
+    // projeto. Configure VOICELAUNCH_PYTHON_PATH para forcar um interpretador
+    // proprio (ex.: ao desenvolver o backend Python a partir do fonte).
+    const bundledCandidates = [
+      join(process.resourcesPath || '', 'python_dist', 'voicelaunch-backend', 'voicelaunch-backend.exe'),
+      join(app.getAppPath(), 'python_dist', 'voicelaunch-backend', 'voicelaunch-backend.exe'),
+      join(__dirname, '..', '..', 'python_dist', 'voicelaunch-backend', 'voicelaunch-backend.exe'),
+    ]
+    const bundled = bundledCandidates.find((candidate) => candidate && existsSync(candidate))
+    if (bundled) {
+      if (this.isDev()) {
+        logMain('INFO', `Using bundled backend in dev: ${bundled}. Set ${VOICELAUNCH_ENV.pythonPath} to use your own Python.`)
+      }
+      return bundled
     }
 
     return process.platform === 'win32' ? 'python.exe' : 'python3'

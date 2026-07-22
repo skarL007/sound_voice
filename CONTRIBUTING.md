@@ -20,7 +20,8 @@ para uma versão futura.
 - **Testes** — testes unitários vitest em `src/**/*.test.ts`
 - **UI do renderer** — React/TypeScript em `src/renderer/`
 - **Processo principal Electron** — `src/main/`
-- **Backend Python** — `src/python/` (requer Python 3.10+)
+- **Backend Python** — `src/python/` (requer Python 3.12)
+- **Design** — agentes `.claude/agents/launcher-designer.md` e `app-flow-designer.md` ajudam a auditar UI/fluxo (design v2: sóbrio, sem neon)
 
 ---
 
@@ -31,7 +32,7 @@ para uma versão futura.
 - Windows 10 ou 11 (x64)
 - Node.js 20 ou superior
 - npm 10 ou superior
-- Python 3.10 (apenas para trabalhar no backend ou buildar o instalador)
+- Python 3.12 (apenas para trabalhar no backend ou buildar o instalador)
 - Git
 
 ### Instalar e rodar
@@ -50,7 +51,7 @@ a maior parte do desenvolvimento de UI.
 
 ### Buildar o backend Python (opcional)
 
-Este passo requer Python 3.10+ e leva 5–15 minutos:
+Este passo requer Python 3.12 e leva 5–15 minutos:
 
 ```bat
 scripts\build-python.bat
@@ -65,7 +66,7 @@ O diretório é excluído do git (~200 MB).
 npm test
 ```
 
-Todos os 95 testes devem passar antes de um PR ser mergeado.
+Todos os testes devem passar antes de um PR ser mergeado (hoje 148).
 
 ### Buildar o instalador
 
@@ -73,14 +74,14 @@ Todos os 95 testes devem passar antes de um PR ser mergeado.
 npm run dist:win
 ```
 
-Isso produz `dist/VoiceLaunch-TTS-Setup-1.0.0.exe`. Requer o diretório
+Isso produz `dist/VoiceLaunch-TTS-Setup-<versao>.exe`. Requer o diretório
 `python_dist/` presente.
 
 ---
 
 ## Checklist do Pull Request
 
-- [ ] `npm test` passa (95/95)
+- [ ] `npm test` passa
 - [ ] `npm run build` sucede sem erros TypeScript
 - [ ] Mudanças são limitadas a uma responsabilidade por PR
 - [ ] Novo comportamento tem cobertura de teste quando praticável

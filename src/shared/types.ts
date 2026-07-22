@@ -104,6 +104,34 @@ export interface AudioDevice {
   name: string
   isInput: boolean
   isDefault: boolean
+  isVirtualCable?: boolean
+}
+
+export interface VBCableDownloadProgress {
+  percent: number
+  speed: string
+  eta: string
+}
+
+export interface VBCableDownloadComplete {
+  success: boolean
+  error?: string
+}
+
+export interface VBCableInstallResult {
+  success: boolean
+  /** true quando o instalador foi efetivamente aberto */
+  launched?: boolean
+  /** true quando o instalador foi baixado pelo launcher antes de abrir */
+  downloaded?: boolean
+  message?: string
+  error?: string
+}
+
+export interface VirtualMicStatus {
+  enabled: boolean
+  available: boolean
+  deviceName: string | null
 }
 
 export interface CloudVoice {
@@ -205,5 +233,9 @@ export interface AppSettings {
   cloudVoice?: string
   cableDeviceId?: string | null
   cableDeviceLabel?: string | null
+  // Monitor: onde o usuario ouve a propria voz online enquanto ela vai ao cabo.
+  // 'default' = alto-falante padrao do sistema; null = nao ouvir (mudo).
+  monitorDeviceId?: string | null
+  monitorDeviceLabel?: string | null
   voiceShortcuts?: VoiceShortcut[]
 }

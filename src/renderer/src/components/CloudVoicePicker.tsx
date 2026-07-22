@@ -56,8 +56,8 @@ export default function CloudVoicePicker({ selectedVoice, onSelect }: CloudVoice
   }
 
   return (
-    <div className="hud-frame p-4 space-y-3">
-      <div className="flex items-center gap-2">
+    <div className="hud-frame p-4 space-y-3 min-w-0">
+      <div className="flex flex-wrap items-center gap-2">
         <Cloud className="h-4 w-4" style={{ color: 'var(--vl-state-live)' }} />
         <h3 className="text-sm font-semibold text-ink-strong">Vozes online (Edge TTS)</h3>
         <span className="text-xs text-ink-soft ml-auto">{voices.length} vozes · sem instalacao</span>
@@ -121,8 +121,8 @@ export default function CloudVoicePicker({ selectedVoice, onSelect }: CloudVoice
                   <span
                     className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded"
                     style={{
-                      background: voice.Gender === 'Female' ? 'rgba(255,107,125,0.16)' : 'var(--vl-surface-overlay)',
-                      color: voice.Gender === 'Female' ? '#FFC1CB' : 'var(--vl-state-live-text)',
+                      background: 'var(--vl-surface-overlay)',
+                      color: 'var(--vl-state-live-text)',
                     }}
                   >
                     {voice.Gender === 'Female' ? 'F' : 'M'}

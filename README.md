@@ -5,10 +5,10 @@
 [![Platform: Windows](https://img.shields.io/badge/Platform-Windows%2010%2F11-blue.svg)](https://github.com/skarL007/sound_voice/releases)
 [![Release](https://img.shields.io/github/v/release/skarL007/sound_voice?color=purple)](https://github.com/skarL007/sound_voice/releases/latest)
 
-**Open-source local text-to-speech launcher for assistive communication on Windows.**
+**Open-source text-to-speech launcher for assistive communication and Discord/games on Windows.**
 
 Type text → hear a natural voice → route it as a virtual microphone to Discord, Zoom, or games.
-Works offline after initial model download. No account required. No telemetry.
+Online-first: hundreds of Microsoft Edge TTS voices work instantly, no install. No account. No telemetry.
 
 > O restante deste documento está em Português (Brasil). English docs are available in the [docs/](docs/) folder.
 
@@ -25,7 +25,7 @@ O projeto foi pensado para pessoas que usam voz sintetizada no dia a dia, pessoa
 ### Download (recomendado)
 
 1. Vá para [Releases](https://github.com/skarL007/sound_voice/releases/latest)
-2. Baixe `VoiceLaunch-TTS-Setup-1.0.0.exe`
+2. Baixe o instalador mais recente (`VoiceLaunch-TTS-Setup-<versao>.exe`)
 3. Execute o instalador
 
 **Aviso do Windows SmartScreen:** porque este build não está com assinatura de código, o Windows vai mostrar "O Windows protegeu seu PC". Clique em **Mais informações → Executar assim mesmo**. Isso é esperado para instaladores open-source não assinados. Verifique o checksum SHA-256 nas notas da release se quiser confirmar a autenticidade do arquivo.
@@ -79,37 +79,34 @@ npm run dist:win
 
 ## Estado atual do projeto
 
-- **MVP local estabilizado**
-- **Fluxo principal validado:** `Piper -> Kokoro -> microfone virtual`
-- **Recurso avançado:** `XTTS v2` apenas depois de validar `NVIDIA/CUDA`
-- **Fora do caminho principal atual:** `MeloTTS`, `Fish Speech` e `Bark`
+- **Online-first:** vozes Microsoft Edge TTS (nuvem) funcionam imediatamente, sem instalação — é o caminho padrão.
+- **Microfone virtual** com VB-Cable: instalação assistida (baixa, abre o instalador, detecta e ativa sozinho) + monitor para você se ouvir.
+- **Atalhos de voz** com captura de tecla livre (qualquer combinação) e disparo global em qualquer app.
+- **Vozes locais** (Piper/Kokoro/XTTS) seguem suportadas como caminho opcional/avançado.
 
 ## Como o produto funciona
 
 ```mermaid
 flowchart LR
-    A[Digitar texto ou escolher frase rapida] --> B[VoiceLaunch UI]
-    B --> C[Backend local FastAPI]
-    C --> D{Engine selecionada}
-    D --> E[Piper]
-    D --> F[Kokoro]
-    D --> G[XTTS v2 avancado]
-    E --> H[Audio gerado localmente]
-    F --> H
-    G --> H
-    H --> I[Reproducao no app]
-    H --> J[VB-Cable virtual mic]
-    J --> K[Discord Zoom Jogos]
+    A[Digitar texto ou disparar atalho] --> B[VoiceLaunch UI]
+    B --> C{Fonte de voz}
+    C --> D[Edge TTS online - padrao]
+    C --> E[Vozes locais - opcional]
+    D --> F[Audio]
+    E --> F
+    F --> G[Voce ouve - monitor]
+    F --> H[CABLE Input - mic virtual]
+    H --> I[Discord, Zoom, jogos]
 ```
 
 ## Proposta do produto
 
-- **Local-first:** a síntese principal roda no computador do usuário
+- **Online-first:** centenas de vozes Edge TTS funcionam na hora; vozes locais são opcionais
 - **Assistivo de verdade:** frases rápidas, histórico persistente, rascunho persistente e atalhos globais
 - **Fluxo honesto:** primeiro garantir a primeira fala com baixo atrito, depois liberar recursos avançados
 - **Uso real:** áudio local, comunicador compacto e microfone virtual no mesmo app
 
-## Caminho recomendado do MVP
+## Caminho opcional de vozes locais
 
 | Etapa | Objetivo | Resultado esperado |
 |------|----------|--------------------|
@@ -139,15 +136,12 @@ flowchart LR
 
 ## Funcionalidades principais
 
-- Execução local offline depois dos downloads iniciais
-- Download e gestão de modelos pela interface
-- ~400 vozes Edge TTS (nuvem) sem instalação
-- Frases rápidas personalizáveis e histórico persistente
-- Comunicador compacto com atalhos globais (Ctrl+Shift+1–9)
-- Soundboard de atalhos de voz (31 slots)
-- Microfone virtual com VB-Cable para Discord/Zoom/jogos
-- Perfis separados (Padrão / Jogo) com frases diferentes
-- Onboarding para primeira fala local
+- Centenas de vozes Microsoft Edge TTS (nuvem), sem instalação — funcionam na hora
+- Microfone virtual (VB-Cable) com instalação assistida: entrada (mic do Discord) e saída (monitor) separadas
+- Atalhos de voz com captura de tecla livre e disparo global em qualquer app
+- Histórico e rascunho persistentes; criação de atalho direto na tela Falar
+- Comunicador compacto sempre no topo
+- Vozes locais (Piper/Kokoro/XTTS) como caminho opcional/avançado
 - UI pensada para teclado, foco visível, alto contraste e fonte grande
 
 ## Arquitetura

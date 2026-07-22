@@ -1,13 +1,20 @@
 !macro customInstall
-  ; Check if VB-Audio Virtual Cable is installed
-  ReadRegStr $0 HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\VBCable" "DisplayName"
+  ; O microfone virtual (VB-Audio Virtual Cable) vem embutido no app
+  ; (assets/vbcable -> resources/vbcable). O instalador do app roda elevado
+  ; (requireAdministrator), entao instalamos o driver aqui, em silencio, se ele
+  ; ainda nao estiver presente. Assim o launcher nao precisa baixar/instalar nada.
+  ReadRegStr $0 HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\VBCABLE" "DisplayName"
   ${If} $0 == ""
-    DetailPrint "VB-Audio Virtual Cable not detected. Installing bundled driver..."
-    ExecWait '"$INSTDIR\vbcable\VBCABLE_Setup.exe" /S'
+    ${If} ${FileExists} "$INSTDIR\resources\vbcable\VBCABLE_Setup_x64.exe"
+      DetailPrint "Instalando microfone virtual (VB-Audio Virtual Cable)..."
+      ExecWait '"$INSTDIR\resources\vbcable\VBCABLE_Setup_x64.exe" /S'
+    ${ElseIf} ${FileExists} "$INSTDIR\resources\vbcable\VBCABLE_Setup.exe"
+      DetailPrint "Instalando microfone virtual (VB-Audio Virtual Cable)..."
+      ExecWait '"$INSTDIR\resources\vbcable\VBCABLE_Setup.exe" /S'
+    ${EndIf}
   ${EndIf}
 !macroend
 
 !macro customUnInstall
-  ; Optionally remove VB-Cable on uninstall (commented by default to be safe)
-  ; ExecWait '"$INSTDIR\vbcable\VBCABLE_Setup.exe" /U /S'
+  ; Por seguranca, NAO removemos o VB-Cable na desinstalacao (outros apps podem usar).
 !macroend

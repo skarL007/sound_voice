@@ -18,12 +18,21 @@ O VoiceLaunch TTS usa o **VB-Audio Virtual Cable** para rotear o audio gerado co
 
 ## Instalacao
 
-### Pelo app
-O app tenta abrir o instalador embutido quando ele estiver presente no pacote. Se esse instalador nao estiver disponivel, o fluxo oficial e abrir o site do VB-Audio para instalacao manual.
+### Pelo app (recomendado)
+1. Abra a tela **Falar** (ou **Ajustes > Microfone Virtual**).
+2. Se o VB-Cable nao for detectado, clique em **Instalar microfone virtual**.
+3. O launcher baixa o instalador oficial da VB-Audio com barra de progresso, extrai o pacote e abre o instalador. Se o `VBCABLE_Setup.exe` ja vier embutido no pacote, ele e usado direto, sem download.
+4. No instalador do VB-Cable, clique em **Install Driver**. Se ele pedir, reinicie o Windows.
+5. Volte ao VoiceLaunch TTS e clique em **Verificar instalacao** (re-detecta sem reiniciar o app).
+6. Quando aparecer **VB-Cable detectado**, clique em **Ativar microfone virtual**.
+
+Se o download automatico falhar (rede ou URL indisponivel), o launcher abre o site oficial para download manual.
+
+> Origem: **VB-Cable da VB-Audio** (donationware) — https://vb-audio.com/Cable/. O download/redistribuicao e permitido mantendo a origem visivel ao usuario.
 
 ### Manual
 1. Baixe em: https://vb-audio.com/Cable/
-2. Execute `VBCABLE_Setup.exe`
+2. Extraia o ZIP e execute `VBCABLE_Setup_x64.exe` (ou `VBCABLE_Setup.exe` em 32-bit)
 3. Reinicie o computador
 
 ## Configuracao nos Aplicativos

@@ -1,7 +1,7 @@
 # VoiceLaunch TTS - Estado do Projeto
 
-> Atualizado em: 2026-05-15
-> Status: **MVP LOCAL ESTABILIZADO - REPO PUBLICADO, README ALINHADO E BETA CORE PENDENTE**
+> Atualizado em: 2026-06-02
+> Status: **PIVO ONLINE-FIRST (EDGE TTS) + MIC VIRTUAL AUTO-INSTALL + ATALHOS DE VOZ UNIFICADOS — VER SNAPSHOT 2026-06-02**
 
 ---
 
@@ -272,3 +272,50 @@ dist/
 - `src/renderer/src/pages/*` — DashboardPage, TTSPage, ModelsPage, SettingsPage, LogsPage, ClonePage atualizados.
 - `src/renderer/src/components/*` — ToastContainer, OnboardingTutorial, LocalSetupCard, **DiscordReadyBanner (novo)**, **ProfileSwitcher (novo)**.
 - Testes: `src/renderer/src/utils/communicationState.test.ts`, `src/renderer/src/stores/appStore.test.ts`.
+
+---
+
+## Snapshot de Continuidade - 2026-06-02
+
+### Pivô do produto: online-first + mic virtual auto-install + atalhos unificados
+
+Esta rodada moveu o produto do "MVP local" para uma experiência **online-first focada em Discord/gamers e comunicação assistiva**, com instalação assistida do microfone virtual e unificação total dos atalhos de voz.
+
+**1. Pivô online-only (Edge TTS)**
+- A tela **Falar** e a navegação passaram a forçar `voiceSource = 'cloud'` (Microsoft Edge TTS via WebSocket). As abas/rotas locais **`/models` (Vozes) e `/clone` (Clonar) foram removidas** da navegação e do roteador; `/dashboard` (hardware) permanece por ser útil também online.
+- O painel local morto da tela Falar (seletor de modelo/voz local) foi removido do JSX. Restou apenas lógica local **defensiva** (guards `voiceSource === 'local'` sempre falsos + `modelId`/`voiceId` ainda consumidos pelo histórico e pelo `DiscordReadyBanner`); removê-la cascateia no histórico/banner, então ficou para uma limpeza futura dedicada.
+- O áudio online é roteado no renderer via `setSinkId` (Web Audio), não pelo backend.
+
+**2. Microfone virtual com download + instalação assistida (VB-Cable)**
+- Novo fluxo: o launcher **baixa o `VBCABLE_Driver_Pack45.zip`** (URL + SHA-256 fixados em `app-config.ts`), extrai e **lança o instalador**.
+- **Causa-raiz resolvida** do "instalador não abre": a conta do usuário é **padrão (não-admin)**; a elevação UAC troca para um admin diferente que **não enxerga o AppData do usuário**. Solução: baixar/extrair para **`%ProgramData%\VoiceLaunch TTS\vbcable`** (gravável pelo usuário e acessível ao admin que eleva) e lançar com `Start-Process -Verb RunAs`. Erros anteriores percorridos: `spawn EACCES` → `shell.openPath` (path inexistente) → `Start-Process -Verb RunAs`.
+- Em **dev**, o backend agora prefere o standalone empacotado (`python_dist/.../voicelaunch-backend.exe`) antes do `python.exe` — o `python.exe` da máquina era um stub da Microsoft Store ("Python executable not runnable").
+
+**3. "O mic sai mas não consigo me ouvir" → monitoramento**
+- A voz ia **só** para o CABLE Input (o que o Discord ouve). Agora há **saída dupla** (Web Audio: `source.connect(cabo)` + `source.connect(ctx.destination)`), então o usuário ouve a própria voz nos fones **enquanto** ela vai pro cabo. Auto-seleção do CABLE Input ao ligar o mic no modo online.
+
+**4. Latência**
+- Cache LRU de áudio do Edge TTS (`cloudTtsCache`) no main + **pré-aquecimento** dos atalhos (síntese antecipada) para o disparo sair na hora.
+
+**5. Atalhos de voz unificados (fonte única `voiceShortcuts`)**
+- As **`quickPhrases` legadas foram aposentadas** como mecanismo de atalho: `schemaVersion 3→4` com migração `quickPhrases → voiceShortcuts` (teclas em ordem `Ctrl+Shift+1..9` etc, voz = `cloudVoice` ou vazia, sem apagar as `quickPhrases`).
+- **Colisão de hotkey resolvida (Fase 0):** os slots `Ctrl+Shift+1..9` **não são mais** registrados fixos em `setupGlobalShortcuts`; pertencem aos atalhos de voz (`registerVoiceShortcuts`), registrados conforme o usuário cria.
+- **Criação/edição inline** unificada: cards na tela **Falar** e na tela **Atalhos** criam (escrever frase → "Adicionar/criar") e editam (texto, tecla, voz, testar) via componentes compartilhados `ShortcutControls.tsx` + hook `useVoiceShortcuts.ts`.
+
+**6. Dependências**
+- Bump **Electron `^36 → ^42`** (instalado 42.2.0) e **electron-builder `^25 → ^26`** (26.8.1). Validado: `electron-vite build` = **build OK**; tsc e testes verdes no Electron 42.
+
+### Gates desta máquina (2026-06-02)
+- [x] `tsc --noEmit` = **OK**.
+- [x] `vitest run` = **134/134 testes passando** (novos: migração v4 `quickPhrases→voiceShortcuts` — sequência de teclas, voz vazia sem cloud, pula vazios, cap nos slots, fallback do perfil ativo, não-regenera quando já há atalhos, preserva `quickPhrases`, nome em 40 chars; + hidratação dispara `reregisterVoiceShortcuts` na conversão e não dispara sem atalhos).
+- [x] `electron-vite build` = **build OK** no Electron 42.
+
+### Pendências reais antes de release empacotada
+- **`python_dist` está defasado** (gerado em 2026-05-15, **sem os endpoints `/mic/route`, `/mic/status`, `/mic/refresh`** da Fase 2). O dev roda do fonte; o **instalador** precisa de um `python_dist` reconstruído antes de validar o mic virtual empacotado.
+- `npm run dist:win` completo (NSIS) + revalidação do backend empacotado + smoke ainda **não** rerodados nesta rodada (são território do `release-packager` / skill `dist-win-release`).
+- Validar o fluxo VB-Cable ponta-a-ponta em **conta padrão** (download→ProgramData→UAC→instala→Discord ouve) em máquina limpa.
+- Installer não assinado (SmartScreen) segue como pendência de release pública.
+
+### Branch / onde paramos
+- Trabalho na branch **`feat/virtual-mic-auto-install`** (não mergeada). Commits das Fases 0–6 + testes (Fase 5) + bump + docs nesta rodada; **push/PR** é o passo final da Fase 7.
+- Artefatos de planejamento desta rodada: `docs/superpowers/analyses/2026-06-02-virtual-mic-discord-gap-analysis.md` e `docs/superpowers/plans/2026-06-02-unificacao-atalhos.md`. Agentes de design/fluxo novos: `.claude/agents/ui-designer.md`, `.claude/agents/ux-flow.md`.

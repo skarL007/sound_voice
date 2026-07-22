@@ -3,13 +3,13 @@ import { autoUpdater } from 'electron-updater'
 import { spawn } from 'child_process'
 import { getMainWindow, getBackendManager } from './index'
 import { detectHardware } from './hardware-detector'
-import { downloadModelWithProgress, cancelDownload } from './download-manager'
+import { downloadModelWithProgress, downloadFileWithProgress, cancelDownload } from './download-manager'
 import { loadSettings, saveSettings } from './settings-store'
 import { logMain, getLogs, clearLogs } from './logger'
-import { join, relative, isAbsolute, resolve } from 'path'
+import { join, relative, isAbsolute, resolve, dirname } from 'path'
 import { existsSync, readdirSync, statSync, unlinkSync, rmdirSync, readFileSync, mkdirSync, writeFileSync } from 'fs'
 import { validateModelId, validateAudioExtension, isHttpUrl } from './security-utils'
-import { getBundledVBCableInstallerCandidates, isAutoUpdateEnabled } from './app-config'
+import { getBundledVBCableInstallerCandidates, isAutoUpdateEnabled, VBCABLE_DOWNLOAD } from './app-config'
 import { listEdgeVoices, synthesizeEdgeTTS } from './edge-tts-client'
 
 const USER_DATA = app.getPath('userData')
@@ -18,6 +18,14 @@ const VOICES_DIR = join(USER_DATA, 'voices')
 
 if (!existsSync(MODELS_DIR)) mkdirSync(MODELS_DIR, { recursive: true })
 if (!existsSync(VOICES_DIR)) mkdirSync(VOICES_DIR, { recursive: true })
+
+// Cache em memoria de audio Edge TTS por (voz|speed|pitch|texto). Frases
+// repetidas (atalhos, frases rapidas) tocam na hora, sem reabrir o WebSocket.
+const CLOUD_TTS_CACHE_MAX = 60
+const cloudTtsCache = new Map<string, string>()
+function cloudCacheKey(p: { text: string; voice: string; speed?: number; pitch?: number }): string {
+  return `${p.voice}|${p.speed ?? 1}|${p.pitch ?? 0}|${p.text.trim()}`
+}
 
 // Registry de modelos
 const MODEL_REGISTRY_PATH = join(__dirname, '../../assets/model-registry.json')
@@ -341,6 +349,17 @@ export function registerIpcHandlers(): void {
     }
   })
 
+  // Re-escaneia os dispositivos no backend para detectar um VB-Cable recem-instalado
+  // sem precisar reiniciar o app.
+  ipcMain.handle('mic:refresh', async () => {
+    try {
+      const response = await fetch(`${getBackendUrl()}/mic/refresh`, { method: 'POST' })
+      return await response.json()
+    } catch (error) {
+      return { success: false, enabled: false, available: false, deviceName: null, error: String(error) }
+    }
+  })
+
   ipcMain.handle('audio:devices', async () => {
     try {
       const response = await fetch(`${getBackendUrl()}/audio/devices`)
@@ -354,13 +373,12 @@ export function registerIpcHandlers(): void {
     const installerPath = getBundledVBCableInstallerCandidates().find((candidate) => existsSync(candidate))
     if (installerPath) {
       logMain('INFO', `Launching VB-Cable installer: ${installerPath}`)
-      try {
-        spawn(installerPath, [], { detached: true, shell: false })
+      const openError = await launchInstaller(installerPath)
+      if (!openError) {
         return { success: true, launched: true }
-      } catch (e) {
-        logMain('ERROR', `Failed to launch VB-Cable installer: ${e}`)
-        return { success: false, error: String(e) }
       }
+      logMain('ERROR', `Failed to launch VB-Cable installer: ${openError}`)
+      return { success: false, error: openError }
     }
     // Fallback: open official website
     shell.openExternal('https://vb-audio.com/Cable/')
@@ -369,6 +387,114 @@ export function registerIpcHandlers(): void {
       launched: false,
       message: 'O instalador do pacote nao esta disponivel. O site oficial foi aberto para download manual.',
     }
+  })
+
+  // Fluxo automatico: usa o instalador embutido se existir; senao baixa o ZIP
+  // oficial da VB-Audio, extrai e lanca o instalador (o usuario confirma 1 vez).
+  ipcMain.handle('mic:download-vb-cable', async () => {
+    const window = getMainWindow()
+    const sendComplete = (payload: { success: boolean; error?: string }) =>
+      window?.webContents.send('mic:vbcable:download:complete', payload)
+
+    // 1. Prefere o instalador embutido (offline, sem depender de rede).
+    const bundled = getBundledVBCableInstallerCandidates().find((candidate) => existsSync(candidate))
+    if (bundled) {
+      const openError = await launchInstaller(bundled)
+      if (!openError) {
+        sendComplete({ success: true })
+        return { success: true, launched: true, downloaded: false }
+      }
+      logMain('WARN', `Bundled VB-Cable launch failed (${openError}), will try download`)
+    }
+
+    // 2. Baixa o ZIP para ProgramData (fora do perfil do usuario). Critico:
+    // em contas PADRAO (nao-admin) o UAC eleva para OUTRA conta de admin, que
+    // nao acessa o AppData do usuario — por isso RunAs de um exe em AppData
+    // falha com "The system cannot find the file specified". ProgramData e
+    // gravavel pelo usuario E acessivel ao admin que eleva, entao o RunAs
+    // funciona em conta padrao e em conta de admin.
+    const programData = process.env.ProgramData || process.env.ALLUSERSPROFILE || 'C:\\ProgramData'
+    const workDir = join(programData, 'VoiceLaunch TTS', 'vbcable')
+    try {
+      if (!existsSync(workDir)) mkdirSync(workDir, { recursive: true })
+    } catch (e) {
+      const error = `Nao foi possivel criar a pasta temporaria: ${e}`
+      sendComplete({ success: false, error })
+      return { success: false, error }
+    }
+    const zipPath = join(workDir, 'VBCABLE_Driver_Pack.zip')
+
+    try {
+      logMain('INFO', `Downloading VB-Cable from ${VBCABLE_DOWNLOAD.url}`)
+      await downloadFileWithProgress(
+        {
+          id: 'vbcable',
+          url: VBCABLE_DOWNLOAD.url,
+          destination: zipPath,
+          checksum: VBCABLE_DOWNLOAD.sha256 || undefined,
+        },
+        (info) => window?.webContents.send('mic:vbcable:download:progress', info),
+      )
+    } catch (e) {
+      const error = e instanceof Error ? e.message : String(e)
+      logMain('ERROR', `VB-Cable download failed: ${error}`)
+      sendComplete({ success: false, error })
+      shell.openExternal(VBCABLE_DOWNLOAD.officialSite)
+      return {
+        success: true,
+        launched: false,
+        downloaded: false,
+        message: 'Nao foi possivel baixar automaticamente. O site oficial foi aberto.',
+      }
+    }
+
+    // 3. Extrai o ZIP (tar.exe nativo, com fallback para PowerShell).
+    try {
+      await extractZip(zipPath, workDir)
+    } catch (e) {
+      const error = e instanceof Error ? e.message : String(e)
+      logMain('ERROR', `VB-Cable extract failed: ${error}`)
+      sendComplete({ success: false, error })
+      shell.openExternal(VBCABLE_DOWNLOAD.officialSite)
+      return {
+        success: true,
+        launched: false,
+        downloaded: true,
+        message: 'Baixado, mas nao consegui extrair o pacote. O site oficial foi aberto.',
+      }
+    }
+
+    // 4. Seleciona o instalador certo para a arquitetura.
+    const order =
+      process.arch === 'x64'
+        ? [VBCABLE_DOWNLOAD.setupExeX64, VBCABLE_DOWNLOAD.setupExe]
+        : [VBCABLE_DOWNLOAD.setupExe, VBCABLE_DOWNLOAD.setupExeX64]
+    const exePath = order.map((name) => join(workDir, name)).find((p) => existsSync(p))
+    if (!exePath) {
+      const error = 'Instalador nao encontrado no pacote baixado.'
+      sendComplete({ success: false, error })
+      return { success: false, downloaded: true, error }
+    }
+
+    // 5. Lanca o instalador oficial via ShellExecute (dispara o UAC se necessario).
+    logMain('INFO', `Launching downloaded VB-Cable installer: ${exePath}`)
+    const launchError = await launchInstaller(exePath)
+    if (launchError) {
+      logMain('ERROR', `VB-Cable installer launch failed: ${launchError}`)
+      sendComplete({ success: false, error: launchError })
+      return {
+        success: false,
+        downloaded: true,
+        error: launchError,
+        message: `Baixei o instalador, mas nao consegui abri-lo (${launchError}). Execute manualmente como administrador: ${exePath}`,
+      }
+    }
+    sendComplete({ success: true })
+    return { success: true, launched: true, downloaded: true }
+  })
+
+  ipcMain.handle('mic:cancel-vb-cable-download', async () => {
+    return cancelDownload('vbcable')
   })
 
   // Voice cloning: save audio blob to disk so Python backend can read it
@@ -406,9 +532,24 @@ export function registerIpcHandlers(): void {
   })
 
   ipcMain.handle('cloud:synthesize', async (_, payload: { text: string; voice: string; speed?: number; pitch?: number }) => {
+    const key = cloudCacheKey(payload)
+    const hit = cloudTtsCache.get(key)
+    if (hit) {
+      // Move para o fim (LRU) e devolve na hora — sem ida ao Edge TTS.
+      cloudTtsCache.delete(key)
+      cloudTtsCache.set(key, hit)
+      return { success: true, audioBase64: hit, mimeType: 'audio/webm', cached: true }
+    }
     try {
       const buffer = await synthesizeEdgeTTS(payload)
-      return { success: true, audioBase64: buffer.toString('base64'), mimeType: 'audio/webm' }
+      const audioBase64 = buffer.toString('base64')
+      cloudTtsCache.set(key, audioBase64)
+      while (cloudTtsCache.size > CLOUD_TTS_CACHE_MAX) {
+        const oldest = cloudTtsCache.keys().next().value
+        if (oldest === undefined) break
+        cloudTtsCache.delete(oldest)
+      }
+      return { success: true, audioBase64, mimeType: 'audio/webm' }
     } catch (error) {
       logMain('WARN', `Edge TTS synthesize failed: ${error instanceof Error ? error.message : String(error)}`)
       return { success: false, error: error instanceof Error ? error.message : String(error) }
@@ -476,6 +617,88 @@ export function registerIpcHandlers(): void {
   ipcMain.handle('updater:version', () => {
     return app.getVersion()
   })
+}
+
+/**
+ * Lanca um instalador elevado. spawn() direto falha com EACCES para .exe com
+ * manifesto requireAdministrator (e o erro chega assincrono -> crash), e o
+ * shell.openPath teve comportamento inconsistente nesses .exe (retornava
+ * "path does not exist" sem elevar). No Windows usamos Start-Process -Verb
+ * RunAs, que dispara o UAC de forma confiavel mesmo a partir de um processo
+ * nao-elevado (dev). Retorna '' em sucesso ou a mensagem de erro.
+ */
+async function launchInstaller(exePath: string): Promise<string> {
+  if (!existsSync(exePath)) {
+    return `Arquivo do instalador nao encontrado: ${exePath}`
+  }
+  if (process.platform !== 'win32') {
+    try {
+      return await shell.openPath(exePath)
+    } catch (e) {
+      return e instanceof Error ? e.message : String(e)
+    }
+  }
+  const system32 = join(process.env.SystemRoot || 'C:\\Windows', 'System32')
+  const powershell = join(system32, 'WindowsPowerShell', 'v1.0', 'powershell.exe')
+  const installerDir = dirname(exePath)
+  // -WorkingDirectory explicito e obrigatorio: sem ele o Start-Process -Verb
+  // RunAs herda o cwd do processo Electron, que ao elevar resulta em
+  // "The system cannot find the path specified" (ERROR_PATH_NOT_FOUND).
+  const command = `Start-Process -FilePath '${exePath.replace(/'/g, "''")}' -WorkingDirectory '${installerDir.replace(/'/g, "''")}' -Verb RunAs`
+  return await new Promise<string>((resolve) => {
+    const ps = spawn(existsSync(powershell) ? powershell : 'powershell.exe', ['-NoProfile', '-Command', command], {
+      cwd: installerDir,
+      shell: false,
+      windowsHide: true,
+    })
+    let stderr = ''
+    ps.stderr?.on('data', (d) => {
+      stderr += d.toString()
+    })
+    ps.on('error', (e) => resolve(e.message))
+    ps.on('close', (code) => {
+      if (code === 0) resolve('')
+      else resolve(stderr.trim() || `O instalador nao foi iniciado (codigo ${code}). Voce pode ter cancelado o pedido de permissao do Windows.`)
+    })
+  })
+}
+
+function runProcess(command: string, args: string[]): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, { shell: false, windowsHide: true })
+    let stderr = ''
+    child.stderr?.on('data', (d) => {
+      stderr += d.toString()
+    })
+    child.on('error', reject)
+    child.on('close', (code) => {
+      if (code === 0) resolve()
+      else reject(new Error(`${command} saiu com codigo ${code}: ${stderr.slice(0, 500)}`))
+    })
+  })
+}
+
+/**
+ * Extrai um ZIP usando o tar.exe nativo do Windows (10 17063+); cai para o
+ * Expand-Archive do PowerShell se o tar nao estiver disponivel. Evita
+ * dependencias de runtime (yauzl/extract-zip nao sao empacotados).
+ */
+async function extractZip(zipPath: string, destDir: string): Promise<void> {
+  const system32 = join(process.env.SystemRoot || 'C:\\Windows', 'System32')
+  const tar = join(system32, 'tar.exe')
+  try {
+    await runProcess(existsSync(tar) ? tar : 'tar', ['-xf', zipPath, '-C', destDir])
+    return
+  } catch (e) {
+    logMain('WARN', `tar extract failed, trying PowerShell: ${e}`)
+  }
+  const powershell = join(system32, 'WindowsPowerShell', 'v1.0', 'powershell.exe')
+  await runProcess(existsSync(powershell) ? powershell : 'powershell', [
+    '-NoProfile',
+    '-NonInteractive',
+    '-Command',
+    `Expand-Archive -LiteralPath '${zipPath}' -DestinationPath '${destDir}' -Force`,
+  ])
 }
 
 function getFolderSize(dir: string): number {

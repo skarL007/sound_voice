@@ -67,11 +67,23 @@ Validar o fluxo real de comunicacao assistiva offline antes de qualquer abertura
 
 ### Microfone Virtual
 
-- [ ] Instalar VB-Audio Virtual Cable
-- [ ] Se o instalador nao estiver embutido no pacote, confirmar fallback para o site oficial
-- [ ] Ativar o microfone virtual no app
-- [ ] Confirmar que o dispositivo aparece na lista do Discord/Zoom
-- [ ] Usar a fala sintetizada dentro do Discord ou Zoom
+Fluxo de instalacao (download automatico no app):
+
+- [ ] Na tela **Falar** sem VB-Cable, confirmar que aparece o botao **Instalar microfone virtual** (e nao o toggle de ativar)
+- [ ] Clicar e confirmar a **barra de progresso** do download (percentual avanca; nao trava em 0%)
+- [ ] Confirmar que o instalador do VB-Cable abre sozinho apos o download/extracao
+- [ ] Concluir a instalacao ("Install Driver") e, se pedido, reiniciar o Windows
+- [ ] Clicar em **Verificar instalacao** e confirmar que o app passa para **VB-Cable detectado** SEM reiniciar o app
+- [ ] Simular falha de rede e confirmar o fallback que abre o site oficial
+
+Criterios de aceite no Discord (mensuravel — define "done"):
+
+- [ ] **CABLE Output** aparece na lista de microfones do Discord (Config. de Voz e Video)
+- [ ] Com o mic virtual ativo, ao falar uma frase o **medidor de entrada do Discord se move** (barra verde)
+- [ ] Em uma chamada de teste, um segundo participante **ouve a voz sintetizada** de forma inteligivel
+- [ ] **Sem pitch shift** audivel (a voz nao sai "acelerada/grave") — valida o resample para 48 kHz
+- [ ] Latencia da fala ate sair no Discord **<= 2 s** com Piper/Kokoro em CPU
+- [ ] Ao desativar o mic virtual, o audio volta para a saida normal (alto-falante)
 
 ### Acessibilidade
 
