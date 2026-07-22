@@ -19,6 +19,8 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui",
+    "test:e2e": "npm run build && playwright test --grep-invert @online",
+    "test:e2e:online": "npm run build && playwright test",
     "type-check": "tsc --noEmit",
     "postinstall": "electron-builder install-app-deps"
   },
@@ -31,6 +33,7 @@
     "zustand": "^5.0.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@types/jsdom": "^28.0.3",
     "@types/node": "^22.13.4",
     "@types/react": "^19.0.10",

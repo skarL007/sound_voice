@@ -55,3 +55,7 @@ tmp*/
 
 # VB-Cable redistributable (donationware) — baixado no build, nao versionado
 assets/vbcable/*.exe
+
+# Playwright
+test-results/
+playwright-report/

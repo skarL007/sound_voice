@@ -37,8 +37,15 @@ jobs:
         run: scripts\build-python-venv.bat
         shell: cmd
 
-      - name: Rodar testes
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Run tests
         run: npm test
+
+      - name: Smoke-test packaged backend
+        shell: pwsh
+        run: ./scripts/smoke-packaged-backend.ps1
 
       - name: Build Electron
         run: npm run build

@@ -105,6 +105,25 @@ class TestErrorBodies:
         assert response.status_code == 400
 
 
+class TestInfoEndpoints:
+    def test_health_shape(self):
+        body = client.get("/health").json()
+        assert body["status"] == "ok"
+        assert "version" in body
+
+    def test_hardware_reports_a_tier(self):
+        body = client.get("/hardware", headers=AUTH).json()
+        assert "recommendedTier" in body
+        assert isinstance(body["recommendedTier"], str)
+        assert body["recommendedTier"]
+
+    def test_models_lists_piper_and_kokoro(self):
+        models = client.get("/models", headers=AUTH).json()
+        ids = {m["id"] for m in models}
+        assert "piper" in ids
+        assert "kokoro" in ids
+
+
 class TestSanitizeAudioPath:
     def test_temp_dir_is_allowed(self):
         import tempfile

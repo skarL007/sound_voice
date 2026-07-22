@@ -31,5 +31,21 @@ jobs:
       - name: Run tests
         run: npm test
 
-      - name: Build (sem instalador)
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install backend test dependencies
+        run: pip install fastapi "httpx<0.28" pytest psutil numpy soundfile sounddevice
+
+      - name: Run Python API tests
+        run: python -m pytest src/python/tests src/python/test_security_validators.py -q
+
+      - name: Build (no installer)
         run: npm run build
+
+      # Electron E2E uses the app's own Electron binary (installed by npm ci),
+      # so no Playwright browser download is needed.
+      - name: Run E2E tests (Electron, offline)
+        run: npx playwright test --grep-invert @online

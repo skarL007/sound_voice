@@ -50,7 +50,47 @@ const CACHE_TTL_MS = 24 * 60 * 60 * 1000
 let voicesCache: EdgeVoice[] | null = null
 let voicesCacheTime = 0
 
+// Offline test hook: with VOICELAUNCH_EDGE_MOCK=1 the client returns a fixed
+// voice list and a tiny WAV instead of touching the network. Used by E2E so the
+// speak journey runs deterministically on CI without hitting Microsoft.
+function edgeMockEnabled(): boolean {
+  return process.env.VOICELAUNCH_EDGE_MOCK === '1'
+}
+
+const MOCK_VOICES: EdgeVoice[] = [
+  {
+    Name: 'Microsoft Server Speech Text to Speech Voice (en-US, MockNeural)',
+    ShortName: 'en-US-MockNeural',
+    Gender: 'Female',
+    Locale: 'en-US',
+    SuggestedCodec: 'audio-24khz-48kbitrate-mono-mp3',
+    FriendlyName: 'Microsoft Mock Online (Natural)',
+    Status: 'GA',
+  },
+]
+
+// A minimal, valid silent WAV (44-byte header + a few PCM frames).
+function mockAudioBuffer(): Buffer {
+  const dataLen = 32
+  const buf = Buffer.alloc(44 + dataLen)
+  buf.write('RIFF', 0)
+  buf.writeUInt32LE(36 + dataLen, 4)
+  buf.write('WAVE', 8)
+  buf.write('fmt ', 12)
+  buf.writeUInt32LE(16, 16)
+  buf.writeUInt16LE(1, 20)
+  buf.writeUInt16LE(1, 22)
+  buf.writeUInt32LE(24000, 24)
+  buf.writeUInt32LE(48000, 28)
+  buf.writeUInt16LE(2, 32)
+  buf.writeUInt16LE(16, 34)
+  buf.write('data', 36)
+  buf.writeUInt32LE(dataLen, 40)
+  return buf
+}
+
 export async function listEdgeVoices(forceRefresh = false): Promise<EdgeVoice[]> {
+  if (edgeMockEnabled()) return MOCK_VOICES
   const now = Date.now()
   if (!forceRefresh && voicesCache && now - voicesCacheTime < CACHE_TTL_MS) {
     return voicesCache
@@ -124,6 +164,7 @@ export async function synthesizeEdgeTTS(options: SynthesizeOptions): Promise<Buf
   if (!options.text || options.text.trim().length === 0) {
     throw new Error('Empty text.')
   }
+  if (edgeMockEnabled()) return mockAudioBuffer()
   const speed = options.speed ?? 1.0
   const pitch = options.pitch ?? 0
   const volume = options.volume ?? 0
