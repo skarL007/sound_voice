@@ -46,6 +46,7 @@ jobs:
         run: npm run build
 
       # Electron E2E uses the app's own Electron binary (installed by npm ci),
-      # so no Playwright browser download is needed.
+      # so no Playwright browser download is needed. Quote @online — under pwsh
+      # a bare @online is parsed as a splat and reaches Playwright empty.
       - name: Run E2E tests (Electron, offline)
-        run: npx playwright test --grep-invert @online
+        run: npx playwright test --grep-invert '@online'

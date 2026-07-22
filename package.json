@@ -19,7 +19,7 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui",
-    "test:e2e": "npm run build && playwright test --grep-invert @online",
+    "test:e2e": "npm run build && playwright test --grep-invert \"@online\"",
     "test:e2e:online": "npm run build && playwright test",
     "type-check": "tsc --noEmit",
     "postinstall": "electron-builder install-app-deps"
