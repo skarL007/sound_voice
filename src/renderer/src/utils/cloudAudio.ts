@@ -191,7 +191,7 @@ export async function playCloudAudio(
     URL.revokeObjectURL(blobUrl)
     if (token !== playbackToken) return
     if (await tryPlayWithWebAudio(bytes, outputs, token)) return
-    throw new Error('Nao foi possivel reproduzir o audio: todas as estrategias falharam.')
+    throw new Error('Could not play the audio: all strategies failed.')
   }
 
   // Cabo e/ou monitor: toca em todas as saidas ao mesmo tempo.

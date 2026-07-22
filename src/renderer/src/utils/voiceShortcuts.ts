@@ -129,7 +129,7 @@ export function acceleratorFromEvent(event: HotkeyEventLike): HotkeyCaptureResul
       accelerator: null,
       pending: false,
       preview: previewLabel(mods),
-      error: 'Tecla nao suportada. Use letras, numeros, F1-F24 ou setas.',
+      error: 'Unsupported key. Use letters, numbers, F1-F24, or arrows.',
     }
   }
 
@@ -139,7 +139,7 @@ export function acceleratorFromEvent(event: HotkeyEventLike): HotkeyCaptureResul
       accelerator: null,
       pending: false,
       preview: previewLabel([...mods, mainKey]),
-      error: 'Combine com Ctrl ou Alt (evita conflito com a digitacao).',
+      error: 'Combine with Ctrl or Alt (avoids conflicting with typing).',
     }
   }
 
@@ -173,12 +173,12 @@ export function suggestNextHotkey(shortcuts: VoiceShortcut[]): string | null {
 
 export function validateVoiceShortcut(shortcut: VoiceShortcut): string[] {
   const errors: string[] = []
-  if (!shortcut.name.trim()) errors.push('Nome obrigatorio.')
-  if (!shortcut.text.trim()) errors.push('Texto obrigatorio.')
-  if (!shortcut.hotkey) errors.push('Atalho obrigatorio.')
-  else if (isReservedHotkey(shortcut.hotkey)) errors.push('Atalho reservado pelo sistema.')
-  if (!shortcut.voice) errors.push('Selecione uma voz.')
-  if (shortcut.speed < 0.5 || shortcut.speed > 2.0) errors.push('Velocidade entre 0.5 e 2.0.')
+  if (!shortcut.name.trim()) errors.push('Name is required.')
+  if (!shortcut.text.trim()) errors.push('Text is required.')
+  if (!shortcut.hotkey) errors.push('Hotkey is required.')
+  else if (isReservedHotkey(shortcut.hotkey)) errors.push('Hotkey is reserved by the system.')
+  if (!shortcut.voice) errors.push('Select a voice.')
+  if (shortcut.speed < 0.5 || shortcut.speed > 2.0) errors.push('Speed between 0.5 and 2.0.')
   return errors
 }
 
@@ -187,32 +187,32 @@ export function defaultShortcuts(cloudVoice: string | null): VoiceShortcut[] {
   return [
     {
       id: 'gg-triunfante',
-      name: 'GG Triunfante',
+      name: 'GG well played',
       hotkey: 'CommandOrControl+Shift+1',
       enabled: true,
       voiceSource: 'cloud',
       voice: cloudVoice,
-      text: 'GG, partida excelente!',
+      text: 'GG, great match!',
       speed: 1.0,
     },
     {
       id: 'cuidado',
-      name: 'Cuidado!',
+      name: 'Watch out!',
       hotkey: 'CommandOrControl+Shift+2',
       enabled: true,
       voiceSource: 'cloud',
       voice: cloudVoice,
-      text: 'Cuidado, inimigo se aproximando!',
+      text: 'Watch out, enemy incoming!',
       speed: 1.0,
     },
     {
       id: 'oi-pessoal',
-      name: 'Cumprimento',
+      name: 'Greeting',
       hotkey: 'CommandOrControl+Shift+3',
       enabled: true,
       voiceSource: 'cloud',
       voice: cloudVoice,
-      text: 'Oi pessoal, tudo bem com voces?',
+      text: 'Hey everyone, how are you doing?',
       speed: 1.0,
     },
   ]

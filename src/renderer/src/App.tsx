@@ -37,9 +37,9 @@ import type { BackendStatus, ModelInfo } from '../../shared/types'
 // App focado no online (Edge TTS): jornada começa → fala → atalho → ajustes.
 // As telas locais (instalar modelos, clonar voz) saem da navegacao.
 const navItems = [
-  { to: '/', icon: Volume2, label: 'Falar' },
-  { to: '/shortcuts', icon: Keyboard, label: 'Atalhos' },
-  { to: '/settings', icon: Settings, label: 'Ajustes' },
+  { to: '/', icon: Volume2, label: 'Speak' },
+  { to: '/shortcuts', icon: Keyboard, label: 'Shortcuts' },
+  { to: '/settings', icon: Settings, label: 'Settings' },
 ]
 
 const INITIAL_BACKEND_STATUS: BackendStatus = {
@@ -73,11 +73,11 @@ function BackendBanner({
     return null
   }
 
-  const title = isStarting ? 'Iniciando backend local' : 'Vozes locais indisponiveis'
+  const title = isStarting ? 'Starting local backend' : 'Local voices unavailable'
   const description = isStarting
-    ? 'A interface ja esta pronta. As vozes locais ficam disponiveis quando o backend terminar de subir. As vozes online (Edge TTS) ja podem ser usadas em "Falar".'
+    ? 'The interface is already ready. Local voices become available once the backend finishes starting. Online voices (Edge TTS) can already be used in "Speak".'
     : (status.lastError ? `${status.lastError}. ` : '') +
-      'Voce ainda pode usar vozes online (Edge TTS) sem instalacao em "Falar". Para liberar Piper/Kokoro, use Tentar novamente ou abra Ajustes.'
+      'You can still use online voices (Edge TTS) without installation in "Speak". To unlock Piper/Kokoro, use Retry or open Settings.'
 
   const containerStyle = isStarting
     ? { borderBottomColor: 'var(--vl-state-warn-border)', background: 'var(--vl-state-warn-bg)' }
@@ -112,7 +112,7 @@ function BackendBanner({
               <details className="mt-2 text-xs text-ink-soft">
                 <summary className="cursor-pointer inline-flex items-center gap-1 select-none hover:text-ink-strong">
                   <ChevronDown className="h-3 w-3" />
-                  Diagnostico
+                  Diagnostics
                 </summary>
                 <div className="mt-2 grid gap-1 font-mono text-[11px] leading-5">
                   {diagnostics?.command && <div><span className="text-ink-mute">command:</span> {diagnostics.command}</div>}
@@ -131,7 +131,7 @@ function BackendBanner({
             className="btn-secondary inline-flex items-center gap-2 self-start text-sm disabled:opacity-60"
           >
             <RefreshCw className={`h-4 w-4 ${retrying ? 'animate-spin' : ''}`} />
-            Tentar novamente
+            Retry
           </button>
         </div>
       </div>
@@ -152,11 +152,11 @@ function TitleBar({
   const setCompactMode = useAppStore((state) => state.setCompactMode)
 
   const subtitleText = backendStatus.running
-    ? 'Pronto para falar'
+    ? 'Ready to speak'
     : backendStatus.phase === 'starting'
-      ? 'Iniciando...'
+      ? 'Starting...'
       : backendStatus.phase === 'error'
-        ? 'Backend com falha'
+        ? 'Backend failed'
         : 'Offline'
 
   const subtitleColor = backendStatus.running
@@ -193,45 +193,45 @@ function TitleBar({
         <button
           onClick={onCheatsheet}
           className="titlebar-btn text-slate-400 hover:bg-chrome-800 hover:text-brand-300"
-          title="Atalhos de teclado"
-          aria-label="Ver atalhos de teclado"
+          title="Keyboard shortcuts"
+          aria-label="View keyboard shortcuts"
         >
           <Keyboard className="w-4 h-4" />
         </button>
         <button
           onClick={() => setCompactMode(!compactMode)}
           className={`titlebar-btn ${compactMode ? 'bg-brand-400/10 text-brand-300' : 'text-slate-400 hover:bg-chrome-800 hover:text-brand-300'}`}
-          title="Modo compacto"
-          aria-label="Alternar modo compacto"
+          title="Compact mode"
+          aria-label="Toggle compact mode"
         >
           <PictureInPicture className="w-4 h-4" />
         </button>
         <button
           onClick={() => setAlwaysOnTop(!alwaysOnTop)}
           className={`titlebar-btn ${alwaysOnTop ? 'bg-brand-400/10 text-brand-300' : 'text-slate-400 hover:bg-chrome-800 hover:text-brand-300'}`}
-          title="Sempre no topo"
-          aria-label="Sempre no topo"
+          title="Always on top"
+          aria-label="Always on top"
         >
           <Pin className="w-4 h-4" />
         </button>
         <button
           onClick={() => window.electronAPI.minimizeWindow()}
           className="titlebar-btn text-slate-400 hover:bg-chrome-800 hover:text-slate-100"
-          aria-label="Minimizar janela"
+          aria-label="Minimize window"
         >
           <Minus className="w-4 h-4" />
         </button>
         <button
           onClick={() => window.electronAPI.maximizeWindow()}
           className="titlebar-btn text-slate-400 hover:bg-chrome-800 hover:text-slate-100"
-          aria-label="Maximizar janela"
+          aria-label="Maximize window"
         >
           <Square className="w-4 h-4" />
         </button>
         <button
           onClick={() => window.electronAPI.closeWindow()}
           className="titlebar-btn text-slate-400 hover:bg-red-500/80 hover:text-white"
-          aria-label="Fechar janela"
+          aria-label="Close window"
         >
           <X className="w-4 h-4" />
         </button>
@@ -278,7 +278,7 @@ function Sidebar() {
       <div className="mt-auto px-1 py-3 space-y-3">
         <div className="hidden lg:block text-xs text-ink-mute px-3">
           <p>VoiceLaunch TTS v1.0</p>
-          <p>Voz online (Edge TTS) · Open Source</p>
+          <p>Online voice (Edge TTS) · Open Source</p>
         </div>
       </div>
     </nav>
@@ -349,17 +349,17 @@ function CompactView({ backendStatus }: { backendStatus: BackendStatus }) {
     routePreview.engine === 'edge'
       ? cloudVoice
         ? routePreview.label
-        : 'Escolha uma voz online na tela Falar'
+        : 'Choose an online voice on the Speak screen'
       : routePreview.engine
         ? localReady
           ? routePreview.label
-          : 'Backend local iniciando...'
+          : 'Starting local backend...'
         : routePreview.label
   const statusColor = canSpeak ? 'var(--vl-state-ready)' : 'var(--vl-state-warn)'
 
   const speakLocalCompact = async (textToSpeak: string, localModelId: string): Promise<boolean> => {
     if (!backendStatus.running) {
-      toast('Backend iniciando', 'A fala sera liberada quando o backend local terminar de subir.', 'info')
+      toast('Backend starting', 'Speech will be available once the local backend finishes starting.', 'info')
       return false
     }
     const response = await window.electronAPI.synthesize({
@@ -369,7 +369,7 @@ function CompactView({ backendStatus }: { backendStatus: BackendStatus }) {
     })
     if (cancelRef.current) return true
     if (!response.success || !response.audioPath) {
-      if (response.error) toast('Erro na fala', response.error, 'error')
+      if (response.error) toast('Speech failed', response.error, 'error')
       return false
     }
     await window.electronAPI.playAudio(response.audioPath)
@@ -421,11 +421,11 @@ function CompactView({ backendStatus }: { backendStatus: BackendStatus }) {
           ? routeEngine({ ...buildRouteInput(textToSpeak.length), online: false })
           : null
         if (fallback?.engine && fallback.modelId) {
-          toast('Voz online falhou', `Falando com a voz local (${fallback.engine}).`, 'info')
+          toast('Online voice failed', `Speaking with the local voice (${fallback.engine}).`, 'info')
           await speakLocalCompact(textToSpeak, fallback.modelId)
           return
         }
-        toast('Erro na voz online', response.error || 'Nao foi possivel gerar a voz.', 'error')
+        toast('Online voice error', response.error || 'Could not generate the voice.', 'error')
         return
       }
       if (decision.engine && decision.modelId) {
@@ -433,12 +433,12 @@ function CompactView({ backendStatus }: { backendStatus: BackendStatus }) {
         return
       }
       if (decision.engine === 'edge' && !cloudVoice) {
-        toast('Sem voz online', 'Escolha uma voz online na tela Falar.', 'warning')
+        toast('No online voice', 'Choose an online voice on the Speak screen.', 'warning')
         return
       }
-      toast('Sem voz disponivel', `${decision.label}.`, 'warning')
+      toast('No voice available', `${decision.label}.`, 'warning')
     } catch (error) {
-      toast('Erro na fala', String(error), 'error')
+      toast('Speech failed', String(error), 'error')
     } finally {
       setIsSpeaking(false)
     }
@@ -476,9 +476,9 @@ function CompactView({ backendStatus }: { backendStatus: BackendStatus }) {
           onChange={(e) => setDefaultModelId(e.target.value)}
           disabled={availableModels.length === 0}
           className="input-field flex-1 min-w-0 py-1.5 text-xs"
-          aria-label="Modelo de voz"
+          aria-label="Voice model"
         >
-          {availableModels.length === 0 && <option value="">Sem modelo</option>}
+          {availableModels.length === 0 && <option value="">No model</option>}
           {availableModels.map((model) => (
             <option key={model.id} value={model.id}>
               {model.name}
@@ -489,8 +489,8 @@ function CompactView({ backendStatus }: { backendStatus: BackendStatus }) {
           onClick={() => setShowAdvanced((value) => !value)}
           className="btn-ghost px-2 py-1.5 text-xs"
           aria-expanded={showAdvanced}
-          aria-label="Mais opcoes"
-          title="Velocidade e ajustes"
+          aria-label="More options"
+          title="Speed and settings"
         >
           <MoreHorizontal className="h-4 w-4" />
         </button>
@@ -498,7 +498,7 @@ function CompactView({ backendStatus }: { backendStatus: BackendStatus }) {
 
       {showAdvanced && (
         <div className="hud-frame flex items-center gap-3 p-3 text-xs">
-          <span className="text-ink-soft">Vel</span>
+          <span className="text-ink-soft">Speed</span>
           <input
             type="range"
             min={0.5}
@@ -507,7 +507,7 @@ function CompactView({ backendStatus }: { backendStatus: BackendStatus }) {
             value={defaultSpeed}
             onChange={(e) => setDefaultSpeed(parseFloat(e.target.value))}
             className="flex-1 accent-brand-400"
-            aria-label="Velocidade de fala"
+            aria-label="Speech speed"
             aria-valuemin={0.5}
             aria-valuemax={2.0}
             aria-valuenow={defaultSpeed}
@@ -521,7 +521,7 @@ function CompactView({ backendStatus }: { backendStatus: BackendStatus }) {
               onChange={(event) => setKeepTextAfterSpeak(event.target.checked)}
               className="accent-brand-500"
             />
-            Manter
+            Keep
           </label>
         </div>
       )}
@@ -532,7 +532,7 @@ function CompactView({ backendStatus }: { backendStatus: BackendStatus }) {
         value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder="> digite e aperte Enter"
+        placeholder="> type and press Enter"
         className="terminal-textarea min-h-[150px] flex-1 resize-none p-3 text-base leading-6 outline-none placeholder:text-ink-mute"
         autoFocus
       />
@@ -576,17 +576,17 @@ function CompactView({ backendStatus }: { backendStatus: BackendStatus }) {
         onClick={() => void speak(text)}
         disabled={isSpeaking ? false : !text.trim() || !canSpeak}
         className={`btn-primary ${canSpeak && text.trim() ? 'btn-primary--armed' : ''} flex items-center justify-center gap-2 py-3 text-sm font-semibold`}
-        aria-label={isSpeaking ? 'Parar' : 'Falar'}
+        aria-label={isSpeaking ? 'Stop' : 'Speak'}
       >
         {isSpeaking ? (
           <>
             <Square className="w-4 h-4" />
-            Parar
+            Stop
           </>
         ) : (
           <>
             <Send className="w-4 h-4" />
-            Falar
+            Speak
           </>
         )}
       </button>
@@ -624,7 +624,7 @@ export default function App() {
             ...prev,
             running: false,
             phase: 'error',
-            lastError: 'Nao foi possivel consultar o backend local.',
+            lastError: 'Could not reach the local backend.',
           }))
         }
       }
@@ -647,7 +647,7 @@ export default function App() {
     try {
       const restarted = await window.electronAPI.restartBackend()
       if (!restarted) {
-        toast('Backend local', 'O backend nao confirmou reinicio imediato. Vou continuar monitorando.', 'warning')
+        toast('Local backend', 'The backend did not confirm an immediate restart. Still monitoring.', 'warning')
       }
       const status = await window.electronAPI.getBackendStatus()
       setBackendStatus(status)
@@ -728,8 +728,8 @@ export default function App() {
         return result.id
       }
       toast(
-        'Mic virtual sem cabo',
-        'A voz vai tocar no alto-falante, nao no Discord. Abra Ajustes > Microfone Virtual.',
+        'Virtual mic has no cable',
+        'The voice will play on the speaker, not on Discord. Open Settings > Virtual microphone.',
         'warning',
       )
       return undefined
@@ -749,7 +749,7 @@ export default function App() {
       const speed = settings.defaultSpeed || 1
 
       if (!phrase) {
-        toast('Atalho sem frase', 'Configure as frases rapidas na aba Falar.', 'warning')
+        toast('Shortcut has no phrase', 'Set up quick phrases on the Speak tab.', 'warning')
         return
       }
 
@@ -781,7 +781,7 @@ export default function App() {
 
       const speakLocalPhrase = async (localModelId: string): Promise<boolean> => {
         if (!runtimeStatus.running) {
-          toast('Backend offline', 'Vozes locais indisponiveis. Troque para Online na aba Falar.', 'info')
+          toast('Backend offline', 'Local voices unavailable. Switch to Online on the Speak tab.', 'info')
           return false
         }
         const response = await window.electronAPI.synthesize({
@@ -790,7 +790,7 @@ export default function App() {
           speed,
         })
         if (!response.success || !response.audioPath) {
-          toast('Erro na fala', response.error || 'Nao foi possivel gerar o audio.', 'error')
+          toast('Speech failed', response.error || 'Could not generate the audio.', 'error')
           return false
         }
         await window.electronAPI.playAudio(response.audioPath)
@@ -801,13 +801,13 @@ export default function App() {
       try {
         const decision = routeEngine(routeInput)
         if (decision.engine === null) {
-          toast('Sem voz disponivel', `${decision.label}.`, 'warning')
+          toast('No voice available', `${decision.label}.`, 'warning')
           return
         }
         if (decision.engine === 'edge') {
           const cloudVoice = settings.cloudVoice
           if (!cloudVoice) {
-            toast('Sem voz online', 'Escolha uma voz online na aba Falar antes de usar atalhos.', 'warning')
+            toast('No online voice', 'Choose an online voice on the Speak tab before using shortcuts.', 'warning')
             return
           }
           const response = await window.electronAPI.synthesizeCloud({
@@ -820,10 +820,10 @@ export default function App() {
             // Auto: falhou online, fala com a voz local na mesma acao.
             const fallback = source === 'auto' ? routeEngine({ ...routeInput, online: false }) : null
             if (fallback?.engine && fallback.modelId && (await speakLocalPhrase(fallback.modelId))) {
-              toast('Voz online falhou', `Frase falada com a voz local (${fallback.engine}).`, 'info')
+              toast('Online voice failed', `Phrase spoken with the local voice (${fallback.engine}).`, 'info')
               return
             }
-            toast('Erro na voz online', response.error || 'Nao foi possivel gerar a voz.', 'error')
+            toast('Online voice error', response.error || 'Could not generate the voice.', 'error')
             return
           }
           useAppStore.getState().reportEdgeSuccess()
@@ -838,7 +838,7 @@ export default function App() {
           await speakLocalPhrase(decision.modelId)
         }
       } catch (error) {
-        toast('Erro no atalho', String(error), 'error')
+        toast('Shortcut failed', String(error), 'error')
       }
     }
 
@@ -849,8 +849,8 @@ export default function App() {
       void window.electronAPI.setVirtualMic(nextState)
       window.dispatchEvent(new CustomEvent('voicelaunch:virtual-mic-changed', { detail: nextState }))
       toast(
-        'Microfone virtual',
-        nextState ? 'Microfone virtual ativado.' : 'Microfone virtual desativado.',
+        'Virtual microphone',
+        nextState ? 'Virtual microphone enabled.' : 'Virtual microphone disabled.',
         'info',
       )
     }
@@ -868,8 +868,8 @@ export default function App() {
       if (!conflicted || conflicted.length === 0) return
       const conflictList = conflicted.slice(0, 3).map(formatHotkeyDisplay).join(', ') + (conflicted.length > 3 ? '...' : '')
       toast(
-        `${conflicted.length} atalho(s) bloqueado(s)`,
-        `Outro app ja usa: ${conflictList}. Tente combinacoes Ctrl+Alt ou F-keys em "Atalhos".`,
+        `${conflicted.length} shortcut(s) blocked`,
+        `Another app is already using: ${conflictList}. Try Ctrl+Alt or F-key combos in "Shortcuts".`,
         'warning',
       )
     })
@@ -891,7 +891,7 @@ export default function App() {
 
       const speakLocalShortcut = async (localModelId: string): Promise<boolean> => {
         if (!runtimeStatus.running) {
-          toast('Backend offline', 'O atalho local precisa do backend Python ativo.', 'warning')
+          toast('Backend offline', 'The local shortcut needs the Python backend running.', 'warning')
           return false
         }
         const response = await window.electronAPI.synthesize({
@@ -900,7 +900,7 @@ export default function App() {
           speed: shortcut.speed,
         })
         if (!response.success || !response.audioPath) {
-          toast('Falha no atalho', response.error || 'Nao foi possivel gerar o audio local.', 'error')
+          toast('Shortcut failed', response.error || 'Could not generate the local audio.', 'error')
           return false
         }
         await window.electronAPI.playAudio(response.audioPath)
@@ -932,12 +932,12 @@ export default function App() {
               await speakLocalShortcut(fallback.modelId)
               return
             }
-            toast('Sem voz disponivel', `${fallback.label}.`, 'warning')
+            toast('No voice available', `${fallback.label}.`, 'warning')
             return
           }
 
           if (!voice) {
-            toast('Sem voz online', 'Escolha uma voz no atalho ou na tela Falar.', 'warning')
+            toast('No online voice', 'Choose a voice in the shortcut or on the Speak screen.', 'warning')
             return
           }
           const response = await window.electronAPI.synthesizeCloud({
@@ -950,10 +950,10 @@ export default function App() {
             useAppStore.getState().reportEdgeFailure()
             const fallback = localFallbackFor(shortcut.text.length)
             if (fallback.engine && fallback.modelId && (await speakLocalShortcut(fallback.modelId))) {
-              toast('Voz online falhou', `Atalho falado com a voz local (${fallback.engine}).`, 'info')
+              toast('Online voice failed', `Shortcut spoken with the local voice (${fallback.engine}).`, 'info')
               return
             }
-            toast('Falha no atalho', response.error || 'Nao foi possivel gerar a voz.', 'error')
+            toast('Shortcut failed', response.error || 'Could not generate the voice.', 'error')
             return
           }
           useAppStore.getState().reportEdgeSuccess()
@@ -965,7 +965,7 @@ export default function App() {
         }
         await speakLocalShortcut(shortcut.voice)
       } catch (error) {
-        toast('Falha no atalho', String(error), 'error')
+        toast('Shortcut failed', String(error), 'error')
       }
     }
 
@@ -1027,14 +1027,14 @@ export default function App() {
 // ─── Cheatsheet Modal ────────────────────────────────────────────────────────
 
 const SHORTCUTS = [
-  { keys: 'Ctrl+Shift+F', desc: 'Focar campo de texto' },
-  { keys: 'Enter', desc: 'Falar texto' },
-  { keys: 'Shift+Enter', desc: 'Nova linha' },
-  { keys: 'Ctrl+Shift+1..9', desc: 'Atalho de voz 1–9' },
-  { keys: 'Ctrl+Shift+M', desc: 'Ativar/desativar mic' },
-  { keys: 'Ctrl+Shift+V', desc: 'Modo compacto' },
-  { keys: 'Ctrl+Shift+S', desc: 'Parar audio' },
-  { keys: 'Escape', desc: 'Fechar modal / parar' },
+  { keys: 'Ctrl+Shift+F', desc: 'Focus text field' },
+  { keys: 'Enter', desc: 'Speak text' },
+  { keys: 'Shift+Enter', desc: 'New line' },
+  { keys: 'Ctrl+Shift+1..9', desc: 'Voice shortcut 1-9' },
+  { keys: 'Ctrl+Shift+M', desc: 'Toggle mic' },
+  { keys: 'Ctrl+Shift+V', desc: 'Compact mode' },
+  { keys: 'Ctrl+Shift+S', desc: 'Stop audio' },
+  { keys: 'Escape', desc: 'Close modal / stop' },
 ]
 
 function CheatsheetModal({ onClose }: { onClose: () => void }) {
@@ -1074,7 +1074,7 @@ function CheatsheetModal({ onClose }: { onClose: () => void }) {
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
       role="dialog"
       aria-modal="true"
-      aria-label="Atalhos de teclado"
+      aria-label="Keyboard shortcuts"
       onKeyDown={handleKeyDown}
       ref={dialogRef}
     >
@@ -1082,12 +1082,12 @@ function CheatsheetModal({ onClose }: { onClose: () => void }) {
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-lg font-bold text-ink-strong flex items-center gap-2">
             <Keyboard className="w-5 h-5" style={{ color: 'var(--vl-state-ready)' }} />
-            Atalhos de teclado
+            Keyboard shortcuts
           </h2>
           <button
             onClick={onClose}
             className="p-2 rounded-lg text-ink-soft hover:bg-brand-500/15 hover:text-ink-strong transition-colors"
-            aria-label="Fechar"
+            aria-label="Close"
           >
             <X className="w-5 h-5" />
           </button>
@@ -1105,7 +1105,7 @@ function CheatsheetModal({ onClose }: { onClose: () => void }) {
             </div>
           ))}
         </div>
-        <p className="mt-4 text-xs text-ink-mute">Ctrl+Alt+1..9 e Ctrl+Shift+F1..F12 disponíveis em Atalhos de Voz.</p>
+        <p className="mt-4 text-xs text-ink-mute">Ctrl+Alt+1..9 and Ctrl+Shift+F1..F12 are available in Voice Shortcuts.</p>
       </div>
     </div>
   )

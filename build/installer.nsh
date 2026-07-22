@@ -6,10 +6,10 @@
   ReadRegStr $0 HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\VBCABLE" "DisplayName"
   ${If} $0 == ""
     ${If} ${FileExists} "$INSTDIR\resources\vbcable\VBCABLE_Setup_x64.exe"
-      DetailPrint "Instalando microfone virtual (VB-Audio Virtual Cable)..."
+      DetailPrint "Installing virtual microphone (VB-Audio Virtual Cable)..."
       ExecWait '"$INSTDIR\resources\vbcable\VBCABLE_Setup_x64.exe" /S'
     ${ElseIf} ${FileExists} "$INSTDIR\resources\vbcable\VBCABLE_Setup.exe"
-      DetailPrint "Instalando microfone virtual (VB-Audio Virtual Cable)..."
+      DetailPrint "Installing virtual microphone (VB-Audio Virtual Cable)..."
       ExecWait '"$INSTDIR\resources\vbcable\VBCABLE_Setup.exe" /S'
     ${EndIf}
   ${EndIf}

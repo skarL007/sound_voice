@@ -113,16 +113,16 @@ export default function AudioOutputPicker({ showTestButton = true }: AudioOutput
       await playTestChime(cableDeviceId, monitorDeviceId)
       const heard = monitorDeviceId !== null
       toast(
-        'Chime enviado',
+        'Chime sent',
         cableDeviceId
-          ? `Foi pro microfone virtual${heard ? ' e pro seu fone' : ' (monitor mudo)'}. No Discord, confirme CABLE Output como microfone.`
+          ? `Sent to the virtual microphone${heard ? ' and your headset' : ' (monitor muted)'}. In Discord, confirm CABLE Output as your microphone.`
           : heard
-            ? 'Tocou no seu fone/alto-falante. Selecione o microfone virtual para o Discord ouvir.'
-            : 'Monitor mudo e sem microfone virtual: nada para ouvir.',
+            ? 'Played on your headset/speaker. Select the virtual microphone for Discord to hear it.'
+            : 'Monitor muted and no virtual microphone: nothing to hear.',
         'success',
       )
     } catch (error) {
-      toast('Falha no teste', String(error), 'error')
+      toast('Test failed', String(error), 'error')
     } finally {
       setTesting(false)
     }
@@ -136,13 +136,13 @@ export default function AudioOutputPicker({ showTestButton = true }: AudioOutput
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Headphones className="h-4 w-4" style={{ color: 'var(--vl-state-live)' }} />
-          <h3 className="text-sm font-semibold text-ink-strong">Audio do microfone virtual</h3>
+          <h3 className="text-sm font-semibold text-ink-strong">Virtual microphone audio</h3>
         </div>
         <button
           onClick={() => void refresh()}
           className="btn-ghost text-xs"
-          aria-label="Atualizar dispositivos"
-          title="Atualizar"
+          aria-label="Refresh devices"
+          title="Refresh"
         >
           <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
         </button>
@@ -154,14 +154,14 @@ export default function AudioOutputPicker({ showTestButton = true }: AudioOutput
       >
         <Mic className="h-4 w-4 flex-shrink-0 mt-0.5" style={{ color: 'var(--vl-state-live)' }} />
         <p className="text-ink-body">
-          No <strong>Discord, Zoom ou jogo</strong>, escolha{' '}
+          In <strong>Discord, Zoom, or your game</strong>, choose{' '}
           <span
             className="font-mono px-1 rounded"
             style={{ background: 'var(--vl-surface-overlay)', color: 'var(--vl-state-live-text)' }}
           >
             CABLE Output
           </span>{' '}
-          como microfone. Aqui no app, a voz sai pelo <strong>CABLE Input</strong> (abaixo).
+          as the microphone. Here in the app, the voice goes out through <strong>CABLE Input</strong> (below).
         </p>
       </div>
 
@@ -172,9 +172,9 @@ export default function AudioOutputPicker({ showTestButton = true }: AudioOutput
         >
           <Volume2 className="h-4 w-4 flex-shrink-0 mt-0.5" style={{ color: 'var(--vl-state-warn)' }} />
           <div className="flex-1 text-ink-body">
-            Para ver os nomes dos dispositivos preciso de uma permissao rapida.
+            To see device names I need a quick permission grant.
             <button onClick={handleRequestPermission} className="btn-ghost text-xs ml-2">
-              Liberar nomes
+              Grant access
             </button>
           </div>
         </div>
@@ -184,27 +184,27 @@ export default function AudioOutputPicker({ showTestButton = true }: AudioOutput
       <section className="space-y-2">
         <div className="flex items-center gap-2">
           <Mic className="h-4 w-4" style={{ color: 'var(--vl-state-live)' }} />
-          <h4 className="text-sm font-semibold text-ink-strong">1. Microfone virtual (o Discord ouve)</h4>
+          <h4 className="text-sm font-semibold text-ink-strong">1. Virtual microphone (Discord hears this)</h4>
         </div>
         <p className="text-xs text-ink-soft leading-relaxed">
-          A voz <strong>entra</strong> aqui. Escolha <strong>CABLE Input</strong> (ja vem marcado como recomendado).
+          The voice <strong>enters</strong> here. Choose <strong>CABLE Input</strong> (already marked as recommended).
         </p>
         <div className="space-y-1.5 max-h-[170px] overflow-auto pr-1">
           <SelectRow
             icon={<VolumeX className="h-4 w-4 flex-shrink-0" />}
-            label="Sem microfone virtual (so alto-falante)"
+            label="No virtual microphone (speaker only)"
             selected={cableDeviceId === null}
             onSelect={() => setCableDevice(null, null)}
           />
           {cableDevices.length > 0 && (
             <div className="pt-1">
-              <p className="text-[10px] uppercase tracking-[0.2em] text-ink-mute mb-1.5 px-1">VB-Cable detectado</p>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-ink-mute mb-1.5 px-1">VB-Cable detected</p>
               {cableDevices.map((device) => (
                 <SelectRow
                   key={device.deviceId}
                   icon={<Mic className="h-4 w-4 flex-shrink-0" style={{ color: 'var(--vl-state-live)' }} />}
-                  label={device.label || 'Dispositivo sem nome'}
-                  badge={device.deviceId === cableDeviceId ? undefined : 'Recomendado'}
+                  label={device.label || 'Unnamed device'}
+                  badge={device.deviceId === cableDeviceId ? undefined : 'Recommended'}
                   selected={device.deviceId === cableDeviceId}
                   highlight
                   onSelect={() => setCableDevice(device.deviceId, device.label || null)}
@@ -214,12 +214,12 @@ export default function AudioOutputPicker({ showTestButton = true }: AudioOutput
           )}
           {otherDevices.length > 0 && (
             <div className="pt-1">
-              <p className="text-[10px] uppercase tracking-[0.2em] text-ink-mute mb-1.5 px-1">Outras saidas</p>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-ink-mute mb-1.5 px-1">Other outputs</p>
               {otherDevices.map((device) => (
                 <SelectRow
                   key={device.deviceId}
                   icon={<Headphones className="h-4 w-4 flex-shrink-0" />}
-                  label={device.label || 'Dispositivo sem nome'}
+                  label={device.label || 'Unnamed device'}
                   selected={device.deviceId === cableDeviceId}
                   onSelect={() => setCableDevice(device.deviceId, device.label || null)}
                 />
@@ -227,7 +227,7 @@ export default function AudioOutputPicker({ showTestButton = true }: AudioOutput
             </div>
           )}
           {devices.length === 0 && !loading && (
-            <p className="text-xs text-ink-mute">Nenhum dispositivo de saida encontrado.</p>
+            <p className="text-xs text-ink-mute">No output device found.</p>
           )}
         </div>
       </section>
@@ -236,35 +236,35 @@ export default function AudioOutputPicker({ showTestButton = true }: AudioOutput
       <section className="space-y-2">
         <div className="flex items-center gap-2">
           <Headphones className="h-4 w-4" style={{ color: 'var(--vl-state-ready)' }} />
-          <h4 className="text-sm font-semibold text-ink-strong">2. Voce escuta em (monitor)</h4>
+          <h4 className="text-sm font-semibold text-ink-strong">2. You hear it on (monitor)</h4>
         </div>
         <p className="text-xs text-ink-soft leading-relaxed">
-          A <strong>saida</strong> para voce ouvir a propria voz enquanto ela vai pro Discord. Escolha seu
-          fone/alto-falante — ou deixe mudo se nao quiser se ouvir.
+          The <strong>output</strong> for you to hear your own voice while it goes to Discord. Choose your
+          headset/speaker — or leave it muted if you'd rather not hear yourself.
         </p>
         <div className="space-y-1.5 max-h-[170px] overflow-auto pr-1">
           <SelectRow
             icon={<VolumeX className="h-4 w-4 flex-shrink-0" />}
-            label="Nao ouvir (mudo)"
+            label="Don't hear it (muted)"
             selected={monitorDeviceId === null}
             onSelect={() => setMonitorDevice(null, null)}
           />
           <SelectRow
             icon={<Volume2 className="h-4 w-4 flex-shrink-0" />}
-            label="Padrao do sistema"
+            label="System default"
             selected={monitorDeviceId === 'default'}
-            onSelect={() => setMonitorDevice('default', 'Padrao do sistema')}
+            onSelect={() => setMonitorDevice('default', 'System default')}
           />
           {otherDevices.length > 0 && (
             <div className="pt-1">
-              <p className="text-[10px] uppercase tracking-[0.2em] text-ink-mute mb-1.5 px-1">Saidas disponiveis</p>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-ink-mute mb-1.5 px-1">Available outputs</p>
               {otherDevices
                 .filter((device) => device.deviceId !== 'default')
                 .map((device) => (
                   <SelectRow
                     key={device.deviceId}
                     icon={<Headphones className="h-4 w-4 flex-shrink-0" />}
-                    label={device.label || 'Dispositivo sem nome'}
+                    label={device.label || 'Unnamed device'}
                     selected={device.deviceId === monitorDeviceId}
                     onSelect={() => setMonitorDevice(device.deviceId, device.label || null)}
                   />
@@ -274,12 +274,12 @@ export default function AudioOutputPicker({ showTestButton = true }: AudioOutput
         </div>
         {monitorDeviceId === null && (
           <p className="text-[11px]" style={{ color: 'var(--vl-state-warn-text)' }}>
-            Monitor mudo: o Discord ouve, mas voce nao escuta a propria voz.
+            Monitor muted: Discord hears it, but you won't hear your own voice.
           </p>
         )}
         {monitorDeviceLabel && monitorDeviceId && monitorDeviceId !== 'default' && (
           <p className="text-[11px] text-ink-soft">
-            Ouvindo em: <span className="text-ink-strong font-medium">{monitorDeviceLabel}</span>
+            Listening on: <span className="text-ink-strong font-medium">{monitorDeviceLabel}</span>
           </p>
         )}
       </section>
@@ -289,10 +289,10 @@ export default function AudioOutputPicker({ showTestButton = true }: AudioOutput
           onClick={() => void handleTest()}
           disabled={testing}
           className="btn-primary w-full inline-flex items-center justify-center gap-2 text-sm"
-          aria-label="Testar audio (chime)"
+          aria-label="Test audio (chime)"
         >
           <PlayCircle className={`h-4 w-4 ${testing ? 'animate-pulse' : ''}`} />
-          {testing ? 'Tocando chime...' : 'Testar audio (chime)'}
+          {testing ? 'Playing chime...' : 'Test audio (chime)'}
         </button>
       )}
     </div>

@@ -75,9 +75,9 @@ export default function SettingsPage() {
     backendStatus.phase === 'running'
       ? 'Online'
       : backendStatus.phase === 'starting'
-        ? 'Iniciando'
+        ? 'Starting'
         : backendStatus.phase === 'error'
-          ? 'Falha'
+          ? 'Failed'
           : 'Offline'
 
   const statusDotColor = backendStatus.phase === 'running'
@@ -90,14 +90,14 @@ export default function SettingsPage() {
     <div className="max-w-3xl mx-auto space-y-6">
       <div className="flex items-center gap-3">
         <Settings className="w-7 h-7" style={{ color: 'var(--vl-state-ready)' }} />
-        <h1 className="text-2xl font-bold text-ink-strong">Configuracoes</h1>
+        <h1 className="text-2xl font-bold text-ink-strong">Settings</h1>
       </div>
 
       <div className="hud-frame p-5">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <RefreshCw className="w-5 h-5" style={{ color: 'var(--vl-state-ready)' }} />
-            <h2 className="text-lg font-medium text-ink-strong">Backend Python (vozes locais)</h2>
+            <h2 className="text-lg font-medium text-ink-strong">Python backend (local voices)</h2>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full" style={{ background: statusDotColor }} />
@@ -107,7 +107,7 @@ export default function SettingsPage() {
 
         <div className="grid grid-cols-2 gap-4 text-sm mb-4">
           <div className="panel-muted p-3">
-            <span className="text-ink-mute">Porta</span>
+            <span className="text-ink-mute">Port</span>
             <p className="text-ink-strong font-medium font-mono">{backendStatus.port}</p>
           </div>
           <div className="panel-muted p-3">
@@ -116,9 +116,9 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <button onClick={restartBackend} className="btn-secondary text-sm flex items-center gap-2" aria-label="Reiniciar backend Python">
+        <button onClick={restartBackend} className="btn-secondary text-sm flex items-center gap-2" aria-label="Restart Python backend">
           <RefreshCw className="w-4 h-4" />
-          {backendStatus.phase === 'starting' ? 'Reiniciar backend' : 'Tentar novamente'}
+          {backendStatus.phase === 'starting' ? 'Restart backend' : 'Try again'}
         </button>
         {backendStatus.lastError && (
           <p className="mt-3 text-sm" style={{ color: 'var(--vl-state-error)' }}>{backendStatus.lastError}</p>
@@ -128,17 +128,17 @@ export default function SettingsPage() {
       <div className="hud-frame p-5">
         <div className="flex items-center gap-3 mb-4">
           <Volume2 className="w-5 h-5" style={{ color: 'var(--vl-state-ready)' }} />
-          <h2 className="text-lg font-medium text-ink-strong">Fonte de voz</h2>
+          <h2 className="text-lg font-medium text-ink-strong">Voice source</h2>
         </div>
         <p className="mb-3 text-sm text-ink-soft">
-          No modo Auto o app usa a voz online (Edge) quando ha internet e cai para a voz
-          local (Kokoro/Piper) quando esta offline ou o Edge falha.
+          In Auto mode the app uses the online voice (Edge) when there's internet and falls
+          back to the local voice (Kokoro/Piper) when offline or when Edge fails.
         </p>
-        <div className="grid gap-2 sm:grid-cols-3" role="radiogroup" aria-label="Fonte de voz">
+        <div className="grid gap-2 sm:grid-cols-3" role="radiogroup" aria-label="Voice source">
           {([
-            { value: 'auto', title: 'Auto (recomendado)', hint: 'Online quando da, local quando precisa' },
-            { value: 'cloud', title: 'Sempre online', hint: 'Edge TTS; sem fallback local' },
-            { value: 'local', title: 'Sempre local', hint: 'Piper/Kokoro; funciona offline' },
+            { value: 'auto', title: 'Auto (recommended)', hint: 'Online when possible, local when needed' },
+            { value: 'cloud', title: 'Always online', hint: 'Edge TTS; no local fallback' },
+            { value: 'local', title: 'Always local', hint: 'Piper/Kokoro; works offline' },
           ] as const).map((option) => (
             <label
               key={option.value}
@@ -166,7 +166,7 @@ export default function SettingsPage() {
       <div className="hud-frame p-5">
         <div className="flex items-center gap-3 mb-4">
           <Mic className="w-5 h-5" style={{ color: 'var(--vl-state-ready)' }} />
-          <h2 className="text-lg font-medium text-ink-strong">Microfone Virtual</h2>
+          <h2 className="text-lg font-medium text-ink-strong">Virtual microphone</h2>
         </div>
 
         <div
@@ -183,8 +183,8 @@ export default function SettingsPage() {
           />
           <p className="text-ink-body">
             {vbCableInstalled
-              ? 'Microfone virtual instalado. No Discord/Zoom/jogo, escolha CABLE Output como microfone.'
-              : 'Microfone virtual ainda nao detectado. Ele vem com o instalador do app — reinicie o Windows se voce acabou de instalar.'}
+              ? 'Virtual microphone installed. In Discord/Zoom/games, choose CABLE Output as the microphone.'
+              : 'Virtual microphone not detected yet. It comes with the app installer — restart Windows if you just installed it.'}
           </p>
         </div>
 
@@ -196,7 +196,7 @@ export default function SettingsPage() {
       <div className="hud-frame p-5">
         <div className="flex items-center gap-3 mb-4">
           <Contrast className="w-5 h-5" style={{ color: 'var(--vl-state-ready)' }} />
-          <h2 className="text-lg font-medium text-ink-strong">Acessibilidade</h2>
+          <h2 className="text-lg font-medium text-ink-strong">Accessibility</h2>
         </div>
 
         <div className="space-y-3">
@@ -204,8 +204,8 @@ export default function SettingsPage() {
             <div className="flex items-center gap-3">
               <Contrast className="w-5 h-5 text-ink-soft" />
               <div>
-                <p className="text-sm font-medium text-ink-strong">Alto contraste</p>
-                <p className="text-xs text-ink-mute">Cores de alto contraste para melhor visibilidade</p>
+                <p className="text-sm font-medium text-ink-strong">High contrast</p>
+                <p className="text-xs text-ink-mute">High-contrast colors for better visibility</p>
               </div>
             </div>
             <input
@@ -220,8 +220,8 @@ export default function SettingsPage() {
             <div className="flex items-center gap-3">
               <Type className="w-5 h-5 text-ink-soft" />
               <div>
-                <p className="text-sm font-medium text-ink-strong">Fontes grandes</p>
-                <p className="text-xs text-ink-mute">Aumenta o tamanho do texto em toda a interface</p>
+                <p className="text-sm font-medium text-ink-strong">Large fonts</p>
+                <p className="text-xs text-ink-mute">Increases text size across the whole interface</p>
               </div>
             </div>
             <input
@@ -237,14 +237,14 @@ export default function SettingsPage() {
       <div className="hud-frame p-5">
         <div className="flex items-center gap-3 mb-4">
           <Eye className="w-5 h-5" style={{ color: 'var(--vl-state-ready)' }} />
-          <h2 className="text-lg font-medium text-ink-strong">Politica do MVP local</h2>
+          <h2 className="text-lg font-medium text-ink-strong">Local voices</h2>
         </div>
 
         <label className="panel-muted flex items-center justify-between p-3 cursor-pointer transition-colors hover:bg-brand-500/8">
           <div>
-            <p className="text-sm font-medium text-ink-strong">Mostrar modelos experimentais</p>
+            <p className="text-sm font-medium text-ink-strong">Show experimental models</p>
             <p className="text-xs text-ink-mute">
-              Exibe Bark, Fish Speech e outros itens fora do fluxo principal. Eles continuam fora do caminho recomendado para usuario final.
+              Shows Bark, Fish Speech, and other items outside the main flow. They remain off the recommended path for end users.
             </p>
           </div>
           <input
@@ -257,17 +257,17 @@ export default function SettingsPage() {
       </div>
 
       <div className="hud-frame p-5">
-        <h2 className="text-lg font-medium text-ink-strong mb-3">Atalhos globais</h2>
+        <h2 className="text-lg font-medium text-ink-strong mb-3">Global shortcuts</h2>
         <p className="text-sm text-ink-soft mb-3">
-          Pressione qualquer combinacao a partir de qualquer app. Edicao customizada chega na proxima versao.
+          Press any combination from any app. Custom editing is coming in the next version.
         </p>
         <ul className="space-y-2 text-sm">
           {[
-            ['Ctrl+Shift+F', 'Foca a janela e o campo de texto'],
-            ['Ctrl+Shift+V', 'Abre o modo compacto'],
-            ['Ctrl+Shift+M', 'Liga/desliga microfone virtual'],
-            ['Ctrl+Shift+S', 'Para o audio em execucao'],
-            ['Ctrl+Shift+1..9', 'Fala a frase rapida 1 a 9'],
+            ['Ctrl+Shift+F', 'Focus the window and the text field'],
+            ['Ctrl+Shift+V', 'Open compact mode'],
+            ['Ctrl+Shift+M', 'Toggle the virtual microphone'],
+            ['Ctrl+Shift+S', 'Stop the playing audio'],
+            ['Ctrl+Shift+1..9', 'Speak quick phrase 1 to 9'],
           ].map(([shortcut, desc]) => (
             <li key={shortcut} className="panel-muted flex items-center justify-between p-2.5">
               <span className="text-ink-body">{desc}</span>
@@ -280,35 +280,35 @@ export default function SettingsPage() {
       </div>
 
       <div className="hud-frame p-5">
-        <h2 className="text-lg font-medium text-ink-strong mb-3">Sobre o VoiceLaunch TTS</h2>
+        <h2 className="text-lg font-medium text-ink-strong mb-3">About VoiceLaunch TTS</h2>
         <p className="text-sm text-ink-soft leading-relaxed mb-4">
-          VoiceLaunch TTS e uma ferramenta gratuita e open source de comunicacao assistiva local.
-          Ela ajuda quem prefere, precisa ou escolhe transformar texto em voz com rapidez, autonomia e privacidade.
+          VoiceLaunch TTS is a free and open-source assistive communication tool.
+          It helps anyone who prefers, needs, or chooses to turn text into voice with speed, autonomy, and privacy.
         </p>
         <button
           onClick={() => setTutorialSeen(false)}
           className="btn-secondary inline-flex items-center gap-2 text-sm mb-4"
-          aria-label="Rever tutorial de introducao"
+          aria-label="Replay the intro tutorial"
         >
           <BookOpen className="w-4 h-4" />
-          Rever tutorial de introducao
+          Replay the intro tutorial
         </button>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
           <div className="panel-muted p-3">
-            <span className="text-ink-mute block mb-1">Versao</span>
-            <span className="text-ink-strong">1.0.0</span>
+            <span className="text-ink-mute block mb-1">Version</span>
+            <span className="text-ink-strong">1.3.0</span>
           </div>
           <div className="panel-muted p-3">
-            <span className="text-ink-mute block mb-1">Licenca</span>
+            <span className="text-ink-mute block mb-1">License</span>
             <span className="text-ink-strong">MIT</span>
           </div>
           <div className="panel-muted p-3">
-            <span className="text-ink-mute block mb-1">Fluxo principal</span>
-            <span className="text-ink-strong">Piper, Kokoro, microfone virtual</span>
+            <span className="text-ink-mute block mb-1">Main flow</span>
+            <span className="text-ink-strong">Piper, Kokoro, virtual microphone</span>
           </div>
           <div className="panel-muted p-3">
-            <span className="text-ink-mute block mb-1">Recurso avancado</span>
-            <span className="text-ink-strong">XTTS v2 apos validar NVIDIA/CUDA</span>
+            <span className="text-ink-mute block mb-1">Advanced feature</span>
+            <span className="text-ink-strong">XTTS v2 after validating NVIDIA/CUDA</span>
           </div>
         </div>
       </div>

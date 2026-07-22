@@ -40,7 +40,7 @@ export function useVoiceShortcuts() {
         setCloudVoices(response.voices)
         setCloudError(null)
       } else {
-        setCloudError(response.error || 'Falha ao carregar vozes online.')
+        setCloudError(response.error || 'Failed to load online voices.')
       }
     })
     const handleTriggered = (event: Event) => {
@@ -86,17 +86,17 @@ export function useVoiceShortcuts() {
   ): VoiceShortcut | null => {
     const trimmed = text.trim()
     if (!trimmed) {
-      toast('Escreva a frase', 'Digite o que o atalho deve falar.', 'warning')
+      toast('Write the phrase', 'Type what the shortcut should say.', 'warning')
       return null
     }
     const voice = resolveVoice(opts?.voice)
     if (!voice) {
-      toast('Escolha uma voz', 'Selecione uma voz online primeiro (na tela Falar).', 'warning')
+      toast('Choose a voice', 'Select an online voice first (on the Speak screen).', 'warning')
       return null
     }
     const hotkey = opts?.hotkey || suggestNextHotkey(voiceShortcuts) || HOTKEY_SLOTS[0]
     if (isHotkeyTaken(hotkey, voiceShortcuts)) {
-      toast('Sem tecla livre', 'Todas as teclas de atalho estao em uso.', 'warning')
+      toast('No key available', 'All shortcut keys are in use.', 'warning')
       return null
     }
     const shortcut: VoiceShortcut = {
@@ -110,7 +110,7 @@ export function useVoiceShortcuts() {
       speed: opts?.speed ?? 1.0,
     }
     addVoiceShortcut(shortcut)
-    toast('Atalho criado', `${formatHotkeyDisplay(hotkey)} → fala sua frase`, 'success')
+    toast('Shortcut created', `${formatHotkeyDisplay(hotkey)} → speaks your phrase`, 'success')
     return shortcut
   }
 
@@ -120,7 +120,7 @@ export function useVoiceShortcuts() {
     try {
       const voice = resolveVoice(shortcut.voice)
       if (!voice) {
-        toast('Sem voz', 'Escolha uma voz para o atalho.', 'warning')
+        toast('No voice', 'Choose a voice for the shortcut.', 'warning')
         return
       }
       const response = await window.electronAPI.synthesizeCloud({
@@ -130,7 +130,7 @@ export function useVoiceShortcuts() {
         pitch: shortcut.pitch,
       })
       if (!response.success || !response.audioBase64) {
-        toast('Falha no teste', response.error || 'Nao foi possivel gerar a voz.', 'error')
+        toast('Test failed', response.error || 'Could not generate the voice.', 'error')
         return
       }
       await playCloudAudio(response.audioBase64, response.mimeType ?? 'audio/webm', {
@@ -138,7 +138,7 @@ export function useVoiceShortcuts() {
         monitorDeviceId,
       })
     } catch (error) {
-      toast('Falha no teste', String(error), 'error')
+      toast('Test failed', String(error), 'error')
     } finally {
       setTestingId(null)
     }

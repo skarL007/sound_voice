@@ -28,10 +28,10 @@ export function VirtualKeyboardButton({ onClick }: { onClick: () => void }) {
     <button
       onClick={onClick}
       className="btn-secondary flex items-center gap-2 text-sm"
-      title="Teclado virtual"
+      title="Virtual keyboard"
     >
       <Keyboard className="w-4 h-4" />
-      Teclado
+      Keyboard
     </button>
   )
 }
@@ -45,12 +45,12 @@ export default function VirtualKeyboard({ onKeyPress, onBackspace, onEnter, onSp
       <button
         onClick={() => setIsOpen(true)}
         className="btn-secondary flex items-center gap-2 text-sm"
-        title="Abrir teclado virtual"
-        aria-label="Abrir teclado virtual"
+        title="Open virtual keyboard"
+        aria-label="Open virtual keyboard"
         aria-expanded={false}
       >
         <Keyboard className="w-4 h-4" />
-        Teclado Virtual
+        Virtual keyboard
       </button>
     )
   }
@@ -63,18 +63,18 @@ export default function VirtualKeyboard({ onKeyPress, onBackspace, onEnter, onSp
   return (
     <div className="hud-frame p-3 space-y-2 animate-lift-in">
       <div className="flex items-center justify-between mb-1">
-        <span className="text-xs font-medium text-ink-soft uppercase tracking-wider" id="vkb-label">Teclado Virtual</span>
+        <span className="text-xs font-medium text-ink-soft uppercase tracking-wider" id="vkb-label">Virtual keyboard</span>
         <button
           onClick={() => setIsOpen(false)}
           className="p-1 rounded text-ink-soft hover:bg-brand-500/15 hover:text-ink-strong transition-colors"
-          title="Fechar teclado"
-          aria-label="Fechar teclado virtual"
+          title="Close keyboard"
+          aria-label="Close virtual keyboard"
         >
           <X className="w-4 h-4" />
         </button>
       </div>
 
-      <div className="space-y-1.5" role="group" aria-label="Teclas de caractere">
+      <div className="space-y-1.5" role="group" aria-label="Character keys">
         {rows.map((row, ri) => (
           <div key={ri} className="flex gap-1 justify-center">
             {row.map((key) => {
@@ -102,7 +102,7 @@ export default function VirtualKeyboard({ onKeyPress, onBackspace, onEnter, onSp
             isShift ? 'btn-primary' : ''
           }`}
           style={isShift ? undefined : KEY_BASE_STYLE}
-          aria-label={isShift ? 'Shift ativado' : 'Shift desativado'}
+          aria-label={isShift ? 'Shift enabled' : 'Shift disabled'}
           aria-pressed={isShift}
         >
           Shift
@@ -112,7 +112,7 @@ export default function VirtualKeyboard({ onKeyPress, onBackspace, onEnter, onSp
           onClick={onSpace}
           className="h-10 px-8 rounded-lg text-sm font-medium border transition-colors"
           style={KEY_BASE_STYLE}
-          aria-label="Espaco"
+          aria-label="Space"
         >
           <Space className="w-4 h-4" />
         </button>
@@ -121,7 +121,7 @@ export default function VirtualKeyboard({ onKeyPress, onBackspace, onEnter, onSp
           onClick={onBackspace}
           className="h-10 px-4 rounded-lg text-sm font-medium border transition-colors"
           style={{ ...KEY_BASE_STYLE, color: 'var(--vl-state-error)' }}
-          aria-label="Apagar"
+          aria-label="Delete"
         >
           <Delete className="w-4 h-4" />
         </button>
@@ -129,7 +129,7 @@ export default function VirtualKeyboard({ onKeyPress, onBackspace, onEnter, onSp
         <button
           onClick={onEnter}
           className="btn-primary h-10 px-4 rounded-lg"
-          aria-label="Enviar"
+          aria-label="Send"
         >
           <CornerDownLeft className="w-4 h-4" />
         </button>

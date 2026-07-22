@@ -412,7 +412,7 @@ export function registerIpcHandlers(): void {
     return {
       success: true,
       launched: false,
-      message: 'O instalador do pacote nao esta disponivel. O site oficial foi aberto para download manual.',
+      message: 'The bundled installer is not available. The official website was opened for manual download.',
     }
   })
 
@@ -445,7 +445,7 @@ export function registerIpcHandlers(): void {
     try {
       if (!existsSync(workDir)) mkdirSync(workDir, { recursive: true })
     } catch (e) {
-      const error = `Nao foi possivel criar a pasta temporaria: ${e}`
+      const error = `Could not create temporary folder: ${e}`
       sendComplete({ success: false, error })
       return { success: false, error }
     }
@@ -471,7 +471,7 @@ export function registerIpcHandlers(): void {
         success: true,
         launched: false,
         downloaded: false,
-        message: 'Nao foi possivel baixar automaticamente. O site oficial foi aberto.',
+        message: 'Could not download automatically. The official website was opened.',
       }
     }
 
@@ -487,7 +487,7 @@ export function registerIpcHandlers(): void {
         success: true,
         launched: false,
         downloaded: true,
-        message: 'Baixado, mas nao consegui extrair o pacote. O site oficial foi aberto.',
+        message: 'Downloaded, but could not extract the package. The official website was opened.',
       }
     }
 
@@ -498,7 +498,7 @@ export function registerIpcHandlers(): void {
         : [VBCABLE_DOWNLOAD.setupExe, VBCABLE_DOWNLOAD.setupExeX64]
     const exePath = order.map((name) => join(workDir, name)).find((p) => existsSync(p))
     if (!exePath) {
-      const error = 'Instalador nao encontrado no pacote baixado.'
+      const error = 'Installer not found in the downloaded package.'
       sendComplete({ success: false, error })
       return { success: false, downloaded: true, error }
     }
@@ -513,7 +513,7 @@ export function registerIpcHandlers(): void {
         success: false,
         downloaded: true,
         error: launchError,
-        message: `Baixei o instalador, mas nao consegui abri-lo (${launchError}). Execute manualmente como administrador: ${exePath}`,
+        message: `Downloaded the installer but could not open it (${launchError}). Run it manually as administrator: ${exePath}`,
       }
     }
     sendComplete({ success: true })
@@ -656,7 +656,7 @@ export function registerIpcHandlers(): void {
  */
 async function launchInstaller(exePath: string): Promise<string> {
   if (!existsSync(exePath)) {
-    return `Arquivo do instalador nao encontrado: ${exePath}`
+    return `Installer file not found: ${exePath}`
   }
   if (process.platform !== 'win32') {
     try {
@@ -685,7 +685,7 @@ async function launchInstaller(exePath: string): Promise<string> {
     ps.on('error', (e) => resolve(e.message))
     ps.on('close', (code) => {
       if (code === 0) resolve('')
-      else resolve(stderr.trim() || `O instalador nao foi iniciado (codigo ${code}). Voce pode ter cancelado o pedido de permissao do Windows.`)
+      else resolve(stderr.trim() || `The installer did not start (exit code ${code}). You may have cancelled the Windows permission prompt.`)
     })
   })
 }
@@ -700,7 +700,7 @@ function runProcess(command: string, args: string[]): Promise<void> {
     child.on('error', reject)
     child.on('close', (code) => {
       if (code === 0) resolve()
-      else reject(new Error(`${command} saiu com codigo ${code}: ${stderr.slice(0, 500)}`))
+      else reject(new Error(`${command} exited with code ${code}: ${stderr.slice(0, 500)}`))
     })
   })
 }

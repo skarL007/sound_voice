@@ -72,7 +72,7 @@ describe('modelSupport MVP policy', () => {
     const cpuHardware = { ...baseHardware, gpuVendor: 'amd', isCudaAvailable: false }
     expect(getCloneCapability(cpuHardware)).toEqual({
       enabled: false,
-      reason: 'A clonagem prática do MVP requer NVIDIA com CUDA validado.',
+      reason: 'Practical voice cloning requires NVIDIA with validated CUDA.',
     })
   })
 

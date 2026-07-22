@@ -38,7 +38,7 @@ export function useCloudVoices(): UseCloudVoicesResult {
           setVoices(response.voices)
           setError(null)
         } else {
-          setError(response.error || 'Falha ao carregar vozes online.')
+          setError(response.error || 'Failed to load online voices.')
         }
       })
       .catch((err) => {

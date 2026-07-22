@@ -8,10 +8,10 @@ interface DiscordVRChatGuideProps {
 
 const STEPS: { title: string; description: React.ReactNode }[] = [
   {
-    title: 'Instale o VB-Audio Virtual Cable',
+    title: 'Install VB-Audio Virtual Cable',
     description: (
       <span>
-        Baixe em{' '}
+        Download it at{' '}
         <button
           onClick={() => window.electronAPI?.openExternal?.('https://vb-audio.com/Cable/')}
           className="underline"
@@ -19,36 +19,36 @@ const STEPS: { title: string; description: React.ReactNode }[] = [
         >
           vb-audio.com/Cable
         </button>{' '}
-        ou em <strong>Ajustes &gt; Microfone Virtual &gt; Tentar instalador do pacote</strong>.
+        or from <strong>Settings &gt; Virtual microphone &gt; Try bundled installer</strong>.
       </span>
     ),
   },
   {
-    title: 'Selecione CABLE Input no app',
+    title: 'Select CABLE Input in the app',
     description: (
       <span>
-        Em <strong>Ajustes &gt; Microfone Virtual</strong>, escolha{' '}
-        <strong>CABLE Input (VB-Audio Virtual Cable)</strong> como saida de audio.
+        In <strong>Settings &gt; Virtual microphone</strong>, choose{' '}
+        <strong>CABLE Input (VB-Audio Virtual Cable)</strong> as the audio output.
       </span>
     ),
   },
   {
-    title: 'Configure CABLE Output no Discord ou jogo',
+    title: 'Set CABLE Output in Discord or your game',
     description: (
       <span>
         Discord: <em>User Settings &gt; Voice &amp; Video &gt; Input Device = CABLE Output</em>.<br />
-        VRChat: <em>Settings &gt; Audio &gt; Microphone = CABLE Output</em>; ative voice activation ou use PTT.<br />
-        Outros jogos: aponte o microfone padrao para CABLE Output.
+        VRChat: <em>Settings &gt; Audio &gt; Microphone = CABLE Output</em>; enable voice activation or use PTT.<br />
+        Other games: point the default microphone to CABLE Output.
       </span>
     ),
   },
   {
-    title: 'Ative o microfone virtual no painel Falar',
+    title: 'Enable the virtual microphone on the Speak panel',
     description: (
       <span>
-        Clique em <strong>Ativar microfone virtual</strong>. A voz online e as locais
-        passam a tocar diretamente no CABLE. Atalhos globais (Ctrl+Shift+1..9) funcionam
-        em background, mesmo com o jogo em foco.
+        Click <strong>Enable virtual microphone</strong>. Online and local voices
+        will play directly through CABLE. Global shortcuts (Ctrl+Shift+1..9) work
+        in the background, even with the game focused.
       </span>
     ),
   },
@@ -67,11 +67,11 @@ export default function DiscordVRChatGuide({ defaultExpanded = false, compact = 
         <Headphones className="h-5 w-5" style={{ color: 'var(--vl-state-live)' }} />
         <div className="flex-1 min-w-0">
           <p className="text-base font-semibold text-ink-strong">
-            Como usar como microfone no Discord, VRChat e jogos
+            How to use this as a microphone in Discord, VRChat, and games
           </p>
           {!open && (
             <p className="text-xs text-ink-soft mt-0.5">
-              4 passos: instalar VB-Cable, selecionar CABLE Input/Output, ativar mic virtual.
+              4 steps: install VB-Cable, select CABLE Input/Output, enable the virtual mic.
             </p>
           )}
         </div>
@@ -112,9 +112,9 @@ export default function DiscordVRChatGuide({ defaultExpanded = false, compact = 
         >
           <Zap className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
           <span>
-            Dica VRChat: se o jogo nao detectar o mic, abra o launcher e clique em{' '}
-            <strong>Testar saida</strong> no painel de Microfone Virtual — isso forca o Windows
-            a reconhecer o CABLE Input como ativo.
+            VRChat tip: if the game doesn't detect the mic, open the launcher and click{' '}
+            <strong>Test output</strong> in the Virtual microphone panel — this forces Windows
+            to recognize CABLE Input as active.
           </span>
         </div>
       )}

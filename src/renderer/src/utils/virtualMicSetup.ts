@@ -100,8 +100,8 @@ export function resolveVBCableInstallState(result: VBCableInstallResult): VBCabl
       message:
         result.message ||
         (result.downloaded
-          ? 'Baixado e instalador aberto. Clique em "Install Driver" e, se pedir, reinicie o Windows.'
-          : 'Instalador aberto. Siga o VB-Cable e reinicie o Windows se ele pedir.'),
+          ? 'Downloaded and installer opened. Click "Install Driver" and restart Windows if prompted.'
+          : 'Installer opened. Follow VB-Cable and restart Windows if it asks.'),
     }
   }
 
@@ -110,12 +110,12 @@ export function resolveVBCableInstallState(result: VBCableInstallResult): VBCabl
       state: 'manual',
       message:
         result.message ||
-        'Nao foi possivel instalar automaticamente. Baixe o VB-Cable pelo site oficial e volte para verificar.',
+        "Couldn't install automatically. Download VB-Cable from the official site and come back to check.",
     }
   }
 
   return {
     state: 'error',
-    message: result.error || 'Nao foi possivel instalar o VB-Cable. Tente novamente ou use o site oficial.',
+    message: result.error || "Couldn't install VB-Cable. Try again or use the official site.",
   }
 }

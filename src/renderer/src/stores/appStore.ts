@@ -100,7 +100,7 @@ function buildDefaultProfiles(carriedQuickPhrases?: string[]): Profile[] {
   const padraoPhrases = carriedQuickPhrases && carriedQuickPhrases.length > 0
     ? carriedQuickPhrases.slice(0, MAX_QUICK_PHRASES)
     : DEFAULT_QUICK_PHRASES
-  return [{ id: DEFAULT_PROFILE_ID, name: 'Padrao', quickPhrases: padraoPhrases }]
+  return [{ id: DEFAULT_PROFILE_ID, name: 'Default', quickPhrases: padraoPhrases }]
 }
 
 export function migrateSettings(saved: Partial<AppSettings> | null | undefined): Partial<AppSettings> {

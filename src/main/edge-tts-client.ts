@@ -63,7 +63,7 @@ export async function listEdgeVoices(forceRefresh = false): Promise<EdgeVoice[]>
     },
   })
   if (!response.ok) {
-    throw new Error(`Falha ao consultar vozes Edge TTS: HTTP ${response.status}`)
+    throw new Error(`Failed to fetch Edge TTS voices: HTTP ${response.status}`)
   }
   const data = (await response.json()) as EdgeVoice[]
   voicesCache = data
@@ -122,14 +122,14 @@ function parseTextHeaders(payload: string): Record<string, string> {
 
 export async function synthesizeEdgeTTS(options: SynthesizeOptions): Promise<Buffer> {
   if (!options.text || options.text.trim().length === 0) {
-    throw new Error('Texto vazio.')
+    throw new Error('Empty text.')
   }
   const speed = options.speed ?? 1.0
   const pitch = options.pitch ?? 0
   const volume = options.volume ?? 0
   const voices = await listEdgeVoices()
   const voice = voices.find((v) => v.ShortName === options.voice)
-  if (!voice) throw new Error(`Voz nao encontrada: ${options.voice}`)
+  if (!voice) throw new Error(`Voice not found: ${options.voice}`)
   const rawId = typeof crypto !== 'undefined' && crypto.randomUUID
     ? crypto.randomUUID()
     : `${Date.now()}-${Math.random().toString(36).slice(2)}`
@@ -241,7 +241,7 @@ export async function synthesizeEdgeTTS(options: SynthesizeOptions): Promise<Buf
               const ctx = parsed?.context
               const ttsStatus = ctx?.serviceTag ? 'ok' : (parsed?.status || ctx?.status || '')
               if (ttsStatus && /error|fail/i.test(String(ttsStatus))) {
-                finish(new Error(`Edge TTS rejeitou: ${body}`))
+                finish(new Error(`Edge TTS rejected: ${body}`))
                 return
               }
             } catch (parseErr) {
@@ -268,7 +268,7 @@ export async function synthesizeEdgeTTS(options: SynthesizeOptions): Promise<Buf
     ws.on('close', () => finish())
     ws.on('error', (err) => finish(err))
     ws.on('unexpected-response', (_req, res) => {
-      finish(new Error(`Edge TTS rejeitou a conexao: HTTP ${res.statusCode}. Tente atualizar a aplicacao.`))
+      finish(new Error(`Edge TTS rejected the connection: HTTP ${res.statusCode}. Try updating the app.`))
     })
   })
 
@@ -277,7 +277,7 @@ export async function synthesizeEdgeTTS(options: SynthesizeOptions): Promise<Buf
   const head = combined.subarray(0, Math.min(32, combined.length)).toString('hex')
   logMain('INFO', `Edge TTS synth ${options.voice}: ${textMessages} text msg + ${binaryMessages} binary msg = ${totalBytes} bytes audio; head=${head}`)
   if (audioChunks.length === 0 || totalBytes < 200) {
-    throw new Error(`Nenhum audio valido recebido do Edge TTS (${totalBytes} bytes). Veja Logs.`)
+    throw new Error(`No valid audio received from Edge TTS (${totalBytes} bytes). Check Logs.`)
   }
   return combined
 }

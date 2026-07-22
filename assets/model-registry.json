@@ -4,7 +4,7 @@
     {
       "id": "piper",
       "name": "Piper TTS",
-      "description": "Motor TTS ultraleve otimizado para CPU. Vozes pré-treinadas em 50+ idiomas.",
+      "description": "Ultra-lightweight TTS engine optimized for CPU. Pre-trained voices in 50+ languages.",
       "languages": ["pt-BR", "en", "es", "fr", "de", "it", "50+"],
       "ptBr": true,
       "mos": 3.5,
@@ -18,12 +18,12 @@
       "filename": "pt_BR-faber-medium.onnx",
       "configUrl": "https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/pt/pt_BR/faber/medium/pt_BR-faber-medium.onnx.json?download=true",
       "configChecksum": "7e694de195ae3fc36dd732c445eb04fb49b649854893cb5506b978f0d50a1d6f",
-      "tags": ["CPU", "Leve", "PT-BR", "Rápido", "Acessibilidade"]
+      "tags": ["CPU", "Light", "PT-BR", "Fast", "Accessibility"]
     },
     {
       "id": "kokoro",
       "name": "Kokoro",
-      "description": "Qualidade excepcional (MOS 4.2) com apenas 82M parâmetros. Suporta português.",
+      "description": "Exceptional quality (MOS 4.2) with only 82M parameters. Supports Portuguese.",
       "languages": ["pt", "en", "ja", "ko", "zh", "es", "fr", "de", "it"],
       "ptBr": true,
       "mos": 4.2,
@@ -38,12 +38,12 @@
       "configUrl": "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin",
       "configChecksum": "bca610b8308e8d99f32e6fe4197e7ec01679264efed0cac9140fe9c29f1fbf7d",
       "configFilename": "voices-v1.0.bin",
-      "tags": ["Qualidade", "Eficiente", "PT-BR", "Apache"]
+      "tags": ["Quality", "Efficient", "PT-BR", "Apache"]
     },
     {
       "id": "melotts",
       "name": "MeloTTS",
-      "description": "Multilingue com ótimo português brasileiro. Otimizado para CPU.",
+      "description": "Multilingual with excellent Brazilian Portuguese. Optimized for CPU.",
       "languages": ["pt-BR", "en", "es", "fr", "zh", "ja", "ko"],
       "ptBr": true,
       "mos": 3.9,
@@ -59,23 +59,23 @@
     {
       "id": "xtts_v2",
       "name": "XTTS v2",
-      "description": "Padrão ouro para clonagem de voz zero-shot. 17 idiomas.",
+      "description": "Gold standard for zero-shot voice cloning. 17 languages.",
       "languages": ["pt", "en", "es", "fr", "de", "it", "pl", "tr", "ru", "nl", "cs", "ar", "zh", "ja", "ko", "hi", "17 total"],
       "ptBr": true,
       "mos": 4.0,
       "vramMinMB": 4096,
       "cpuOk": false,
       "cloning": true,
-      "license": "CPML (não comercial)",
+      "license": "CPML (non-commercial)",
       "sizeMB": 2048,
       "downloadUrl": "https://huggingface.co/coqui/XTTS-v2/resolve/main/model.pth",
       "filename": "model.pth",
-      "tags": ["Clonagem", "GPU", "PT-BR", "Top"]
+      "tags": ["Cloning", "GPU", "PT-BR", "Top"]
     },
     {
       "id": "fish_speech",
       "name": "Fish Speech",
-      "description": "Clonagem de voz comercial com Apache 2.0. Multilingue.",
+      "description": "Commercial voice cloning under Apache 2.0. Multilingual.",
       "languages": ["en", "zh", "ja", "ko", "fr", "de", "es", "8 total"],
       "ptBr": false,
       "mos": 4.1,
@@ -86,12 +86,12 @@
       "sizeMB": 2048,
       "downloadUrl": "https://huggingface.co/fishaudio/fish-speech-1.5/resolve/main/model.pt",
       "filename": "model.pt",
-      "tags": ["Clonagem", "GPU", "Comercial"]
+      "tags": ["Cloning", "GPU", "Commercial"]
     },
     {
       "id": "bark",
       "name": "Bark",
-      "description": "Modelo expressivo que gera risadas, suspiros, música e emoções.",
+      "description": "Expressive model that generates laughter, sighs, music, and emotions.",
       "languages": ["en", "zh", "ja", "de", "es", "fr", "hi", "it", "ko", "pl", "pt", "ru", "tr", "13+"],
       "ptBr": false,
       "mos": 3.7,
@@ -102,7 +102,7 @@
       "sizeMB": 4096,
       "downloadUrl": "https://huggingface.co/suno/bark/resolve/main/model.pt",
       "filename": "model.pt",
-      "tags": ["Expressivo", "GPU", "Criativo"]
+      "tags": ["Expressive", "GPU", "Creative"]
     }
   ]
 }

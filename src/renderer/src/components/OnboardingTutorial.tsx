@@ -52,26 +52,26 @@ function iconFor(action: PlaybookStepAction | 'welcome'): ReactNode {
 function buildSteps(hardware: HardwareInfo | null): Step[] {
   const playbook = getHardwarePlaybook(hardware)
   const intro: Step = {
-    title: 'Bem-vindo ao VoiceLaunch TTS',
+    title: 'Welcome to VoiceLaunch TTS',
     description:
-      'Estacao de voz local para quem nao fala, joga, conversa no Discord ou precisa de comunicacao assistiva. Sua trilha foi adaptada ao seu hardware.',
+      'A local voice station for people who can\'t speak, gamers, Discord users, or anyone who needs assistive communication. Your track was adapted to your hardware.',
     icon: iconFor('welcome'),
-    tip: `Trilha detectada: ${playbook.headline}.`,
+    tip: `Track detected: ${playbook.headline}.`,
   }
   const playSteps: Step[] = playbook.steps.map((step) => ({
     title: step.title,
     description: step.description,
     icon: iconFor(step.action),
     tip: step.action === 'try-cloud'
-      ? 'Va para "Falar", escolha uma voz e mande Enter. Funciona ja.'
+      ? 'Go to "Speak", choose a voice, and hit Enter. Works right away.'
       : step.action === 'install-piper'
-        ? 'Em "Vozes" > Locais, instale o Piper portugues. Roda no CPU.'
+        ? 'Cloud voices on "Speak" cover most needs out of the box. A local voice kicks in automatically as a fallback when you are offline.'
         : step.action === 'install-xtts'
-          ? 'Use a aba "Clonar" para gravar 6-30s da voz que voce quer reproduzir.'
+          ? 'Voice cloning is not available in this build — use the cloud voices on "Speak" instead.'
           : step.action === 'setup-mic'
-            ? 'Em "Ajustes" > Microfone Virtual, selecione CABLE Input.'
+            ? 'In "Settings" > Virtual microphone, select CABLE Input.'
             : step.action === 'tour-shortcuts'
-              ? 'Em "Atalhos" voce cria teclas globais que disparam frases.'
+              ? 'In "Shortcuts" you create global hotkeys that trigger phrases.'
               : undefined,
     verify: step.action === 'setup-mic' ? 'mic-virtual' : null,
   }))
@@ -206,7 +206,7 @@ export default function OnboardingTutorial() {
     if (stepIndex > 0) setStepIndex((index) => index - 1)
   }
 
-  const trackHardware = hardware ? `${hardware.gpuVendor.toUpperCase()} · ${hardware.ramGB} GB` : 'Detectando hardware...'
+  const trackHardware = hardware ? `${hardware.gpuVendor.toUpperCase()} · ${hardware.ramGB} GB` : 'Detecting hardware...'
 
   if (!isOpen) return null
 
@@ -221,7 +221,7 @@ export default function OnboardingTutorial() {
       }}
       role="complementary"
       aria-modal="false"
-      aria-label="Tutorial de introducao"
+      aria-label="Onboarding tutorial"
       aria-labelledby="onboarding-title"
       onKeyDown={handleKeyDown}
       ref={dialogRef}
@@ -243,13 +243,13 @@ export default function OnboardingTutorial() {
       {/* Header */}
       <div className="flex justify-between items-center px-5 pt-1 pb-2 flex-shrink-0">
         <span className="text-[10px] uppercase tracking-[0.2em] text-ink-mute">
-          Passo {stepIndex + 1} de {steps.length} · {trackHardware}
+          Step {stepIndex + 1} of {steps.length} · {trackHardware}
         </span>
         <button
           onClick={close}
           className="p-2 rounded-lg text-ink-soft hover:bg-brand-500/15 hover:text-ink-strong transition-colors"
-          title="Pular tutorial"
-          aria-label="Pular tutorial"
+          title="Skip tutorial"
+          aria-label="Skip tutorial"
         >
           <X className="w-5 h-5" />
         </button>
@@ -282,7 +282,7 @@ export default function OnboardingTutorial() {
               color: 'var(--vl-purple-200)',
             }}
           >
-            <strong>Dica:</strong> {step.tip}
+            <strong>Tip:</strong> {step.tip}
           </div>
         )}
 
@@ -304,10 +304,10 @@ export default function OnboardingTutorial() {
             )}
             <span>
               {micVerified
-                ? 'Microfone virtual ativo. Discord/VRChat devem ouvir voce agora.'
+                ? 'Virtual microphone active. Discord/VRChat should hear you now.'
                 : polling
-                  ? 'Aguardando voce ativar o microfone virtual (botao "Ativar" na aba Falar)...'
-                  : 'Nao detectei o microfone virtual ainda. Voce pode continuar e configurar depois em Ajustes.'}
+                  ? 'Waiting for you to enable the virtual microphone ("Enable" button on the Speak tab)...'
+                  : 'Virtual microphone not detected yet. You can continue and set it up later in Settings.'}
             </span>
           </div>
         )}
@@ -323,7 +323,7 @@ export default function OnboardingTutorial() {
           disabled={stepIndex === 0}
           className="px-4 py-2 text-sm text-ink-soft hover:text-ink-strong disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
         >
-          Voltar
+          Back
         </button>
 
         <div className="flex gap-2">
@@ -333,7 +333,7 @@ export default function OnboardingTutorial() {
               className="px-4 py-2 text-sm text-ink-soft hover:text-ink-strong flex items-center gap-1.5 transition-colors"
             >
               <SkipForward className="w-4 h-4" />
-              Pular
+              Skip
             </button>
           )}
 
@@ -341,11 +341,11 @@ export default function OnboardingTutorial() {
             {isLast ? (
               <>
                 <CheckCircle2 className="w-4 h-4" />
-                Comecar
+                Get started
               </>
             ) : (
               <>
-                Proximo
+                Next
                 <ArrowRight className="w-4 h-4" />
               </>
             )}

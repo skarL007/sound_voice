@@ -182,7 +182,7 @@ export default function TTSPage() {
 
   const exportHistory = useCallback(() => {
     if (history.length === 0) {
-      toast('Historico vazio', 'Nao ha frases no historico para exportar.', 'info')
+      toast('Empty history', 'There are no phrases in the history to export.', 'info')
       return
     }
     const entries = history.map((item) => ({
@@ -192,8 +192,8 @@ export default function TTSPage() {
     }))
     const csv = buildCsv(entries)
     const date = new Date().toISOString().slice(0, 10)
-    downloadCsv(csv, `historico-tts-${date}.csv`)
-    toast('CSV exportado', `${entries.length} frases exportadas com sucesso.`, 'success')
+    downloadCsv(csv, `tts-history-${date}.csv`)
+    toast('CSV exported', `${entries.length} phrases exported successfully.`, 'success')
   }, [history])
 
   const buildRouteInput = (textLength: number): EngineRouteInput => ({
@@ -218,7 +218,7 @@ export default function TTSPage() {
     setIsSynthesizing(false)
     if (!response.success || !response.audioBase64) {
       useAppStore.getState().reportEdgeFailure()
-      return { ok: false, error: response.error || 'Nao foi possivel gerar a voz online.' }
+      return { ok: false, error: response.error || 'Could not generate the online voice.' }
     }
     useAppStore.getState().reportEdgeSuccess()
     await playCloudAudio(response.audioBase64, response.mimeType ?? 'audio/webm', {
@@ -248,9 +248,9 @@ export default function TTSPage() {
     if (cancelRef.current) return true
     setIsSynthesizing(false)
     if (!response.success || !response.audioPath) {
-      const msg = response.error || 'Nao foi possivel gerar o audio.'
-      notify('Erro na fala', msg)
-      toast('Erro na fala', msg, 'error')
+      const msg = response.error || 'Could not generate the audio.'
+      notify('Speech failed', msg)
+      toast('Speech failed', msg, 'error')
       return false
     }
     const playResult = await window.electronAPI.playAudio(response.audioPath)
@@ -258,11 +258,11 @@ export default function TTSPage() {
     // Diagnostico do backend: mic ligado mas a voz nao chegou ao cabo.
     if (virtualMicEnabled && playResult && playResult.routedToVirtualMic === false) {
       const reason = playResult.fallbackReason === 'device_not_found'
-        ? 'CABLE Input nao encontrado'
-        : playResult.fallbackReason || 'cabo indisponivel'
+        ? 'CABLE Input not found'
+        : playResult.fallbackReason || 'cable unavailable'
       toast(
-        'Voz fora do microfone virtual',
-        `A voz tocou no alto-falante (${reason}) — o Discord nao ouviu.`,
+        'Voice not on the virtual microphone',
+        `The voice played on the speaker (${reason}) — Discord didn't hear it.`,
         'warning',
       )
     }
@@ -294,13 +294,13 @@ export default function TTSPage() {
     const decision = routeEngine(buildRouteInput(textToSpeak.length))
 
     if (decision.engine === 'edge' && !cloudVoice) {
-      toast('Escolha uma voz online', 'Selecione uma voz na lista de Edge TTS antes de falar.', 'warning')
+      toast('Choose an online voice', 'Select a voice from the Edge TTS list before speaking.', 'warning')
       return
     }
     if (decision.engine === null) {
       toast(
-        'Sem voz disponivel',
-        `${decision.label}. Instale o Piper (50 MB) para falar offline.`,
+        'No voice available',
+        `${decision.label}. Install Piper (50 MB) to speak offline.`,
         'warning',
       )
       return
@@ -321,12 +321,12 @@ export default function TTSPage() {
             : null
           if (fallback?.engine && fallback.modelId) {
             setIsSynthesizing(true)
-            toast('Voz online falhou', `Falando com a voz local (${fallback.engine}).`, 'info')
+            toast('Online voice failed', `Speaking with the local voice (${fallback.engine}).`, 'info')
             await speakLocal(textToSpeak, fallback.modelId)
           } else {
-            const msg = cloud.error || 'Nao foi possivel gerar a voz online.'
-            notify('Erro na voz online', msg)
-            toast('Erro na voz online', msg, 'error')
+            const msg = cloud.error || 'Could not generate the online voice.'
+            notify('Online voice error', msg)
+            toast('Online voice error', msg, 'error')
           }
         }
       } else if (decision.modelId) {
@@ -335,8 +335,8 @@ export default function TTSPage() {
     } catch (error) {
       if (cancelRef.current) return
       const msg = String(error)
-      notify('Erro na fala', msg)
-      toast('Erro na fala', msg, 'error')
+      notify('Speech failed', msg)
+      toast('Speech failed', msg, 'error')
     } finally {
       isSpeakingRef.current = false
       setIsSpeaking(false)
@@ -381,8 +381,8 @@ export default function TTSPage() {
         deviceId = cable.id
       } else if (cable.status === 'permission-denied' && announce) {
         toast(
-          'Permissao de microfone negada',
-          'Sem ela o app nao enxerga os nomes dos dispositivos e nao acha o CABLE Input. Permita o acesso e tente de novo.',
+          'Microphone permission denied',
+          "Without it the app can't see device names or find CABLE Input. Allow access and try again.",
           'warning',
         )
         return false
@@ -391,8 +391,8 @@ export default function TTSPage() {
     if (!deviceId) {
       if (announce) {
         toast(
-          'Escolha a saida de audio',
-          'Abra Ajustes > Microfone Virtual e selecione CABLE Input para o Discord ouvir a voz online.',
+          'Choose the audio output',
+          'Open Settings > Virtual microphone and select CABLE Input so Discord hears the online voice.',
           'warning',
         )
       }
@@ -415,8 +415,8 @@ export default function TTSPage() {
       const ok = await loadMicDevices()
       if (!ok) {
         toast(
-          'Microfone virtual nao encontrado',
-          'Ele vem com o instalador do app. Se voce acabou de instalar, reinicie o Windows.',
+          'Virtual microphone not found',
+          'It comes with the app installer. If you just installed it, restart Windows.',
           'warning',
         )
         return
@@ -475,9 +475,9 @@ export default function TTSPage() {
               <Volume2 className="h-5 w-5" style={{ color: 'var(--vl-state-ready)' }} />
             </div>
             <div className="space-y-1">
-              <h1 className="text-page font-bold tracking-tight text-ink-strong">Falar</h1>
+              <h1 className="text-page font-bold tracking-tight text-ink-strong">Speak</h1>
               <p className="max-w-2xl text-sm text-ink-soft">
-                Console principal para composicao, repeticao e disparo rapido de voz.
+                Main console for composing, repeating, and quick-firing voice.
               </p>
             </div>
           </div>
@@ -488,31 +488,31 @@ export default function TTSPage() {
               className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition-all ${
                 virtualMicEnabled ? 'status-pill--live' : 'btn-secondary'
               }`}
-              title="Envia a voz como microfone virtual para Discord, Zoom e jogos"
+              title="Sends the voice as a virtual microphone to Discord, Zoom, and games"
             >
               <Mic className="h-4 w-4" />
-              {virtualMicEnabled ? 'Microfone virtual ativo' : 'Ativar microfone virtual'}
+              {virtualMicEnabled ? 'Virtual mic active' : 'Enable virtual mic'}
             </button>
             <button
               onClick={() => setShowHistory(!showHistory)}
               className={`btn-secondary inline-flex items-center gap-2 text-sm ${
                 showHistory ? 'border-brand-400/60 text-brand-100' : ''
               }`}
-              title="Historico de frases"
-              aria-label="Historico de frases"
+              title="Phrase history"
+              aria-label="Phrase history"
             >
               <History className="h-4 w-4" />
-              {showHistory ? 'Ocultar historico' : 'Abrir historico'}
+              {showHistory ? 'Hide history' : 'Show history'}
             </button>
             <button
               onClick={exportHistory}
               disabled={history.length === 0}
               className="btn-secondary inline-flex items-center gap-2 text-sm"
-              title="Exportar historico como CSV"
-              aria-label="Exportar historico como CSV"
+              title="Export history as CSV"
+              aria-label="Export history as CSV"
             >
               <Download className="h-4 w-4" />
-              Exportar CSV
+              Export CSV
             </button>
           </div>
         </div>
@@ -522,16 +522,16 @@ export default function TTSPage() {
             <Cloud className="h-3.5 w-3.5" />
             {cloudVoice
               ? cloudVoice.FriendlyName.replace(/^Microsoft\s+/i, '').replace(/\s+Online\s+\(Natural\).*$/i, '')
-              : 'Escolha uma voz'}
+              : 'Choose a voice'}
           </span>
           <span className={`status-pill ${virtualMicEnabled ? 'status-pill--live' : ''}`}>
             <Mic className="h-3.5 w-3.5" />
-            {virtualMicEnabled ? 'Mic virtual ligado' : 'Mic virtual desligado'}
+            {virtualMicEnabled ? 'Virtual mic on' : 'Virtual mic off'}
           </span>
           {(isSynthesizing || isSpeaking) && (
             <span className="status-pill status-pill--live">
               {isSynthesizing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MonitorUp className="h-3.5 w-3.5" />}
-              {isSynthesizing ? 'Gerando audio...' : 'Falando agora'}
+              {isSynthesizing ? 'Generating audio...' : 'Speaking now'}
             </span>
           )}
         </div>
@@ -552,7 +552,7 @@ export default function TTSPage() {
           <div className="hud-frame p-4 space-y-3 min-w-0">
             <div className="flex items-center gap-2">
               <Volume2 className="h-4 w-4" style={{ color: 'var(--vl-state-ready)' }} />
-              <h3 className="text-sm font-semibold text-ink-strong">Velocidade</h3>
+              <h3 className="text-sm font-semibold text-ink-strong">Speed</h3>
             </div>
             <div className="flex items-center gap-3">
               <input
@@ -564,7 +564,7 @@ export default function TTSPage() {
                 value={speed}
                 onChange={(e) => handleSpeedChange(parseFloat(e.target.value))}
                 className="flex-1 accent-brand-400"
-                aria-label="Velocidade de fala"
+                aria-label="Speech speed"
                 aria-valuemin={0.5}
                 aria-valuemax={2.0}
                 aria-valuenow={speed}
@@ -573,11 +573,11 @@ export default function TTSPage() {
               <span className="w-12 text-sm text-ink-body font-mono">{speed.toFixed(1)}x</span>
             </div>
             <p className="text-xs text-ink-soft">
-              Vozes online vem do Microsoft Edge TTS. Funcionam imediatamente, sem instalacao, mas precisam de internet.
+              Online voices come from Microsoft Edge TTS. They work instantly, with no installation, but need internet.
             </p>
             {cloudVoice && (
               <div className="panel-muted p-2.5 text-xs text-ink-body">
-                Voz selecionada: <span className="font-medium text-ink-strong">{cloudVoice.FriendlyName.replace(/^Microsoft\s+/i, '')}</span>
+                Selected voice: <span className="font-medium text-ink-strong">{cloudVoice.FriendlyName.replace(/^Microsoft\s+/i, '')}</span>
               </div>
             )}
           </div>
@@ -591,7 +591,7 @@ export default function TTSPage() {
               value={text}
               onChange={(e) => setText(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="> digite uma frase. Enter envia. Shift+Enter quebra linha."
+              placeholder="> type a phrase. Enter sends. Shift+Enter for a new line."
               className="min-h-[280px] flex-1 resize-none bg-transparent text-xl leading-8 text-ink-strong outline-none placeholder:text-ink-mute font-mono"
               autoFocus
               disabled={voiceSource === 'local' && noReadyModel}
@@ -601,7 +601,7 @@ export default function TTSPage() {
               <div className="flex flex-col gap-3">
                 <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
                   <span className="rounded-full border px-3 py-1 text-ink-soft" style={{ borderColor: 'var(--vl-hud-border)', background: 'var(--vl-surface-sunken)' }}>
-                    {text.length} caracteres
+                    {text.length} characters
                   </span>
                 </div>
 
@@ -612,7 +612,7 @@ export default function TTSPage() {
                     onChange={(event) => setKeepTextAfterSpeak(event.target.checked)}
                     className="accent-brand-500"
                   />
-                  Manter texto apos falar
+                  Keep text after speaking
                 </label>
               </div>
 
@@ -623,9 +623,9 @@ export default function TTSPage() {
                     textAreaRef.current?.focus()
                   }}
                   className="btn-secondary text-sm"
-                  aria-label="Limpar texto"
+                  aria-label="Clear text"
                 >
-                  Limpar
+                  Clear
                 </button>
                 <VirtualKeyboard
                   onKeyPress={(key) => {
@@ -646,34 +646,34 @@ export default function TTSPage() {
                   onClick={saveCurrentPhrase}
                   disabled={!text.trim()}
                   className="btn-secondary text-sm flex items-center gap-2"
-                  aria-label="Salvar frase atual como atalho rapido"
+                  aria-label="Save current phrase as a quick shortcut"
                 >
                   <BookmarkPlus className="w-4 h-4" />
-                  Salvar frase
+                  Save phrase
                 </button>
                 <button
                   onClick={() => void speak(text)}
                   disabled={(!isSpeaking && !text.trim()) || speakDisabled}
                   className={`btn-primary ${canSpeak && text.trim() ? 'btn-primary--armed' : ''} inline-flex min-w-[158px] items-center justify-center gap-2 px-5 py-3 text-sm`}
-                  aria-label={isSpeaking ? (isSynthesizing ? 'Gerando audio...' : 'Parar de falar') : 'Falar texto'}
+                  aria-label={isSpeaking ? (isSynthesizing ? 'Generating audio...' : 'Stop speaking') : 'Speak text'}
                   aria-busy={isSynthesizing}
                 >
                   {isSpeaking ? (
                     isSynthesizing ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        Gerando...
+                        Generating...
                       </>
                     ) : (
                       <>
                         <Square className="w-4 h-4" />
-                        Parar
+                        Stop
                       </>
                     )
                   ) : (
                     <>
                       <Send className="w-4 h-4" />
-                      Falar
+                      Speak
                     </>
                   )}
                 </button>
@@ -687,13 +687,13 @@ export default function TTSPage() {
           <div className="hud-frame p-4 min-w-0 2xl:w-[380px] 2xl:shrink-0">
             <div className="flex items-center gap-2 mb-3">
               <Keyboard className="h-4 w-4" style={{ color: 'var(--vl-state-ready)' }} />
-              <h3 className="text-sm font-semibold text-ink-strong">Atalhos rapidos</h3>
+              <h3 className="text-sm font-semibold text-ink-strong">Quick shortcuts</h3>
             </div>
             <p className="mb-3 text-xs text-ink-soft">
-              Escreva a frase, clique em <strong>Criar atalho</strong> e dispare com a tecla em qualquer lugar (Discord, jogo).
+              Write the phrase, click <strong>Create shortcut</strong>, and trigger it with the key anywhere (Discord, game).
             </p>
 
-            {/* Criar atalho no card — escreva e crie, sem sair da tela */}
+            {/* Create a shortcut inline — write and create without leaving the screen */}
             <div className="hud-frame p-3 mb-3 space-y-2" style={{ background: 'var(--vl-surface-raised)' }}>
               <textarea
                 value={shortcutDraft}
@@ -704,13 +704,13 @@ export default function TTSPage() {
                     if (shortcuts.createShortcut(shortcutDraft)) setShortcutDraft('')
                   }
                 }}
-                placeholder="O que dizer ao apertar o atalho? (ex: GG, partida excelente!)"
+                placeholder="What should the shortcut say? (e.g. GG, great match!)"
                 className="terminal-textarea w-full p-3 text-sm min-h-[60px] font-mono"
                 maxLength={500}
               />
               <div className="flex items-center gap-2">
                 <span className="text-xs text-ink-soft">
-                  Tecla: <span className="font-mono text-ink-body">{formatHotkeyDisplay(shortcuts.suggestedHotkey)}</span>
+                  Key: <span className="font-mono text-ink-body">{formatHotkeyDisplay(shortcuts.suggestedHotkey)}</span>
                 </span>
                 <button
                   onClick={() => { if (shortcuts.createShortcut(shortcutDraft)) setShortcutDraft('') }}
@@ -718,13 +718,13 @@ export default function TTSPage() {
                   className="btn-primary btn-primary--armed inline-flex items-center gap-2 text-sm ml-auto"
                 >
                   <Plus className="h-4 w-4" />
-                  Criar atalho
+                  Create shortcut
                 </button>
               </div>
             </div>
 
             {shortcuts.sortedShortcuts.length === 0 ? (
-              <p className="text-center text-xs text-ink-soft py-4">Nenhum atalho ainda. Crie o primeiro acima.</p>
+              <p className="text-center text-xs text-ink-soft py-4">No shortcuts yet. Create the first one above.</p>
             ) : (
               <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-1">
                 {shortcuts.sortedShortcuts.map((entry) => (
@@ -749,10 +749,10 @@ export default function TTSPage() {
           <aside className="panel-surface w-full overflow-auto p-4 xl:w-80">
             <div className="mb-3 flex items-center gap-2">
               <History className="h-4 w-4 text-brand-300" />
-              <h3 className="text-sm font-semibold text-slate-200">Historico persistente</h3>
+              <h3 className="text-sm font-semibold text-ink-strong">Persistent history</h3>
             </div>
             {history.length === 0 ? (
-              <p className="text-sm text-slate-400">Nenhuma frase ainda.</p>
+              <p className="text-sm text-ink-soft">No phrases yet.</p>
             ) : (
               <div className="space-y-2.5">
                 {history.map((item) => (
@@ -768,9 +768,9 @@ export default function TTSPage() {
                         if (item.voiceId) setVoiceId(item.voiceId)
                       }}
                       className="w-full text-left"
-                      aria-label={`Carregar frase: ${item.text.slice(0, 30)}`}
+                      aria-label={`Load phrase: ${item.text.slice(0, 30)}`}
                     >
-                      <p className="line-clamp-3 text-sm text-slate-200">{item.text}</p>
+                      <p className="line-clamp-3 text-sm text-ink-body">{item.text}</p>
                       <div className="mt-2 flex flex-wrap items-center gap-2">
                         <span
                           className="rounded-full border px-2 py-1 text-[11px] text-ink-soft"
@@ -778,7 +778,7 @@ export default function TTSPage() {
                         >
                           {item.modelId}
                         </span>
-                        <span className="text-xs text-slate-400">
+                        <span className="text-xs text-ink-soft">
                           {new Date(item.timestamp).toLocaleTimeString()}
                         </span>
                       </div>
@@ -792,7 +792,7 @@ export default function TTSPage() {
                         className="btn-secondary flex items-center gap-1 text-xs"
                       >
                         <Send className="w-3 h-3" />
-                        Repetir
+                        Repeat
                       </button>
                       <button
                         onClick={() => {
@@ -801,7 +801,7 @@ export default function TTSPage() {
                         className="btn-secondary flex items-center gap-1 text-xs"
                       >
                         <Pin className="w-3 h-3" />
-                        Fixar
+                        Pin
                       </button>
                     </div>
                   </div>
@@ -819,8 +819,8 @@ export default function TTSPage() {
         >
           <MonitorUp className="w-4 h-4" />
           <span>
-            O audio gerado sera enviado para o <strong>microfone virtual</strong>.
-            Selecione &quot;CABLE Output&quot; como microfone no Discord, Zoom ou jogos.
+            The generated audio will be sent to the <strong>virtual microphone</strong>.
+            Select &quot;CABLE Output&quot; as the microphone in Discord, Zoom, or games.
           </span>
         </div>
       )}

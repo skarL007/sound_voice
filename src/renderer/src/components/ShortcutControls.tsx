@@ -18,7 +18,7 @@ export function localeRank(locale: string): number {
 
 export function deriveName(text: string): string {
   const t = text.trim().replace(/\s+/g, ' ')
-  return t.slice(0, 40) || 'Atalho'
+  return t.slice(0, 40) || 'Shortcut'
 }
 
 /**
@@ -66,11 +66,11 @@ export function HotkeyCapture({
         return
       }
       if (!result.accelerator) {
-        setHint(result.error ?? 'Combinacao invalida.')
+        setHint(result.error ?? 'Invalid combination.')
         return
       }
       if (isHotkeyTaken(result.accelerator, shortcuts, excludeId)) {
-        setHint('Essa tecla ja esta em uso. Tente outra.')
+        setHint('That key is already in use. Try another.')
         return
       }
       onChange(result.accelerator)
@@ -89,14 +89,14 @@ export function HotkeyCapture({
           onClick={stop}
           className="input-field font-mono text-xs inline-flex items-center gap-2"
           style={{ width: 'auto', borderColor: 'var(--vl-state-live-border)', color: 'var(--vl-state-live-text)' }}
-          aria-label={`${ariaLabel}: aperte a combinacao desejada, Esc cancela`}
+          aria-label={`${ariaLabel}: press the desired combination, Esc cancels`}
           aria-live="polite"
         >
           <span className="inline-block h-2 w-2 rounded-full animate-pulse" style={{ background: 'var(--vl-state-live)' }} />
-          {preview || 'Aperte as teclas...'}
+          {preview || 'Press the keys...'}
         </button>
         <span className="text-[10px]" style={hint ? { color: 'var(--vl-state-warn-text)' } : undefined}>
-          {hint ?? 'Esc cancela'}
+          {hint ?? 'Esc cancels'}
         </span>
       </span>
     )
@@ -113,10 +113,10 @@ export function HotkeyCapture({
       className="input-field font-mono text-xs inline-flex items-center gap-1.5"
       style={{ width: 'auto' }}
       aria-label={ariaLabel}
-      title="Clique e aperte a combinacao de teclas que quiser"
+      title="Click and press the key combination you want"
     >
       <Keyboard className="h-3.5 w-3.5 opacity-70" />
-      {value ? formatHotkeyDisplay(value) : 'Definir tecla'}
+      {value ? formatHotkeyDisplay(value) : 'Set key'}
     </button>
   )
 }
@@ -145,7 +145,7 @@ export function VoiceSelect({
   }, [voices])
 
   if (voices.length === 0) {
-    return <span className="text-xs text-ink-soft">Carregando vozes...</span>
+    return <span className="text-xs text-ink-soft">Loading voices...</span>
   }
 
   return (
@@ -155,7 +155,7 @@ export function VoiceSelect({
       className="input-field text-sm flex-1 min-w-[180px]"
       aria-label={ariaLabel}
     >
-      <option value="">Escolher voz...</option>
+      <option value="">Choose voice...</option>
       {grouped.map(([locale, list]) => (
         <optgroup key={locale} label={locale}>
           {list
@@ -221,7 +221,7 @@ export function ShortcutCard({
           onChange={(hotkey) => onUpdate({ hotkey })}
           shortcuts={allShortcuts}
           excludeId={shortcut.id}
-          ariaLabel="Tecla do atalho"
+          ariaLabel="Shortcut key"
         />
         {voiceLabel && (
           <span className="text-[11px] px-2 py-0.5 rounded-full truncate max-w-[140px]" style={{ background: 'var(--vl-surface-overlay)', color: 'var(--vl-state-live-text)' }}>
@@ -235,14 +235,14 @@ export function ShortcutCard({
             onChange={(event) => onUpdate({ enabled: event.target.checked })}
             className="accent-brand-500"
           />
-          {shortcut.enabled ? 'Ativo' : 'Inativo'}
+          {shortcut.enabled ? 'Active' : 'Inactive'}
         </label>
         <button
           onClick={onDelete}
           className="btn-ghost p-1.5"
           style={{ color: 'var(--vl-state-error)' }}
-          aria-label={`Excluir atalho ${shortcut.name}`}
-          title="Excluir"
+          aria-label={`Delete shortcut ${shortcut.name}`}
+          title="Delete"
         >
           <Trash2 className="h-3.5 w-3.5" />
         </button>
@@ -252,16 +252,16 @@ export function ShortcutCard({
         value={text}
         onChange={(event) => setText(event.target.value)}
         onBlur={commitText}
-        placeholder="O que esse atalho fala..."
+        placeholder="What this shortcut says..."
         className="terminal-textarea w-full p-3 text-sm min-h-[64px] font-mono"
         maxLength={500}
       />
 
       <div className="flex flex-wrap items-center gap-2">
-        <VoiceSelect voices={voices} value={shortcut.voice} onChange={(voice) => onUpdate({ voice })} ariaLabel="Voz do atalho" />
+        <VoiceSelect voices={voices} value={shortcut.voice} onChange={(voice) => onUpdate({ voice })} ariaLabel="Shortcut voice" />
         <button onClick={onTest} disabled={isTesting} className="btn-secondary inline-flex items-center gap-1.5 text-xs ml-auto">
           {isTesting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <PlayCircle className="h-3.5 w-3.5" />}
-          {isTesting ? 'Tocando...' : 'Testar'}
+          {isTesting ? 'Playing...' : 'Test'}
         </button>
       </div>
     </div>

@@ -56,10 +56,10 @@ export function getRecommendedSetup(hardware: HardwareInfo | null): {
     primaryModelId: 'piper',
     secondaryModelId: 'kokoro',
     advancedModelId: hardware?.isCudaAvailable ? 'xtts_v2' : undefined,
-    summary: 'Comece com Piper para garantir a primeira fala local sem atrito.',
+    summary: 'Start with Piper for a frictionless first local voice.',
     gpuNote: hardware?.isCudaAvailable
-      ? 'XTTS v2 pode ser habilitado depois como recurso avançado em NVIDIA/CUDA.'
-      : 'O caminho garantido do MVP local é Piper e Kokoro.',
+      ? 'XTTS v2 can be enabled later as an advanced feature on NVIDIA/CUDA.'
+      : 'The reliable local path is Piper and Kokoro.',
   }
 }
 
@@ -70,6 +70,6 @@ export function getCloneCapability(hardware: HardwareInfo | null): { enabled: bo
 
   return {
     enabled: false,
-    reason: 'A clonagem prática do MVP requer NVIDIA com CUDA validado.',
+    reason: 'Practical voice cloning requires NVIDIA with validated CUDA.',
   }
 }

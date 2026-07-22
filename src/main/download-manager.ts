@@ -79,7 +79,7 @@ export async function downloadFileWithProgress(
   function doDownload(url: string, depth: number): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       if (depth > MAX_REDIRECTS) {
-        reject(new Error(`Excedido limite de ${MAX_REDIRECTS} redirects (possivel SSRF)`))
+        reject(new Error(`Exceeded limit of ${MAX_REDIRECTS} redirects (possible SSRF)`))
         return
       }
 
@@ -87,7 +87,7 @@ export async function downloadFileWithProgress(
       if (url.startsWith('http://')) {
         const allowLocalhost = /^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?\//i.test(url)
         if (!allowLocalhost) {
-          reject(new Error('Apenas https eh permitido em downloads externos'))
+          reject(new Error('Only https is allowed for external downloads'))
           return
         }
       }

@@ -4,16 +4,16 @@ export const MAX_HISTORY_ITEMS = 20
 export const MAX_QUICK_PHRASES = 12
 
 export const DEFAULT_QUICK_PHRASES = [
-  'Ola.',
-  'Nao consigo falar agora.',
-  'Por favor, leia o que eu digitei.',
-  'Sim.',
-  'Nao.',
-  'Preciso de ajuda.',
-  'Pode repetir, por favor?',
-  'Preciso de agua.',
-  'Onde fica o banheiro?',
-  'Estou com dor.',
+  'Hello.',
+  "I can't speak right now.",
+  'Please read what I typed.',
+  'Yes.',
+  'No.',
+  'I need help.',
+  'Can you repeat that, please?',
+  'I need water.',
+  'Where is the bathroom?',
+  "I'm in pain.",
 ]
 
 export interface CommunicationState {

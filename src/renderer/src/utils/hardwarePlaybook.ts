@@ -28,48 +28,48 @@ function vendor(hw: HardwareInfo | null): 'nvidia' | 'amd' | 'intel' | 'unknown'
 }
 
 const STEP_CLOUD: PlaybookStep = {
-  title: 'Fale agora com Edge TTS',
-  description: 'Centenas de vozes naturais funcionam imediatamente — sem instalacao, sem GPU, com internet.',
+  title: 'Speak now with Edge TTS',
+  description: 'Hundreds of natural voices work right away — no install, no GPU, just internet.',
   action: 'try-cloud',
-  href: '#/tts',
+  href: '#/',
   tone: 'live',
 }
 
 const STEP_PIPER: PlaybookStep = {
-  title: 'Instale Piper local',
-  description: 'Motor leve em ONNX que roda em CPU. 50+ idiomas. Funciona offline depois de baixar.',
+  title: 'Install local Piper',
+  description: 'Lightweight ONNX engine that runs on CPU. 50+ languages. Works offline after downloading.',
   action: 'install-piper',
-  href: '#/models',
+  href: '#/settings',
   tone: 'ready',
 }
 
 const STEP_KOKORO: PlaybookStep = {
-  title: 'Suba a qualidade com Kokoro',
-  description: 'Motor com MOS 4.2 em apenas 300 MB. Ainda funciona em CPU.',
+  title: 'Boost quality with Kokoro',
+  description: 'Engine with MOS 4.2 in just 300 MB. Still runs on CPU.',
   action: 'install-kokoro',
-  href: '#/models',
+  href: '#/settings',
   tone: 'ready',
 }
 
 const STEP_XTTS: PlaybookStep = {
-  title: 'Habilite clonagem com XTTS v2',
-  description: 'Clone qualquer voz com 6-30s de amostra. Requer GPU NVIDIA com CUDA validado.',
+  title: 'Enable cloning with XTTS v2',
+  description: 'Clone any voice with a 6-30s sample. Requires an NVIDIA GPU with validated CUDA.',
   action: 'install-xtts',
-  href: '#/clone',
+  href: '#/settings',
   tone: 'ready',
 }
 
 const STEP_MIC: PlaybookStep = {
-  title: 'Configure o microfone virtual',
-  description: 'Instale VB-Cable, selecione CABLE Input como saida e defina CABLE Output no Discord/VRChat.',
+  title: 'Set up the virtual microphone',
+  description: 'Install VB-Cable, select CABLE Input as output, and set CABLE Output in Discord/VRChat.',
   action: 'setup-mic',
   href: '#/settings',
   tone: 'live',
 }
 
 const STEP_SHORTCUTS: PlaybookStep = {
-  title: 'Crie seus atalhos de voz',
-  description: 'Cada atalho dispara uma frase com voz fixa — funciona no jogo sem trazer o app pra frente.',
+  title: 'Create your voice shortcuts',
+  description: 'Each shortcut triggers a phrase with a fixed voice — works in-game without bringing the app to the front.',
   action: 'tour-shortcuts',
   href: '#/shortcuts',
   tone: 'ready',
@@ -81,71 +81,71 @@ export function getHardwarePlaybook(hw: HardwareInfo | null): HardwarePlaybook {
 
   if (ven === 'nvidia' && cuda) {
     return {
-      headline: 'Trilha completa NVIDIA + CUDA',
-      summary: 'Voce tem o caminho premium liberado: Edge TTS online, Piper/Kokoro local e clonagem XTTS.',
+      headline: 'Full NVIDIA + CUDA track',
+      summary: 'You have the premium path unlocked: online Edge TTS, local Piper/Kokoro, and XTTS cloning.',
       trackBadge: 'NVIDIA',
       trackTone: 'success',
       steps: [STEP_CLOUD, STEP_PIPER, STEP_KOKORO, STEP_XTTS, STEP_MIC, STEP_SHORTCUTS],
       advancedAvailable: true,
       notes: [
-        { tone: 'info', text: 'CUDA ' + (hw?.cudaVersion || 'detectado') + '. Voce pode habilitar o XTTS v2 quando quiser clonar uma voz.' },
+        { tone: 'info', text: 'CUDA ' + (hw?.cudaVersion || 'detected') + '. You can enable XTTS v2 whenever you want to clone a voice.' },
       ],
     }
   }
 
   if (ven === 'amd') {
     return {
-      headline: 'Trilha leve para AMD',
-      summary: 'Em Windows, AMD nao tem framework TTS GPU estavel. Voce vai usar a trilha CPU+nuvem — funciona muito bem para Discord e jogos.',
+      headline: 'Lightweight track for AMD',
+      summary: 'On Windows, AMD has no stable GPU TTS framework. You will use the CPU+cloud track — works great for Discord and games.',
       trackBadge: 'AMD',
       trackTone: 'live',
       steps: [STEP_CLOUD, STEP_PIPER, STEP_KOKORO, STEP_MIC, STEP_SHORTCUTS],
       advancedAvailable: false,
       notes: [
-        { tone: 'info', text: 'Piper e Kokoro rodam diretamente no seu CPU, sem precisar de driver especial.' },
-        { tone: 'info', text: 'A clonagem XTTS v2 exige NVIDIA + CUDA, entao fica fora do seu fluxo. Use vozes online — sao centenas.' },
+        { tone: 'info', text: 'Piper and Kokoro run directly on your CPU, no special driver needed.' },
+        { tone: 'info', text: 'XTTS v2 cloning requires NVIDIA + CUDA, so it is outside your flow. Use online voices — there are hundreds.' },
       ],
     }
   }
 
   if (ven === 'intel') {
     return {
-      headline: 'Trilha CPU + nuvem (Intel)',
-      summary: 'iGPU Intel nao acelera TTS em nenhum framework estavel. Voce vai usar Edge TTS online e modelos leves em CPU.',
+      headline: 'CPU + cloud track (Intel)',
+      summary: 'Intel iGPU does not accelerate TTS in any stable framework. You will use online Edge TTS and lightweight CPU models.',
       trackBadge: 'Intel',
       trackTone: 'live',
       steps: [STEP_CLOUD, STEP_PIPER, STEP_MIC, STEP_SHORTCUTS],
       advancedAvailable: false,
       notes: [
-        { tone: 'info', text: 'Piper foi pensado pra rodar em CPUs modestas. A primeira fala demora menos de 1 segundo.' },
+        { tone: 'info', text: 'Piper was designed to run on modest CPUs. The first utterance takes under 1 second.' },
       ],
     }
   }
 
   if (ven === 'unknown' || !hw) {
     return {
-      headline: 'Trilha universal (sem GPU dedicada)',
-      summary: 'Edge TTS online cobre tudo. Piper pode ser instalado para uso offline em CPU.',
+      headline: 'Universal track (no dedicated GPU)',
+      summary: 'Online Edge TTS covers everything. Piper can be installed for offline use on CPU.',
       trackBadge: 'CPU',
       trackTone: 'live',
       steps: [STEP_CLOUD, STEP_PIPER, STEP_MIC, STEP_SHORTCUTS],
       advancedAvailable: false,
       notes: [
-        { tone: 'info', text: 'Detectei sua maquina como tier CPU. As trilhas avancadas exigem GPU NVIDIA com CUDA.' },
+        { tone: 'info', text: 'Detected your machine as CPU tier. Advanced tracks require an NVIDIA GPU with CUDA.' },
       ],
     }
   }
 
   // NVIDIA without CUDA
   return {
-    headline: 'NVIDIA detectada — sem CUDA',
-    summary: 'A GPU aparece, mas CUDA Toolkit nao foi encontrado. Use a trilha CPU+nuvem agora; instale CUDA depois para liberar a clonagem.',
+    headline: 'NVIDIA detected — no CUDA',
+    summary: 'The GPU is present, but the CUDA Toolkit was not found. Use the CPU+cloud track for now; install CUDA later to unlock cloning.',
     trackBadge: 'NVIDIA',
     trackTone: 'warn',
     steps: [STEP_CLOUD, STEP_PIPER, STEP_KOKORO, STEP_MIC, STEP_SHORTCUTS],
     advancedAvailable: false,
     notes: [
-      { tone: 'warn', text: 'Instale o CUDA Toolkit 11.8+ e reabra o app para habilitar XTTS e clonagem.' },
+      { tone: 'warn', text: 'Install CUDA Toolkit 11.8+ and reopen the app to enable XTTS and cloning.' },
     ],
   }
 }

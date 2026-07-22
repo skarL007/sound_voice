@@ -15,12 +15,12 @@ import type { HotkeyEventLike } from './voiceShortcuts'
 function makeShortcut(overrides: Partial<VoiceShortcut> = {}): VoiceShortcut {
   return {
     id: 'test-id',
-    name: 'Teste',
+    name: 'Test',
     hotkey: 'CommandOrControl+Shift+1',
     enabled: true,
     voiceSource: 'cloud',
     voice: 'pt-BR-AntonioNeural',
-    text: 'Ola pessoal!',
+    text: 'Hello everyone!',
     speed: 1.0,
     ...overrides,
   }
@@ -69,12 +69,12 @@ describe('voiceShortcuts utilities', () => {
   })
 
   it('validates required fields', () => {
-    expect(validateVoiceShortcut(makeShortcut({ name: '' }))).toContain('Nome obrigatorio.')
-    expect(validateVoiceShortcut(makeShortcut({ text: '' }))).toContain('Texto obrigatorio.')
-    expect(validateVoiceShortcut(makeShortcut({ voice: '' }))).toContain('Selecione uma voz.')
-    expect(validateVoiceShortcut(makeShortcut({ speed: 3.0 }))).toContain('Velocidade entre 0.5 e 2.0.')
+    expect(validateVoiceShortcut(makeShortcut({ name: '' }))).toContain('Name is required.')
+    expect(validateVoiceShortcut(makeShortcut({ text: '' }))).toContain('Text is required.')
+    expect(validateVoiceShortcut(makeShortcut({ voice: '' }))).toContain('Select a voice.')
+    expect(validateVoiceShortcut(makeShortcut({ speed: 3.0 }))).toContain('Speed between 0.5 and 2.0.')
     expect(validateVoiceShortcut(makeShortcut({ hotkey: 'CommandOrControl+Shift+F' }))).toContain(
-      'Atalho reservado pelo sistema.',
+      'Hotkey is reserved by the system.',
     )
     expect(validateVoiceShortcut(makeShortcut())).toHaveLength(0)
   })

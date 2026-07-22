@@ -33,10 +33,10 @@ export default function VoiceShortcutsPage() {
           <Keyboard className="h-5 w-5" style={{ color: 'var(--vl-state-ready)' }} />
         </div>
         <div className="space-y-1">
-          <h1 className="text-page font-bold tracking-tight text-ink-strong">Atalhos de voz</h1>
+          <h1 className="text-page font-bold tracking-tight text-ink-strong">Voice shortcuts</h1>
           <p className="max-w-2xl text-sm text-ink-soft">
-            Lista completa dos seus atalhos. Voce tambem pode criar atalhos direto na tela <strong>Falar</strong>.
-            Cada um dispara a frase com a tecla, em qualquer app (Discord, jogo).
+            The full list of your shortcuts. You can also create shortcuts right on the <strong>Speak</strong> screen.
+            Each one triggers the phrase with its key, in any app (Discord, game).
           </p>
         </div>
       </div>
@@ -46,14 +46,14 @@ export default function VoiceShortcutsPage() {
           className="rounded-2xl p-3 text-sm"
           style={{ background: 'var(--vl-state-warn-bg)', border: '1px solid var(--vl-state-warn-border)', color: 'var(--vl-state-warn-text)' }}
         >
-          Vozes online indisponiveis ({sc.cloudError}). Verifique a internet e recarregue.
+          Online voices unavailable ({sc.cloudError}). Check your internet and reload.
         </div>
       )}
 
       <div className="hud-frame p-4 space-y-3" style={{ background: 'var(--vl-surface-raised)' }}>
         <div className="flex items-center gap-2">
           <Plus className="h-4 w-4" style={{ color: 'var(--vl-state-ready)' }} />
-          <h2 className="text-sm font-semibold text-ink-strong">Novo atalho</h2>
+          <h2 className="text-sm font-semibold text-ink-strong">New shortcut</h2>
         </div>
         <textarea
           value={draftText}
@@ -64,22 +64,22 @@ export default function VoiceShortcutsPage() {
               handleAdd()
             }
           }}
-          placeholder="O que dizer quando apertar o atalho? (ex: GG, partida excelente!)"
+          placeholder="What should the shortcut say? (e.g. GG, great match!)"
           className="terminal-textarea w-full p-3 text-sm min-h-[72px] font-mono"
           maxLength={500}
         />
         <div className="flex flex-wrap items-center gap-2">
-          <VoiceSelect voices={sc.cloudVoices} value={draftVoice} onChange={setDraftVoice} ariaLabel="Voz do novo atalho" />
-          <HotkeyCapture value={draftHotkey} onChange={setDraftHotkey} shortcuts={sc.voiceShortcuts} ariaLabel="Tecla do novo atalho" />
+          <VoiceSelect voices={sc.cloudVoices} value={draftVoice} onChange={setDraftVoice} ariaLabel="New shortcut voice" />
+          <HotkeyCapture value={draftHotkey} onChange={setDraftHotkey} shortcuts={sc.voiceShortcuts} ariaLabel="New shortcut key" />
           <button onClick={handleAdd} className="btn-primary btn-primary--armed inline-flex items-center gap-2 text-sm ml-auto">
             <Plus className="h-4 w-4" />
-            Adicionar
+            Add
           </button>
         </div>
       </div>
 
       {sc.sortedShortcuts.length === 0 ? (
-        <p className="text-center text-sm text-ink-soft py-6">Nenhum atalho ainda. Crie o primeiro acima. 👆</p>
+        <p className="text-center text-sm text-ink-soft py-6">No shortcuts yet. Create the first one above. 👆</p>
       ) : (
         <div className="grid gap-3 lg:grid-cols-2">
           {sc.sortedShortcuts.map((entry) => (
@@ -93,7 +93,7 @@ export default function VoiceShortcutsPage() {
               onUpdate={(patch) => sc.updateShortcut(entry.id, patch)}
               onDelete={() => {
                 sc.deleteShortcut(entry.id)
-                toast('Atalho removido', entry.name, 'info')
+                toast('Shortcut removed', entry.name, 'info')
               }}
               onTest={() => void sc.testShortcut(entry)}
             />
