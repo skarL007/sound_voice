@@ -1,30 +1,30 @@
 ---
 name: Feature request
-about: Sugira uma melhoria ou nova funcionalidade
+about: Suggest an improvement or new feature
 title: '[Feature] '
 labels: enhancement
 assignees: ''
 ---
 
-## Resumo
+## Summary
 
-Em uma frase: o que você quer que o VoiceLaunch TTS faça que ele não faz hoje?
+In one sentence: what do you want VoiceLaunch TTS to do that it doesn't today?
 
-## Caso de uso
+## Use case
 
-Quem precisa disso e em que situação? (Contexto de comunicação assistiva é
-especialmente bem-vindo — ex: "Uso o VoiceLaunch como minha voz principal no
-Discord e preciso...")
+Who needs this and in what situation? (Assistive-communication context is
+especially welcome — e.g. "I use VoiceLaunch as my main voice in Discord and I
+need...")
 
-## Comportamento proposto
+## Proposed behavior
 
-Como deveria funcionar do ponto de vista do usuário?
+How should it work from the user's point of view?
 
-## Alternativas consideradas
+## Alternatives considered
 
-Você tentou alguma solução alternativa?
+Have you tried any workaround?
 
-## Contexto de hardware (se relevante)
+## Hardware context (if relevant)
 
 - GPU:
-- Engine TTS que isso afeta:
+- TTS engine this affects:

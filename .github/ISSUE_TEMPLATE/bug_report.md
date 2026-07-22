@@ -1,53 +1,60 @@
 ---
 name: Bug report
-about: Reporte um problema com o VoiceLaunch TTS
+about: Report a problem with VoiceLaunch TTS
 title: '[Bug] '
 labels: bug
 assignees: ''
 ---
 
-## Ambiente
+## Environment
 
-- **OS**: Windows 10 / Windows 11 (marque um)
-- **OS Build**: (ex: 22H2 19045.xxxx)
+- **OS**: Windows 10 / Windows 11 (pick one)
+- **OS Build**: (e.g. 22H2 19045.xxxx)
 - **CPU**:
 - **RAM**:
 - **GPU**:
-- **Versão do VoiceLaunch TTS**:
-- **Engine TTS usada**: Piper / Kokoro / Edge TTS / XTTS v2
+- **VoiceLaunch TTS version**:
+- **Voice source**: Auto / Online (Edge TTS) / Local
+- **TTS engine used**: Edge TTS / Piper / Kokoro / XTTS v2
 
-## Descrição do bug
+## Virtual microphone (if the issue involves Discord/games)
 
-Uma descrição clara do que aconteceu.
+- **Is `CABLE Input (VB-Audio Virtual Cable)` listed in Windows Sound settings?**: Yes / No
+- **Did you select `CABLE Output` as the microphone in Discord/game?**: Yes / No
+- **Does the mic status in Settings show it as detected?**: Yes / No
 
-## Passos para reproduzir
+## Bug description
+
+A clear description of what happened.
+
+## Steps to reproduce
 
 1.
 2.
 3.
 
-## Comportamento esperado
+## Expected behavior
 
-O que você esperava que acontecesse.
+What you expected to happen.
 
-## Comportamento atual
+## Actual behavior
 
-O que realmente aconteceu.
+What actually happened.
 
 ## Logs
 
-Anexe os logs de `%APPDATA%\voicelaunch-tts\logs\` — arraste o arquivo para
-esta issue ou cole as linhas relevantes abaixo.
+Attach the logs from `%APPDATA%\voicelaunch-tts\logs\` — drag the file into this
+issue or paste the relevant lines below.
 
 ```
-(cole os logs aqui)
+(paste logs here)
 ```
 
 ## Screenshots
 
-Se aplicável, adicione screenshots.
+If applicable, add screenshots.
 
-## SmartScreen / Antivírus
+## SmartScreen / Antivirus
 
-- O Windows SmartScreen avisou durante a instalação? Sim / Não
-- Algum antivírus sinalizou o instalador ou o app? Sim / Não (se sim, qual?)
+- Did Windows SmartScreen warn during install? Yes / No
+- Did any antivirus flag the installer or app? Yes / No (if yes, which?)

@@ -7,7 +7,7 @@ on:
 
 jobs:
   release:
-    name: Build instalador e publicar release
+    name: Build installer and publish release
     runs-on: windows-latest
     timeout-minutes: 45
     permissions:
@@ -26,8 +26,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Backend Python compilado no proprio job (autossuficiente) — sem depender
-      # de artefato externo. Usa o mesmo script validado localmente (venv isolado).
+      # Python backend compiled in the job itself (self-contained) — no dependency
+      # on an external artifact. Uses the same locally validated script (isolated venv).
       - name: Setup Python 3.12
         uses: actions/setup-python@v5
         with:
@@ -50,19 +50,19 @@ jobs:
       - name: Build Electron
         run: npm run build
 
-      - name: Baixar VB-Cable (microfone virtual embutido)
+      - name: Fetch VB-Cable (bundled virtual microphone)
         shell: pwsh
         run: ./scripts/fetch-vbcable.ps1
 
-      - name: Build instalador Windows
+      - name: Build Windows installer
         run: npm run dist:win
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Descomente quando tiver certificado de assinatura:
+          # Uncomment once you have a signing certificate:
           # WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
           # WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
 
-      - name: Upload artefato do instalador
+      - name: Upload installer artifact
         uses: actions/upload-artifact@v4
         with:
           name: installer-windows
@@ -72,7 +72,7 @@ jobs:
             dist/*.blockmap
           retention-days: 30
 
-      - name: Criar GitHub Release
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           name: VoiceLaunch TTS ${{ github.ref_name }}

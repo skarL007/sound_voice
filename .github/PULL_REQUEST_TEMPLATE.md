@@ -1,28 +1,27 @@
-## O que este PR faz?
+## What does this PR do?
 
-<!-- Resumo em um parágrafo -->
+<!-- One-paragraph summary -->
 
-## Tipo de mudança
+## Type of change
 
 - [ ] Bug fix
-- [ ] Nova feature
-- [ ] Refactor (sem mudança de comportamento)
-- [ ] Documentação
-- [ ] Apenas testes
+- [ ] New feature
+- [ ] Refactor (no behavior change)
+- [ ] Documentation
+- [ ] Tests only
 
 ## Checklist
 
-- [ ] `npm test` passa (todos os 95 testes verdes)
-- [ ] `npm run build` sucede
-- [ ] Acessibilidade preservada (navegação por teclado, foco visível, contraste WCAG AA)
-- [ ] Sem novos erros TypeScript (`npx tsc --noEmit`)
-- [ ] Segurança: nenhuma nova URL externa, nenhum novo canal IPC sem validação
-      de entrada
+- [ ] `npm test` passes (all tests green)
+- [ ] `npm run type-check` is clean (`npx tsc --noEmit`)
+- [ ] `npm run build` succeeds
+- [ ] Accessibility preserved (keyboard navigation, visible focus, WCAG AA contrast)
+- [ ] Security: no new external URLs, no new IPC channel without input validation
 
-## Notas de teste
+## Test notes
 
-<!-- Como você verificou que funciona? Com qual hardware/engine você testou? -->
+<!-- How did you verify it works? Which hardware/engine did you test with? -->
 
-## Issues relacionadas
+## Related issues
 
 <!-- Closes # -->
