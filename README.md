@@ -1,58 +1,81 @@
 # VoiceLaunch TTS
 
 [![Tests](https://github.com/skarL007/sound_voice/actions/workflows/test.yml/badge.svg)](https://github.com/skarL007/sound_voice/actions/workflows/test.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-purple.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-6d5ae6.svg)](LICENSE)
 [![Platform: Windows](https://img.shields.io/badge/Platform-Windows%2010%2F11-blue.svg)](https://github.com/skarL007/sound_voice/releases)
-[![Release](https://img.shields.io/github/v/release/skarL007/sound_voice?color=purple)](https://github.com/skarL007/sound_voice/releases/latest)
+[![Release](https://img.shields.io/github/v/release/skarL007/sound_voice?color=6d5ae6)](https://github.com/skarL007/sound_voice/releases/latest)
 
-**Open-source text-to-speech launcher for assistive communication and Discord/games on Windows.**
+**A free, open-source text-to-speech launcher that turns your typing into a real microphone for Discord and any game.**
 
-Type text → hear a natural voice → route it as a virtual microphone to Discord, Zoom, or games.
-Online-first: hundreds of Microsoft Edge TTS voices work instantly, no install. No account. No telemetry.
+Type a phrase → hear a natural voice → it comes out of your **virtual microphone** so everyone in your Discord call or game voice chat hears it. Hundreds of Microsoft Edge TTS voices work instantly with no install and no account. When you go offline, a local voice takes over automatically. No telemetry.
 
-> O restante deste documento está em Português (Brasil). English docs are available in the [docs/](docs/) folder.
-
----
-
-VoiceLaunch TTS é um launcher desktop open source para comunicação assistiva local. Ele transforma texto em voz no próprio computador e pode enviar esse áudio para reprodução local ou para um microfone virtual em apps como Discord, Zoom e jogos.
-
-O projeto foi pensado para pessoas que usam voz sintetizada no dia a dia, pessoas não falantes e qualquer pessoa que precise se comunicar com mais rapidez, autonomia e privacidade.
+> Built for people who can't or prefer not to speak, for gamers who want a voice in chat, and for anyone who needs fast, private, assistive communication.
 
 ---
 
-## Instalação
+## Why VoiceLaunch
 
-### Download (recomendado)
+- **Your voice in Discord and any game.** The generated speech is routed into a virtual microphone (VB-Cable), so any app that reads from a mic — Discord, Zoom, in-game voice chat — hears it. VB-Cable ships inside the installer and sets itself up.
+- **Smart voice routing.** In **Auto** mode the app uses online Edge TTS when you have internet and instantly falls back to a local voice (Kokoro/Piper) when you're offline or the connection drops — no setting to flip.
+- **Instant, no account.** Hundreds of natural Edge TTS voices work the moment you open the app. Nothing to download, no sign-up, no telemetry.
+- **Global voice shortcuts.** Bind a phrase to a hotkey and fire it from inside a game without alt-tabbing.
+- **Built for accessibility.** Persistent history and draft, quick phrases, an on-screen keyboard, high-contrast and large-font modes, full keyboard navigation, and visible focus.
 
-1. Vá para [Releases](https://github.com/skarL007/sound_voice/releases/latest)
-2. Baixe o instalador mais recente (`VoiceLaunch-TTS-Setup-<versao>.exe`)
-3. Execute o instalador
+---
 
-**Aviso do Windows SmartScreen:** porque este build não está com assinatura de código, o Windows vai mostrar "O Windows protegeu seu PC". Clique em **Mais informações → Executar assim mesmo**. Isso é esperado para instaladores open-source não assinados. Verifique o checksum SHA-256 nas notas da release se quiser confirmar a autenticidade do arquivo.
+## Install
 
-O **VB-Audio Virtual Cable** está incluído — o instalador vai configurá-lo automaticamente se não estiver presente. Um reinício do sistema pode ser necessário.
+### Download (recommended)
 
-### Requisitos do sistema
+1. Go to [Releases](https://github.com/skarL007/sound_voice/releases/latest).
+2. Download the latest installer (`VoiceLaunch-TTS-Setup-<version>.exe`).
+3. Run it. The bundled **VB-Audio Virtual Cable** installs automatically if it isn't already present (a Windows restart may be required).
 
-| Requisito | Mínimo | Recomendado |
-|-----------|--------|-------------|
+#### Windows SmartScreen
+
+This is an unsigned open-source build, so Windows shows **"Windows protected your PC."** Click **More info → Run anyway**. This is expected for unsigned installers.
+
+#### Verify the download (optional but recommended)
+
+Every release publishes the SHA-256 of the installer. Confirm your download matches:
+
+```powershell
+Get-FileHash -Algorithm SHA256 .\VoiceLaunch-TTS-Setup-<version>.exe
+```
+
+Compare the output against the hash in the [release notes](https://github.com/skarL007/sound_voice/releases/latest).
+
+### System requirements
+
+| Requirement | Minimum | Recommended |
+|-------------|---------|-------------|
 | OS | Windows 10 x64 | Windows 11 x64 |
 | RAM | 4 GB | 8 GB |
-| Armazenamento | 2 GB livre | 10 GB (para modelos locais) |
-| GPU | Qualquer (Edge TTS funciona em todo hardware) | NVIDIA com CUDA (para clonagem XTTS v2) |
-| Internet | Necessária para vozes Edge TTS na nuvem | Opcional após download dos modelos |
+| Storage | 2 GB free | 10 GB (for local models) |
+| GPU | Any (Edge TTS runs on all hardware) | NVIDIA with CUDA (for XTTS v2 cloning) |
+| Internet | Required for cloud Edge TTS voices | Optional once local models are downloaded |
 
 ---
 
-## Desenvolvimento
+## Use it in Discord (or any game)
 
-### Pré-requisitos
+1. Open VoiceLaunch and enable the **virtual mic** (the app auto-selects `CABLE Input`).
+2. In Discord: **Settings → Voice & Video → Input Device → `CABLE Output (VB-Audio Virtual Cable)`**.
+3. Type a phrase and hit **Speak**, or fire a **voice shortcut** hotkey while the game has focus.
+
+Anyone in the channel now hears your generated voice. The same `CABLE Output` device works as the "microphone" in any game's voice-chat settings.
+
+---
+
+## Development
+
+### Prerequisites
 
 - Windows 10/11
 - Node.js 20+
-- Python 3.10+ (apenas para buildar o backend bundled)
+- Python 3.12 (only needed to build the bundled local backend)
 
-### Início rápido
+### Quick start
 
 ```sh
 git clone https://github.com/skarL007/sound_voice.git
@@ -61,122 +84,81 @@ npm install
 npm run dev
 ```
 
-O app abre com as vozes Edge TTS na nuvem funcionando imediatamente. Vozes locais (Piper/Kokoro) requerem o bundle Python. Veja [CONTRIBUTING.md](CONTRIBUTING.md) para instruções completas.
+The app opens with cloud Edge TTS voices working immediately. Local voices (Piper/Kokoro) require the packaged Python backend — see [CONTRIBUTING.md](CONTRIBUTING.md).
 
-### Rodar testes
+### Verify
 
 ```sh
+npm run type-check
 npm test
 ```
 
-### Buildar instalador
+### Build the installer
 
 ```sh
 npm run dist:win
 ```
 
+For architecture and how the pieces fit together, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
 ---
 
-## Estado atual do projeto
-
-- **Online-first:** vozes Microsoft Edge TTS (nuvem) funcionam imediatamente, sem instalação — é o caminho padrão.
-- **Microfone virtual** com VB-Cable: instalação assistida (baixa, abre o instalador, detecta e ativa sozinho) + monitor para você se ouvir.
-- **Atalhos de voz** com captura de tecla livre (qualquer combinação) e disparo global em qualquer app.
-- **Vozes locais** (Piper/Kokoro/XTTS) seguem suportadas como caminho opcional/avançado.
-
-## Como o produto funciona
+## How it works
 
 ```mermaid
 flowchart LR
-    A[Digitar texto ou disparar atalho] --> B[VoiceLaunch UI]
-    B --> C{Fonte de voz}
-    C --> D[Edge TTS online - padrao]
-    C --> E[Vozes locais - opcional]
+    A[Type text or fire a shortcut] --> B[VoiceLaunch]
+    B --> C{Auto routing}
+    C -->|online| D[Edge TTS - cloud]
+    C -->|offline / Edge down| E[Local voice - Kokoro/Piper]
     D --> F[Audio]
     E --> F
-    F --> G[Voce ouve - monitor]
-    F --> H[CABLE Input - mic virtual]
-    H --> I[Discord, Zoom, jogos]
+    F --> G[You hear it - monitor]
+    F --> H[CABLE Input - virtual mic]
+    H --> I[Discord, Zoom, games]
 ```
 
-## Proposta do produto
+The cloud path renders in the app itself and fans the audio out to the virtual-mic device; the local path renders in the Python backend. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full picture.
 
-- **Online-first:** centenas de vozes Edge TTS funcionam na hora; vozes locais são opcionais
-- **Assistivo de verdade:** frases rápidas, histórico persistente, rascunho persistente e atalhos globais
-- **Fluxo honesto:** primeiro garantir a primeira fala com baixo atrito, depois liberar recursos avançados
-- **Uso real:** áudio local, comunicador compacto e microfone virtual no mesmo app
+## Voices
 
-## Caminho opcional de vozes locais
+| Model | Status | Notes |
+|-------|--------|-------|
+| Edge TTS (cloud) | Default | Hundreds of voices, no install, needs internet |
+| Piper | Stable (local) | Lightweight, CPU-only, works offline |
+| Kokoro | Stable (local) | Higher quality (MOS 4.2), still CPU-friendly |
+| XTTS v2 | Advanced (local) | Voice cloning; NVIDIA + CUDA only |
+| MeloTTS / Fish Speech / Bark | Experimental | Outside the main flow |
 
-| Etapa | Objetivo | Resultado esperado |
-|------|----------|--------------------|
-| 1. Piper | Garantir a primeira fala local | Fluxo mais seguro e leve |
-| 2. Kokoro | Melhorar qualidade mantendo simplicidade | Voz melhor sem sair do caminho principal |
-| 3. VB-Cable | Levar a voz para outros aplicativos | Discord, Zoom, jogos e chamadas |
-| 4. XTTS v2 | Recurso avançado opcional | Apenas com NVIDIA/CUDA validado |
+Local voices are auto-selected by hardware tier in Auto mode. The recommended local path is Piper first, Kokoro for better quality.
 
-## Suporte prático por hardware
-
-| Perfil | Caminho recomendado |
-|--------|---------------------|
-| CPU ou máquina básica | Piper primeiro, Kokoro depois |
-| Windows com AMD | Piper e Kokoro como fluxo garantido |
-| NVIDIA com CUDA validado | Piper e Kokoro no fluxo principal, XTTS v2 como avançado |
-
-## Modelos no estado atual
-
-| Modelo | Status | Observação |
-|--------|--------|------------|
-| Piper | Estável | Melhor ponto de partida para primeira fala local |
-| Kokoro | Estável | Melhor qualidade dentro do fluxo principal |
-| XTTS v2 | Avançado | Recomendado apenas com NVIDIA/CUDA validado |
-| MeloTTS | Experimental | Fora do fluxo principal atual |
-| Fish Speech | Experimental | Fora do fluxo principal atual |
-| Bark | Experimental | Fora do fluxo principal atual |
-
-## Funcionalidades principais
-
-- Centenas de vozes Microsoft Edge TTS (nuvem), sem instalação — funcionam na hora
-- Microfone virtual (VB-Cable) com instalação assistida: entrada (mic do Discord) e saída (monitor) separadas
-- Atalhos de voz com captura de tecla livre e disparo global em qualquer app
-- Histórico e rascunho persistentes; criação de atalho direto na tela Falar
-- Comunicador compacto sempre no topo
-- Vozes locais (Piper/Kokoro/XTTS) como caminho opcional/avançado
-- UI pensada para teclado, foco visível, alto contraste e fonte grande
-
-## Arquitetura
-
-- **Electron Main:** ciclo de vida do app, janela, IPC e backend Python
-- **React Renderer:** setup, catálogo de modelos, fala, configurações e comunicador compacto
-- **Python Backend / FastAPI:** inferência TTS, áudio, modelos e recursos avançados
-
-## Estrutura do repositório
+## Repository layout
 
 ```text
 src/
-  main/       processo principal Electron
-  preload/    bridge segura para o renderer
-  renderer/   app React
-  python/     backend FastAPI e wrappers TTS
-  shared/     tipos compartilhados
-docs/         beta, acessibilidade, arquitetura e operação
-codex.md      checkpoint operacional da última sessão
+  main/       Electron main process (lifecycle, IPC, Python backend, Edge TTS client)
+  preload/    secure context bridge to the renderer
+  renderer/   React app (Speak, Shortcuts, Settings, compact mode)
+  python/     FastAPI backend and TTS engine wrappers
+  shared/     shared TypeScript types
+docs/         architecture, accessibility, virtual mic, release validation
 ```
 
-## Documentação operacional
+## Documentation
 
-- [Acessibilidade](docs/ACCESSIBILITY.md)
-- [Programa de Beta](docs/BETA_PROGRAM.md)
-- [Guia de Microfone Virtual](docs/VIRTUAL_MIC.md)
-- [Contribuindo](CONTRIBUTING.md)
-- [Política de Segurança](SECURITY.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Accessibility](docs/ACCESSIBILITY.md)
+- [Virtual microphone guide](docs/VIRTUAL_MIC.md)
+- [Release validation protocol](docs/RELEASE_VALIDATION.md)
+- [Contributing](CONTRIBUTING.md)
+- [Security policy](SECURITY.md)
 
-## Artefatos e logs
+## Data & logs
 
 - Logs: `%APPDATA%\voicelaunch-tts\logs\`
-- Modelos: `%APPDATA%\voicelaunch-tts\models\`
-- Vozes clonadas: `%APPDATA%\voicelaunch-tts\voices\`
+- Models: `%APPDATA%\voicelaunch-tts\models\`
+- Cloned voices: `%APPDATA%\voicelaunch-tts\voices\`
 
-## Licença
+## License
 
-MIT — veja [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE).

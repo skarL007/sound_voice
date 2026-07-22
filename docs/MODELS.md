@@ -1,61 +1,61 @@
-# Catálogo de Modelos TTS
+# TTS Model Catalog
 
 ## Piper TTS
-- **Idiomas**: 50+ (incluindo PT-BR)
-- **Qualidade (MOS)**: 3.5
-- **Hardware**: CPU apenas
+- **Languages**: 50+ (including PT-BR)
+- **Quality (MOS)**: 3.5
+- **Hardware**: CPU only
 - **VRAM**: 0 MB
-- **Clonagem**: ❌ Não
-- **Licença**: MIT
-- **Tamanho**: ~50 MB
-- **Melhor para**: Dispositivos embarcados, Raspberry Pi, acessibilidade em hardware limitado
+- **Cloning**: ❌ No
+- **License**: MIT
+- **Size**: ~50 MB
+- **Best for**: Embedded devices, Raspberry Pi, accessibility on limited hardware
 
 ## Kokoro
-- **Idiomas**: 9 (incluindo PT)
-- **Qualidade (MOS)**: 4.2
-- **Hardware**: CPU ou GPU
+- **Languages**: 9 (including PT)
+- **Quality (MOS)**: 4.2
+- **Hardware**: CPU or GPU
 - **VRAM**: < 1 GB
-- **Clonagem**: ❌ Não (presets de estilo)
-- **Licença**: Apache 2.0
-- **Tamanho**: ~300 MB
-- **Melhor para**: Qualidade máxima com eficiência
+- **Cloning**: ❌ No (style presets)
+- **License**: Apache 2.0
+- **Size**: ~300 MB
+- **Best for**: Maximum quality with efficiency
 
 ## MeloTTS
-- **Idiomas**: 6+ (incluindo PT-BR)
-- **Qualidade (MOS)**: 3.9
-- **Hardware**: CPU apenas
+- **Languages**: 6+ (including PT-BR)
+- **Quality (MOS)**: 3.9
+- **Hardware**: CPU only
 - **VRAM**: 0 MB
-- **Clonagem**: ❌ Não
-- **Licença**: MIT
-- **Tamanho**: ~500 MB
-- **Melhor para**: Português brasileiro natural em CPU
+- **Cloning**: ❌ No
+- **License**: MIT
+- **Size**: ~500 MB
+- **Best for**: Natural Brazilian Portuguese on CPU
 
 ## XTTS v2
-- **Idiomas**: 17 (incluindo PT-BR)
-- **Qualidade (MOS)**: 4.0
-- **Hardware**: GPU obrigatória
+- **Languages**: 17 (including PT-BR)
+- **Quality (MOS)**: 4.0
+- **Hardware**: GPU required
 - **VRAM**: ~4 GB
-- **Clonagem**: ✅ Sim (6s de referência)
-- **Licença**: CPML (não comercial)
-- **Tamanho**: ~2 GB
-- **Melhor para**: Clonagem de voz zero-shot
+- **Cloning**: ✅ Yes (6s reference)
+- **License**: CPML (non-commercial)
+- **Size**: ~2 GB
+- **Best for**: Zero-shot voice cloning
 
 ## Fish Speech
-- **Idiomas**: 8
-- **Qualidade (MOS)**: 4.1
-- **Hardware**: GPU obrigatória
+- **Languages**: 8
+- **Quality (MOS)**: 4.1
+- **Hardware**: GPU required
 - **VRAM**: ~4 GB
-- **Clonagem**: ✅ Sim (10-30s de referência)
-- **Licença**: Apache 2.0
-- **Tamanho**: ~2 GB
-- **Melhor para**: Clonagem comercial permitida
+- **Cloning**: ✅ Yes (10-30s reference)
+- **License**: Apache 2.0
+- **Size**: ~2 GB
+- **Best for**: Commercial cloning allowed
 
 ## Bark
-- **Idiomas**: 13+
-- **Qualidade (MOS)**: 3.7
-- **Hardware**: GPU obrigatória
+- **Languages**: 13+
+- **Quality (MOS)**: 3.7
+- **Hardware**: GPU required
 - **VRAM**: ~6 GB
-- **Clonagem**: ⚠️ Limitada
-- **Licença**: MIT
-- **Tamanho**: ~4 GB
-- **Melhor para**: Áudio expressivo (risadas, música, emoções)
+- **Cloning**: ⚠️ Limited
+- **License**: MIT
+- **Size**: ~4 GB
+- **Best for**: Expressive audio (laughter, music, emotions)

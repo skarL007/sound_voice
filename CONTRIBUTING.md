@@ -1,41 +1,41 @@
-# Contribuindo com o VoiceLaunch TTS
+# Contributing to VoiceLaunch TTS
 
-Obrigado pelo interesse! VoiceLaunch TTS é uma ferramenta de comunicação
-assistiva — contribuições que melhorem acessibilidade, confiabilidade e
-sucesso no primeiro uso são especialmente bem-vindas.
+Thanks for your interest! VoiceLaunch TTS is an assistive communication
+tool — contributions that improve accessibility, reliability, and
+first-run success are especially welcome.
 
-## Plataforma
+## Platform
 
-Este projeto é **somente Windows 10/11**. O sistema de build, o backend Python
-e o instalador NSIS requerem Windows. Suporte a Mac e Linux está planejado
-para uma versão futura.
-
----
-
-## Formas de contribuir
-
-- **Bug reports** — abra uma Issue usando o template de bug
-- **Feature requests** — abra uma Issue usando o template de feature
-- **Documentação** — README, docs/, comentários inline
-- **Testes** — testes unitários vitest em `src/**/*.test.ts`
-- **UI do renderer** — React/TypeScript em `src/renderer/`
-- **Processo principal Electron** — `src/main/`
-- **Backend Python** — `src/python/` (requer Python 3.12)
-- **Design** — agentes `.claude/agents/launcher-designer.md` e `app-flow-designer.md` ajudam a auditar UI/fluxo (design v2: sóbrio, sem neon)
+This project is **Windows 10/11 only**. The build system, the Python backend,
+and the NSIS installer require Windows. Mac and Linux support is planned
+for a future release.
 
 ---
 
-## Configuração de desenvolvimento
+## Ways to contribute
 
-### Pré-requisitos
+- **Bug reports** — open an Issue using the bug template
+- **Feature requests** — open an Issue using the feature template
+- **Documentation** — README, docs/, inline comments
+- **Tests** — vitest unit tests in `src/**/*.test.ts`
+- **Renderer UI** — React/TypeScript in `src/renderer/`
+- **Electron main process** — `src/main/`
+- **Python backend** — `src/python/` (requires Python 3.12)
+- **Design** — the `.claude/agents/launcher-designer.md` and `app-flow-designer.md` agents help audit the UI/flow (design v2: sober, no neon)
 
-- Windows 10 ou 11 (x64)
-- Node.js 20 ou superior
-- npm 10 ou superior
-- Python 3.12 (apenas para trabalhar no backend ou buildar o instalador)
+---
+
+## Development setup
+
+### Prerequisites
+
+- Windows 10 or 11 (x64)
+- Node.js 20 or higher
+- npm 10 or higher
+- Python 3.12 (only needed to work on the backend or build the installer)
 - Git
 
-### Instalar e rodar
+### Install and run
 
 ```sh
 git clone https://github.com/skarL007/sound_voice.git
@@ -44,77 +44,83 @@ npm install
 npm run dev
 ```
 
-O comando `npm run dev` inicia o app Electron. O backend Python **não** inicia
-automaticamente em modo dev a menos que o diretório `python_dist/` esteja
-presente. Sem ele, o app usa vozes Edge TTS na nuvem, o que funciona para
-a maior parte do desenvolvimento de UI.
+The `npm run dev` command starts the Electron app. The Python backend does
+**not** start automatically in dev mode unless the `python_dist/` directory is
+present. Without it, the app uses Edge TTS cloud voices, which works for
+most UI development.
 
-### Buildar o backend Python (opcional)
+### Build the Python backend (optional)
 
-Este passo requer Python 3.12 e leva 5–15 minutos:
+This step requires Python 3.12 and takes 5–15 minutes:
 
 ```bat
 scripts\build-python.bat
 ```
 
-Isso cria `python_dist\voicelaunch-backend\voicelaunch-backend.exe`.
-O diretório é excluído do git (~200 MB).
+This creates `python_dist\voicelaunch-backend\voicelaunch-backend.exe`.
+The directory is excluded from git (~200 MB).
 
-### Rodar os testes
+### Run the tests
 
 ```sh
 npm test
 ```
 
-Todos os testes devem passar antes de um PR ser mergeado (hoje 148).
+All tests must pass before a PR can be merged. You can also run the
+TypeScript type check:
 
-### Buildar o instalador
+```sh
+npm run type-check
+```
+
+### Build the installer
 
 ```sh
 npm run dist:win
 ```
 
-Isso produz `dist/VoiceLaunch-TTS-Setup-<versao>.exe`. Requer o diretório
-`python_dist/` presente.
+This produces `dist/VoiceLaunch-TTS-Setup-<version>.exe`. It requires the
+`python_dist/` directory to be present.
 
 ---
 
-## Checklist do Pull Request
+## Pull Request checklist
 
-- [ ] `npm test` passa
-- [ ] `npm run build` sucede sem erros TypeScript
-- [ ] Mudanças são limitadas a uma responsabilidade por PR
-- [ ] Novo comportamento tem cobertura de teste quando praticável
-- [ ] Acessibilidade preservada (navegação por teclado, foco visível,
-      contraste WCAG AA)
+- [ ] `npm test` passes
+- [ ] `npm run type-check` succeeds with no TypeScript errors
+- [ ] `npm run build` succeeds with no errors
+- [ ] Changes are scoped to a single responsibility per PR
+- [ ] New behavior has test coverage where practical
+- [ ] Accessibility preserved (keyboard navigation, visible focus,
+      WCAG AA contrast)
 
 ---
 
-## Estilo de código
+## Code style
 
 - TypeScript strict mode (`tsconfig.json`)
-- Tailwind CSS para estilos — sem `style` inline onde possível
-- Zustand para estado — subscribe apenas aos fields que o componente usa
-  (veja os selectors existentes como referência)
-- IPC Electron — valide todas as entradas no handler do processo principal
-  antes do uso
+- Tailwind CSS for styling — no inline `style` where possible
+- Zustand for state — subscribe only to the fields the component uses
+  (see the existing selectors for reference)
+- Electron IPC — validate all inputs in the main-process handler
+  before use
 
 ---
 
-## Mensagens de commit
+## Commit messages
 
 Use conventional commits:
 
 ```
-feat: adicionar seletor de saída de áudio na página de configurações
-fix: prevenir SSRF na cadeia de redirecionamentos do download manager
-docs: atualizar guia de microfone virtual para PTT do VRChat
-test: adicionar cobertura da sequência de playback do cloudAudio
+feat: add audio output selector to the settings page
+fix: prevent SSRF in the download manager redirect chain
+docs: update virtual microphone guide for VRChat PTT
+test: add coverage for the cloudAudio playback sequence
 ```
 
 ---
 
-## Problemas de segurança
+## Security issues
 
-**Não** abra Issues públicas para vulnerabilidades de segurança. Veja
-[SECURITY.md](SECURITY.md) para o processo de disclosure responsável.
+Do **not** open public Issues for security vulnerabilities. See
+[SECURITY.md](SECURITY.md) for the responsible disclosure process.

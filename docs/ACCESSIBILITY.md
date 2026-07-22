@@ -1,69 +1,69 @@
-# Acessibilidade - VoiceLaunch TTS
+# Accessibility - VoiceLaunch TTS
 
-## Missao
+## Mission
 
-O VoiceLaunch TTS foi projetado para pessoas que usam comunicacao assistiva, pessoas nao falantes e qualquer usuario que precise transformar texto em voz com mais rapidez, autonomia e privacidade. O foco do produto e oferecer uma ferramenta gratuita, local e pratica para comunicacao por voz sintetizada.
+VoiceLaunch TTS is designed for people who rely on assistive communication, non-speaking people, and anyone who needs to turn text into speech with more speed, autonomy, and privacy. The product's focus is to provide a free, local, and practical tool for communication through synthesized speech.
 
-## Recursos de Acessibilidade
+## Accessibility Features
 
-### Navegacao por Teclado
-- **Tab**: Navegar entre elementos
-- **Enter/Space**: Ativar botoes e controles
-- **Esc**: Fechar modais e janelas flutuantes
-- **Shift+Tab**: Navegar para tras
+### Keyboard Navigation
+- **Tab**: Move between elements
+- **Enter/Space**: Activate buttons and controls
+- **Esc**: Close modals and floating windows
+- **Shift+Tab**: Move backwards
 
-### Atalhos Globais
-- **Ctrl+Shift+F**: Focar a janela e o campo principal de fala
-- **Ctrl+Shift+S**: Parar o audio imediatamente
-- **Ctrl+Shift+V**: Abrir o comunicador compacto e focar a entrada de texto
-- **Ctrl+Shift+1 a 9**: Falar as 9 primeiras frases rapidas salvas
-- **Ctrl+Shift+M**: Ativar ou desativar o microfone virtual
+### Global Shortcuts
+- **Ctrl+Shift+F**: Focus the window and the main speech field
+- **Ctrl+Shift+S**: Stop audio immediately
+- **Ctrl+Shift+V**: Open the compact communicator and focus the text input
+- **Ctrl+Shift+1 to 9**: Speak the first 9 saved quick phrases
+- **Ctrl+Shift+M**: Toggle the virtual microphone on or off
 
 ### Interface
-- **Alto contraste**: Cores com contraste WCAG AA
-- **Tamanhos de fonte grandes**: Legivel em telas de alta resolucao
-- **Foco visivel**: Indicadores de foco claros para navegacao por teclado
-- **Modo escuro**: Interface escura para reduzir fadiga visual
+- **High contrast**: Colors meeting WCAG AA contrast
+- **Large font sizes**: Readable on high-resolution displays
+- **Visible focus**: Clear focus indicators for keyboard navigation
+- **Dark mode**: Dark interface to reduce eye strain
 
-### Modo de Uso
-- **Janela flutuante**: Sempre no topo para acesso rapido
-- **Teclado virtual**: Entrada de texto sem teclado fisico
-- **Frases rapidas personalizaveis**: Salve frases frequentes e ajuste ao seu vocabulario
-- **Historico persistente**: Reutilize frases anteriores mesmo apos fechar o app
-- **Rascunho persistente**: O texto atual pode continuar disponivel entre sessoes
-- **Modo compacto com recentes**: Acesso rapido a texto, frases salvas e frases recentes
+### Usage Modes
+- **Floating window**: Always on top for quick access
+- **Virtual keyboard**: Text entry without a physical keyboard
+- **Customizable quick phrases**: Save frequent phrases and adapt them to your vocabulary
+- **Persistent history**: Reuse previous phrases even after closing the app
+- **Persistent draft**: The current text can remain available between sessions
+- **Compact mode with recents**: Quick access to text, saved phrases, and recent phrases
 
-## Requisitos de Hardware Acessiveis
+## Accessible Hardware Requirements
 
-| Configuracao | Modelos Disponiveis | Desempenho |
+| Configuration | Available Models | Performance |
 |-------------|-------------------|------------|
-| PC basico (CPU, 4GB RAM) | Piper | Fluxo principal mais seguro |
-| Laptop medio (8GB RAM) | Piper, Kokoro | Boa experiencia no MVP local |
-| Desktop com NVIDIA/CUDA validado | Piper, Kokoro, XTTS v2 | Recurso avancado liberado depois da primeira fala |
-| AMD no Windows | Piper, Kokoro | Fluxo garantido do MVP atual |
+| Basic PC (CPU, 4GB RAM) | Piper | Safest primary path |
+| Mid-range laptop (8GB RAM) | Piper, Kokoro | Good experience with the local MVP |
+| Desktop with validated NVIDIA/CUDA | Piper, Kokoro, XTTS v2 | Advanced feature unlocked after the first speech |
+| AMD on Windows | Piper, Kokoro | Guaranteed path in the current MVP |
 
-## Uso com Recursos de Comunicacao Assistiva
+## Use with Assistive Communication Devices
 
-O VoiceLaunch TTS ja atende melhor estes formatos de uso:
-- **Teclado fisico**: Digitacao direta + atalhos globais
-- **Teclado virtual na tela**: Entrada assistida sem teclado fisico
-- **Janela compacta sempre no topo**: Comunicacao rapida em chamadas, jogos e conversas
+VoiceLaunch TTS already serves these usage patterns best:
+- **Physical keyboard**: Direct typing + global shortcuts
+- **On-screen virtual keyboard**: Assisted input without a physical keyboard
+- **Compact always-on-top window**: Fast communication in calls, games, and conversations
 
-Tambem pode ser integrado com:
-- **Eye trackers**: Selecao de frases por olhar
-- **Switches**: Controle por botao unico
-- **Tablets touch**: Interface otimizada para toque
+It can also be integrated with:
+- **Eye trackers**: Select phrases by gaze
+- **Switches**: Single-button control
+- **Touch tablets**: Touch-optimized interface
 
-## Cenarios reais priorizados
+## Prioritized Real-World Scenarios
 
-- **Responder rapido com sim/nao** sem reescrever a frase toda
-- **Pedir ajuda** com um atalho global ou frase salva
-- **Repetir uma frase frequente** a partir do historico persistente
-- **Usar a voz como microfone virtual** em Discord, Zoom, jogos e chamadas
-- **Recuperar o texto apos erro ou interrupcao**, sem perder a mensagem
+- **Reply quickly with yes/no** without rewriting the whole phrase
+- **Ask for help** with a global shortcut or a saved phrase
+- **Repeat a frequent phrase** from the persistent history
+- **Use your voice as a virtual microphone** in Discord, Zoom, games, and calls
+- **Recover your text after an error or interruption**, without losing the message
 
-## Privacidade
+## Privacy
 
-- **100% offline**: Nenhum dado de voz sai do computador
-- **Vozes locais**: Clonagem e sintese acontecem no hardware do usuario
-- **Sem conta**: Nao requer cadastro ou conexao com a internet
+- **100% offline**: No voice data leaves the computer
+- **Local voices**: Cloning and synthesis happen on the user's hardware
+- **No account**: No registration or internet connection required

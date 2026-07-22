@@ -111,23 +111,23 @@ jobs:
 
 | Build | Signed | SmartScreen |
 |-------|--------|-------------|
-| `npm run dist:win` sem credenciais de assinatura | No | Will warn |
-| Build assinado com `WIN_CSC_LINK` / `WIN_CSC_KEY_PASSWORD` | Yes | Reduced warning risk |
+| `npm run dist:win` without signing credentials | No | Will warn |
+| Build signed with `WIN_CSC_LINK` / `WIN_CSC_KEY_PASSWORD` | Yes | Reduced warning risk |
 
 ---
 
 ## Release Policy - 2026-05-15
 
-1. **Beta interno/controlado:** build nao assinado ainda pode circular internamente, desde que SmartScreen e suporte manual sejam tratados como risco conhecido.
-2. **Release publica:** assinatura continua obrigatoria. Nao publicar installer publicamente sem certificado configurado no pipeline ou no ambiente oficial de release.
-3. **Auto-update:** deve continuar desligado. Nao religar antes de validar, no minimo, estes tres gates:
-   - pipeline oficial de release reproduzivel;
-   - `publish`/release target alinhado ao repo real;
-   - instalacao e trilha core em maquina limpa.
-4. **Sequencia correta:** primeiro validar build empacotado real de `Piper + Kokoro`, depois maquina limpa e suporte beta, e so entao religar distribuicao automatica.
+1. **Internal/controlled beta:** an unsigned build may still circulate internally, as long as SmartScreen and manual support are treated as a known risk.
+2. **Public release:** signing remains mandatory. Do not publish the installer publicly without a certificate configured in the pipeline or in the official release environment.
+3. **Auto-update:** must stay disabled. Do not turn it back on before validating, at minimum, these three gates:
+   - reproducible official release pipeline;
+   - `publish`/release target aligned with the real repo;
+   - installation and core trail on a clean machine.
+4. **Correct sequence:** first validate a real packaged build of `Piper + Kokoro`, then clean machine and beta support, and only then re-enable automatic distribution.
 
 ## Operational Notes
 
-- Em `2026-05-15`, `cmd /c npm run test` e `cmd /c npm run build` seguem verdes no repo.
-- Em `2026-05-15`, `cmd /c npm run dist:win` foi rerodado com sucesso, o app empacotado voltou a responder em `/health` e `/models`, e o fallback automatico de porta foi revalidado com `9472` ocupado e backend ativo em `9473`.
-- Isso significa que o gate tecnico de empacotamento desta maquina voltou a ficar verde, mas assinatura e auto-update continuam sendo gates de release enquanto maquina limpa, VB-Cable/Discord/Zoom e suporte beta nao forem fechados.
+- On `2026-05-15`, `cmd /c npm run test` and `cmd /c npm run build` remain green in the repo.
+- On `2026-05-15`, `cmd /c npm run dist:win` was re-run successfully, the packaged app responded again on `/health` and `/models`, and the automatic port fallback was re-validated with `9472` occupied and the backend active on `9473`.
+- This means the packaging technical gate on this machine is green again, but signing and auto-update remain release gates until the clean machine, VB-Cable/Discord/Zoom, and beta support are closed out.

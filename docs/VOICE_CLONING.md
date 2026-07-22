@@ -1,54 +1,54 @@
-# Clonagem de Voz — Guia do Usuário
+# Voice Cloning — User Guide
 
-## O que é Clonagem de Voz?
+## What Is Voice Cloning?
 
-A clonagem de voz permite que o sistema aprenda a característica de uma voz a partir de um pequeno trecho de áudio (6–30 segundos) e depois sintetize novas frases usando essa mesma voz.
+Voice cloning lets the system learn the characteristics of a voice from a short audio clip (6–30 seconds) and then synthesize new phrases using that same voice.
 
-## Modelos que Suportam Clonagem
+## Models That Support Cloning
 
-| Modelo | Tempo de Referência | Tempo de Processamento | Licença |
+| Model | Reference Length | Processing Time | License |
 |--------|-------------------|----------------------|---------|
-| **XTTS v2** | 6 segundos | 2–4 segundos | CPML (não comercial) |
-| **Fish Speech** | 10–30 segundos | 3–5 segundos | Apache 2.0 (comercial OK) |
+| **XTTS v2** | 6 seconds | 2–4 seconds | CPML (non-commercial) |
+| **Fish Speech** | 10–30 seconds | 3–5 seconds | Apache 2.0 (commercial OK) |
 
-## Passo a Passo no Launcher
+## Step by Step in the Launcher
 
-### 1. Gravar ou Importar Áudio
-- **Gravar**: Use o microfone do seu computador em um ambiente silencioso
-- **Importar**: Arraste um arquivo WAV, MP3 ou OGG (mínimo 6s, máximo 60s)
+### 1. Record or Import Audio
+- **Record**: Use your computer's microphone in a quiet environment
+- **Import**: Drag a WAV, MP3, or OGG file (minimum 6s, maximum 60s)
 
-### 2. Validar o Áudio
-O sistema verifica automaticamente:
-- Duração (3–60 segundos)
-- Nível de ruído (SNR)
-- Taxa de amostragem
+### 2. Validate the Audio
+The system automatically checks:
+- Duration (3–60 seconds)
+- Noise level (SNR)
+- Sample rate
 
-### 3. Configurar
-- Escolha o modelo de clonagem
-- Dê um nome à voz (ex: "Minha Voz", "Voz do João")
-- Adicione uma descrição opcional
+### 3. Configure
+- Choose the cloning model
+- Give the voice a name (e.g. "My Voice", "John's Voice")
+- Add an optional description
 
-### 4. Processar
-Clique em "Iniciar Clonagem". O sistema extrairá as características da voz e salvará o embedding.
+### 4. Process
+Click "Start Cloning". The system extracts the voice characteristics and saves the embedding.
 
-### 5. Usar
-A voz clonada aparecerá na aba "Falar" como opção de voz disponível.
+### 5. Use
+The cloned voice appears in the "Speak" tab as an available voice option.
 
-## Dicas para Melhor Resultado
+## Tips for Best Results
 
-1. **Ambiente silencioso**: Evite ruído de fundo, ventiladores, etc.
-2. **Distância consistente**: Mantenha o microfone a ~15cm da boca
-3. **Fala natural**: Leia um texto em tom conversacional
-4. **Evite sibilância excessiva**: Não fale muito próximo ao microfone
-5. **Duração ideal**: 10–15 segundos é o ponto ideal para XTTS v2
+1. **Quiet environment**: Avoid background noise, fans, etc.
+2. **Consistent distance**: Keep the microphone about 15cm from your mouth
+3. **Natural speech**: Read a text in a conversational tone
+4. **Avoid excessive sibilance**: Don't speak too close to the microphone
+5. **Ideal length**: 10–15 seconds is the sweet spot for XTTS v2
 
-## Exemplo de Texto para Gravação
+## Sample Recording Text
 
-> "Olá, meu nome é [seu nome]. Estou gravando esta amostra de voz para usar em um assistente de fala. A tecnologia de inteligência artificial pode ajudar muitas pessoas a se comunicarem melhor."
+> "Hello, my name is [your name]. I'm recording this voice sample to use in a speech assistant. Artificial intelligence technology can help many people communicate better."
 
-## Limitações
+## Limitations
 
-- **XTTS v2**: Uso não comercial sem licença separada
-- **Fish Speech**: Qualidade pode variar com sotaques muito fortes
-- Ambos requerem GPU com pelo menos 4 GB de VRAM
-- Vozes muito sussurradas ou gritadas tendem a clonar com menos fidelidade
+- **XTTS v2**: Non-commercial use without a separate license
+- **Fish Speech**: Quality may vary with very strong accents
+- Both require a GPU with at least 4 GB of VRAM
+- Very whispered or shouted voices tend to clone with less fidelity

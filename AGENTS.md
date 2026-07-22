@@ -1,8 +1,8 @@
 # Agent Instructions — VoiceLaunch TTS
 
-## Projeto
+## Project
 
-VoiceLaunch TTS é um launcher desktop em Electron para execução local de modelos TTS open-source, com foco em acessibilidade para pessoas com deficiência na fala e mudas.
+VoiceLaunch TTS is a desktop Electron launcher for running open-source TTS models locally, focused on accessibility for people with speech impairments and non-speaking users.
 
 ## Stack
 
@@ -12,47 +12,47 @@ VoiceLaunch TTS é um launcher desktop em Electron para execução local de mode
 - **TTS Engines**: Piper, Kokoro, MeloTTS, XTTS v2, Fish Speech, Bark
 - **Audio**: sounddevice + soundfile + VB-Audio Virtual Cable
 
-## Estrutura de Diretórios
+## Directory Structure
 
 ```
 src/
-  main/         # Processo principal Electron (Node.js)
-  preload/      # Script de preload (API segura)
-  renderer/     # Aplicação React
-  python/       # Backend FastAPI
-  shared/       # Tipos TypeScript compartilhados
+  main/         # Electron main process (Node.js)
+  preload/      # Preload script (secure API)
+  renderer/     # React application
+  python/       # FastAPI backend
+  shared/       # Shared TypeScript types
 ```
 
-## Comandos
+## Commands
 
 ```bash
-# Desenvolvimento
+# Development
 npm run dev
 
 # Build
 npm run build
 
-# Distribuição
+# Distribution
 npm run dist:win
 ```
 
-## Convenções
+## Conventions
 
-- Use TypeScript strict em todo código novo
-- Componentes React: arrow functions com export default
-- IPC: sempre tipar payloads no `src/shared/types.ts`
-- Python: docstrings em funções públicas, PEP 8
-- Modelos TTS: imports lazy dentro dos wrappers para evitar dependências obrigatórias
+- Use TypeScript strict in all new code
+- React components: arrow functions with export default
+- IPC: always type payloads in `src/shared/types.ts`
+- Python: docstrings on public functions, PEP 8
+- TTS models: lazy imports inside the wrappers to avoid mandatory dependencies
 
-## Dependências Python
+## Python Dependencies
 
-Instalar via: `pip install -r src/python/requirements.txt`
+Install via: `pip install -r src/python/requirements.txt`
 
-Para build standalone: `scripts/build-python.bat`
+For a standalone build: `scripts/build-python.bat`
 
-## Notas
+## Notes
 
-- O backend Python roda em localhost:9472
-- O launcher gerencia o ciclo de vida do processo Python
-- Vozes clonadas ficam em `%APPDATA%\voicelaunch-tts\voices\`
-- Modelos ficam em `%APPDATA%\voicelaunch-tts\models\`
+- The Python backend runs on localhost:9472
+- The launcher manages the lifecycle of the Python process
+- Cloned voices are stored in `%APPDATA%\voicelaunch-tts\voices\`
+- Models are stored in `%APPDATA%\voicelaunch-tts\models\`
