@@ -206,7 +206,8 @@ export interface Profile {
   quickPhrases?: string[]
 }
 
-export type VoiceSource = 'local' | 'cloud'
+// 'auto' = o app decide (Edge online, Kokoro/Piper offline) via engineRouter.
+export type VoiceSource = 'auto' | 'local' | 'cloud'
 
 export interface VoiceShortcut {
   id: string

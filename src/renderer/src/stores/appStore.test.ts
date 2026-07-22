@@ -134,9 +134,9 @@ describe('migrateSettings', () => {
     expect(result.activeProfileId).toBe('only')
   })
 
-  it('defaults voice source to cloud and unsets cable device on fresh install', () => {
+  it('defaults voice source to auto and unsets cable device on fresh install', () => {
     const result = migrateSettings(null)
-    expect(result.voiceSource).toBe('cloud')
+    expect(result.voiceSource).toBe('auto')
     expect(result.cableDeviceId).toBeNull()
     expect(result.cableDeviceLabel).toBeNull()
     expect(result.monitorDeviceId).toBe('default')
@@ -168,7 +168,8 @@ describe('migrateSettings', () => {
     }
     const result = migrateSettings(legacyV1)
     expect(result.schemaVersion).toBe(SCHEMA_VERSION)
-    expect(result.voiceSource).toBe('cloud')
+    // v5: 'cloud' herdado de versoes antigas (era forcado) vira 'auto'.
+    expect(result.voiceSource).toBe('auto')
     expect(result.cableDeviceId).toBeNull()
     expect(result.defaultModelId).toBe('kokoro')
     expect(result.profiles?.[0].id).toBe('padrao')

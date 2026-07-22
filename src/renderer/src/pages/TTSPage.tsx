@@ -28,6 +28,8 @@ import { isModelVisibleInMvp } from '../utils/modelSupport'
 import { playCloudAudio, stopCloudAudio } from '../utils/cloudAudio'
 import { buildCsv, downloadCsv } from '../utils/historyExport'
 import { detectVBCable, resolveCableSink } from '../utils/virtualMicSetup'
+import { routeEngine, type EngineRouteInput } from '../utils/engineRouter'
+import { isEdgeHealthy } from '../stores/appStore'
 import { ShortcutCard } from '../components/ShortcutControls'
 import { useVoiceShortcuts } from '../hooks/useVoiceShortcuts'
 import { formatHotkeyDisplay } from '../utils/voiceShortcuts'
@@ -40,12 +42,12 @@ export default function TTSPage() {
     setDefaultSpeed,
     showExperimentalModels,
     voiceSource,
-    setVoiceSource,
     storedCloudVoiceShortName,
     setStoredCloudVoice,
     cableDeviceId,
     setCableDevice,
     monitorDeviceId,
+    edgeUnhealthyUntil,
   } = useAppStore(
     useShallow((s) => ({
       defaultModelId: s.defaultModelId,
@@ -54,12 +56,12 @@ export default function TTSPage() {
       setDefaultSpeed: s.setDefaultSpeed,
       showExperimentalModels: s.showExperimentalModels,
       voiceSource: s.voiceSource,
-      setVoiceSource: s.setVoiceSource,
       storedCloudVoiceShortName: s.cloudVoice,
       setStoredCloudVoice: s.setCloudVoice,
       cableDeviceId: s.cableDeviceId,
       setCableDevice: s.setCableDevice,
       monitorDeviceId: s.monitorDeviceId,
+      edgeUnhealthyUntil: s.edgeUnhealthyUntil,
     })),
   )
   const {
@@ -81,6 +83,8 @@ export default function TTSPage() {
   const [showDiscordBanner, setShowDiscordBanner] = useState(false)
   const [cloudVoice, setLocalCloudVoice] = useState<CloudVoice | null>(null)
   const [vbCableDetected, setVbCableDetected] = useState(false)
+  const [installedModelIds, setInstalledModelIds] = useState<string[]>([])
+  const [hardwareTier, setHardwareTier] = useState<string | undefined>(undefined)
   const shortcuts = useVoiceShortcuts()
   const [shortcutDraft, setShortcutDraft] = useState('')
 
@@ -138,16 +142,16 @@ export default function TTSPage() {
     loadRuntimeState()
   }, [showExperimentalModels])
 
-  // App focado no online: a fonte de voz e sempre Edge TTS (sem caminho local).
-  useEffect(() => {
-    if (voiceSource !== 'cloud') setVoiceSource('cloud')
-  }, [voiceSource, setVoiceSource])
-
   const loadRuntimeState = async () => {
     const [registry, detectedHardware] = await Promise.all([
       window.electronAPI.getModelRegistry(),
       window.electronAPI.getHardwareInfo(),
     ])
+
+    // Para o roteamento Auto: modelos instalados (independente de visibilidade)
+    // e o tier de hardware detectado.
+    setInstalledModelIds(registry.filter((model) => model.installed).map((model) => model.id))
+    setHardwareTier(detectedHardware?.recommendedTier)
 
     const visibleInstalledModels = registry.filter(
       (model) => model.installed && isModelVisibleInMvp(model, detectedHardware, showExperimentalModels),
@@ -192,13 +196,90 @@ export default function TTSPage() {
     toast('CSV exportado', `${entries.length} frases exportadas com sucesso.`, 'success')
   }, [history])
 
+  const buildRouteInput = (textLength: number): EngineRouteInput => ({
+    mode: voiceSource,
+    online: navigator.onLine,
+    edgeHealthy: isEdgeHealthy(useAppStore.getState()),
+    hardwareTier,
+    installedModels: installedModelIds,
+    textLength,
+    preferredLocalModelId: modelId || defaultModelId,
+  })
+
+  /** Fala pelo Edge TTS. Retorna ok=false (com o motivo) para o fallback decidir. */
+  const speakCloud = async (textToSpeak: string): Promise<{ ok: boolean; error?: string }> => {
+    if (!cloudVoice) return { ok: false, error: 'no-cloud-voice' }
+    const response = await window.electronAPI.synthesizeCloud({
+      text: textToSpeak,
+      voice: cloudVoice.ShortName,
+      speed,
+    })
+    if (cancelRef.current) return { ok: true }
+    setIsSynthesizing(false)
+    if (!response.success || !response.audioBase64) {
+      useAppStore.getState().reportEdgeFailure()
+      return { ok: false, error: response.error || 'Nao foi possivel gerar a voz online.' }
+    }
+    useAppStore.getState().reportEdgeSuccess()
+    await playCloudAudio(response.audioBase64, response.mimeType ?? 'audio/webm', {
+      cableDeviceId: virtualMicEnabled ? cableDeviceId : undefined,
+      monitorDeviceId,
+    })
+    if (cancelRef.current) return { ok: true }
+    addHistoryItem(
+      buildHistoryItem({
+        text: textToSpeak,
+        modelId: `cloud:${cloudVoice.ShortName}`,
+        voiceId: cloudVoice.ShortName,
+      }),
+    )
+    if (!keepTextAfterSpeak) setText('')
+    return { ok: true }
+  }
+
+  /** Fala por um modelo local (Piper/Kokoro) via backend Python. */
+  const speakLocal = async (textToSpeak: string, localModelId: string): Promise<boolean> => {
+    const response = await window.electronAPI.synthesize({
+      text: textToSpeak,
+      modelId: localModelId,
+      voiceId: voiceId || undefined,
+      speed,
+    })
+    if (cancelRef.current) return true
+    setIsSynthesizing(false)
+    if (!response.success || !response.audioPath) {
+      const msg = response.error || 'Nao foi possivel gerar o audio.'
+      notify('Erro na fala', msg)
+      toast('Erro na fala', msg, 'error')
+      return false
+    }
+    const playResult = await window.electronAPI.playAudio(response.audioPath)
+    if (cancelRef.current) return true
+    // Diagnostico do backend: mic ligado mas a voz nao chegou ao cabo.
+    if (virtualMicEnabled && playResult && playResult.routedToVirtualMic === false) {
+      const reason = playResult.fallbackReason === 'device_not_found'
+        ? 'CABLE Input nao encontrado'
+        : playResult.fallbackReason || 'cabo indisponivel'
+      toast(
+        'Voz fora do microfone virtual',
+        `A voz tocou no alto-falante (${reason}) — o Discord nao ouviu.`,
+        'warning',
+      )
+    }
+    addHistoryItem(
+      buildHistoryItem({
+        text: textToSpeak,
+        modelId: localModelId,
+        voiceId: voiceId || undefined,
+        audioPath: response.audioPath,
+      }),
+    )
+    if (!keepTextAfterSpeak) setText('')
+    return true
+  }
+
   const speak = async (textToSpeak: string) => {
     if (!textToSpeak.trim()) return
-    if (voiceSource === 'local' && !modelId) return
-    if (voiceSource === 'cloud' && !cloudVoice) {
-      toast('Escolha uma voz online', 'Selecione uma voz na lista de Edge TTS antes de falar.', 'warning')
-      return
-    }
 
     // Usa ref para evitar race condition: estado React ainda pode não ter atualizado
     if (isSpeakingRef.current) {
@@ -210,76 +291,46 @@ export default function TTSPage() {
       return
     }
 
+    const decision = routeEngine(buildRouteInput(textToSpeak.length))
+
+    if (decision.engine === 'edge' && !cloudVoice) {
+      toast('Escolha uma voz online', 'Selecione uma voz na lista de Edge TTS antes de falar.', 'warning')
+      return
+    }
+    if (decision.engine === null) {
+      toast(
+        'Sem voz disponivel',
+        `${decision.label}. Instale o Piper (50 MB) para falar offline.`,
+        'warning',
+      )
+      return
+    }
+
     cancelRef.current = false
     isSpeakingRef.current = true
     setIsSpeaking(true)
     setIsSynthesizing(true)
 
     try {
-      if (voiceSource === 'cloud' && cloudVoice) {
-        const response = await window.electronAPI.synthesizeCloud({
-          text: textToSpeak,
-          voice: cloudVoice.ShortName,
-          speed,
-        })
-        if (cancelRef.current) return
-        setIsSynthesizing(false)
-        if (response.success && response.audioBase64) {
-          await playCloudAudio(response.audioBase64, response.mimeType ?? 'audio/webm', {
-            cableDeviceId: virtualMicEnabled ? cableDeviceId : undefined,
-            monitorDeviceId,
-          })
-          if (cancelRef.current) return
-          addHistoryItem(
-            buildHistoryItem({
-              text: textToSpeak,
-              modelId: `cloud:${cloudVoice.ShortName}`,
-              voiceId: cloudVoice.ShortName,
-            }),
-          )
-          if (!keepTextAfterSpeak) setText('')
-        } else {
-          const msg = response.error || 'Nao foi possivel gerar a voz online.'
-          notify('Erro na voz online', msg)
-          toast('Erro na voz online', msg, 'error')
-        }
-      } else {
-        const response = await window.electronAPI.synthesize({
-          text: textToSpeak,
-          modelId,
-          voiceId: voiceId || undefined,
-          speed,
-        })
-        if (cancelRef.current) return
-        setIsSynthesizing(false)
-        if (response.success && response.audioPath) {
-          const playResult = await window.electronAPI.playAudio(response.audioPath)
-          if (cancelRef.current) return
-          // Diagnostico do backend: mic ligado mas a voz nao chegou ao cabo.
-          if (virtualMicEnabled && playResult && playResult.routedToVirtualMic === false) {
-            const reason = playResult.fallbackReason === 'device_not_found'
-              ? 'CABLE Input nao encontrado'
-              : playResult.fallbackReason || 'cabo indisponivel'
-            toast(
-              'Voz fora do microfone virtual',
-              `A voz tocou no alto-falante (${reason}) — o Discord nao ouviu.`,
-              'warning',
-            )
+      if (decision.engine === 'edge') {
+        const cloud = await speakCloud(textToSpeak)
+        if (!cloud.ok && !cancelRef.current) {
+          // A magica do Auto: falhou online, tenta local na mesma fala.
+          const fallback = voiceSource === 'auto'
+            ? routeEngine({ ...buildRouteInput(textToSpeak.length), online: false })
+            : null
+          if (fallback?.engine && fallback.modelId) {
+            setIsSynthesizing(true)
+            toast('Voz online falhou', `Falando com a voz local (${fallback.engine}).`, 'info')
+            await speakLocal(textToSpeak, fallback.modelId)
+          } else {
+            const msg = cloud.error || 'Nao foi possivel gerar a voz online.'
+            notify('Erro na voz online', msg)
+            toast('Erro na voz online', msg, 'error')
           }
-          addHistoryItem(
-            buildHistoryItem({
-              text: textToSpeak,
-              modelId,
-              voiceId: voiceId || undefined,
-              audioPath: response.audioPath,
-            }),
-          )
-          if (!keepTextAfterSpeak) setText('')
-        } else {
-          const msg = response.error || 'Nao foi possivel gerar o audio.'
-          notify('Erro na fala', msg)
-          toast('Erro na fala', msg, 'error')
         }
+      } else if (decision.modelId) {
+        await speakLocal(textToSpeak, decision.modelId)
       }
     } catch (error) {
       if (cancelRef.current) return
@@ -389,8 +440,24 @@ export default function TTSPage() {
   }
 
   const noReadyModel = availableModels.length === 0
-  const canSpeak = voiceSource === 'cloud' ? Boolean(cloudVoice) : !noReadyModel
+  const canSpeak =
+    voiceSource === 'cloud'
+      ? Boolean(cloudVoice)
+      : voiceSource === 'local'
+        ? !noReadyModel
+        : Boolean(cloudVoice) || installedModelIds.length > 0
   const speakDisabled = !canSpeak || (voiceSource === 'local' && noReadyModel)
+
+  // Preview da decisao de roteamento para a linha de status ("Auto → Edge (online)").
+  const routePreview = routeEngine({
+    mode: voiceSource,
+    online: navigator.onLine,
+    edgeHealthy: isEdgeHealthy({ edgeUnhealthyUntil }),
+    hardwareTier,
+    installedModels: installedModelIds,
+    textLength: text.length,
+    preferredLocalModelId: modelId || defaultModelId,
+  })
 
   return (
     <div className="mx-auto flex h-full max-w-7xl flex-col">
@@ -611,6 +678,9 @@ export default function TTSPage() {
                   )}
                 </button>
               </div>
+              <p className="mt-2 text-right text-xs text-ink-soft" aria-live="polite">
+                {routePreview.label}
+              </p>
             </div>
           </div>
 

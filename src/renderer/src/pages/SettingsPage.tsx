@@ -9,6 +9,7 @@ import {
   RefreshCw,
   Settings,
   Type,
+  Volume2,
 } from 'lucide-react'
 import AudioOutputPicker from '../components/AudioOutputPicker'
 import { detectVBCable } from '../utils/virtualMicSetup'
@@ -22,6 +23,8 @@ export default function SettingsPage() {
     showExperimentalModels,
     setShowExperimentalModels,
     setTutorialSeen,
+    voiceSource,
+    setVoiceSource,
   } = useAppStore()
   const [backendStatus, setBackendStatus] = useState<BackendStatus>({
     running: false,
@@ -120,6 +123,44 @@ export default function SettingsPage() {
         {backendStatus.lastError && (
           <p className="mt-3 text-sm" style={{ color: 'var(--vl-state-error)' }}>{backendStatus.lastError}</p>
         )}
+      </div>
+
+      <div className="hud-frame p-5">
+        <div className="flex items-center gap-3 mb-4">
+          <Volume2 className="w-5 h-5" style={{ color: 'var(--vl-state-ready)' }} />
+          <h2 className="text-lg font-medium text-ink-strong">Fonte de voz</h2>
+        </div>
+        <p className="mb-3 text-sm text-ink-soft">
+          No modo Auto o app usa a voz online (Edge) quando ha internet e cai para a voz
+          local (Kokoro/Piper) quando esta offline ou o Edge falha.
+        </p>
+        <div className="grid gap-2 sm:grid-cols-3" role="radiogroup" aria-label="Fonte de voz">
+          {([
+            { value: 'auto', title: 'Auto (recomendado)', hint: 'Online quando da, local quando precisa' },
+            { value: 'cloud', title: 'Sempre online', hint: 'Edge TTS; sem fallback local' },
+            { value: 'local', title: 'Sempre local', hint: 'Piper/Kokoro; funciona offline' },
+          ] as const).map((option) => (
+            <label
+              key={option.value}
+              className={`panel-muted flex cursor-pointer flex-col gap-1 p-3 transition-colors hover:bg-brand-500/8 ${
+                voiceSource === option.value ? 'ring-1 ring-brand-500' : ''
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="voice-source"
+                  value={option.value}
+                  checked={voiceSource === option.value}
+                  onChange={() => setVoiceSource(option.value)}
+                  className="accent-brand-500"
+                />
+                <span className="text-sm font-medium text-ink-strong">{option.title}</span>
+              </span>
+              <span className="text-xs text-ink-mute">{option.hint}</span>
+            </label>
+          ))}
+        </div>
       </div>
 
       <div className="hud-frame p-5">

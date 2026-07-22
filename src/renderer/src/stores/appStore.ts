@@ -1,9 +1,15 @@
 import { create } from 'zustand'
 import type { AppSettings, BackendStatus, Profile, VoiceShortcut, VoiceSource } from '../../../shared/types'
 import { DEFAULT_QUICK_PHRASES, MAX_QUICK_PHRASES } from '../utils/communicationState'
+import { EDGE_FAILURE_COOLDOWN_MS } from '../utils/engineRouter'
 import { HOTKEY_SLOTS, defaultShortcuts, generateShortcutId } from '../utils/voiceShortcuts'
 
-export const SCHEMA_VERSION = 4
+/** True quando o Edge TTS esta fora do cooldown de falha. */
+export function isEdgeHealthy(state: { edgeUnhealthyUntil: number }): boolean {
+  return Date.now() >= state.edgeUnhealthyUntil
+}
+
+export const SCHEMA_VERSION = 5
 
 // Converte frases rapidas legadas (string[]) em atalhos de voz, atribuindo as
 // teclas em ordem (Ctrl+Shift+1..9 etc). A voz vai vazia quando ainda nao ha
@@ -60,6 +66,11 @@ interface AppState {
   addVoiceShortcut: (shortcut: VoiceShortcut) => void
   updateVoiceShortcut: (id: string, patch: Partial<VoiceShortcut>) => void
   deleteVoiceShortcut: (id: string) => void
+  // Saude do Edge TTS (runtime, nao persistido): apos uma falha, o modo Auto
+  // roteia local ate o cooldown expirar.
+  edgeUnhealthyUntil: number
+  reportEdgeFailure: () => void
+  reportEdgeSuccess: () => void
   _hydrated: boolean
 }
 
@@ -94,7 +105,7 @@ function buildDefaultProfiles(carriedQuickPhrases?: string[]): Profile[] {
 
 export function migrateSettings(saved: Partial<AppSettings> | null | undefined): Partial<AppSettings> {
   const ensureMvpDefaults = (base: Partial<AppSettings>): Partial<AppSettings> => ({
-    voiceSource: 'cloud',
+    voiceSource: 'auto',
     cableDeviceId: null,
     cableDeviceLabel: null,
     monitorDeviceId: 'default',
@@ -102,6 +113,15 @@ export function migrateSettings(saved: Partial<AppSettings> | null | undefined):
     voiceShortcuts: [],
     ...base,
   })
+
+  // v4 → v5: 'cloud' era forcado (nao uma escolha do usuario); vira 'auto'
+  // para ganhar o fallback local offline. 'local' explicito e preservado.
+  const upgradeVoiceSource = (base: Partial<AppSettings>): Partial<AppSettings> => {
+    if ((saved?.schemaVersion ?? 0) < 5 && base.voiceSource === 'cloud') {
+      return { ...base, voiceSource: 'auto' }
+    }
+    return base
+  }
 
   if (!saved) {
     return ensureMvpDefaults({
@@ -138,13 +158,15 @@ export function migrateSettings(saved: Partial<AppSettings> | null | undefined):
       voiceShortcuts = quickPhrasesToShortcuts(phrases, saved.cloudVoice ?? null)
     }
   }
-  return ensureMvpDefaults({
-    ...saved,
-    schemaVersion: SCHEMA_VERSION,
-    profiles,
-    activeProfileId,
-    voiceShortcuts,
-  })
+  return ensureMvpDefaults(
+    upgradeVoiceSource({
+      ...saved,
+      schemaVersion: SCHEMA_VERSION,
+      profiles,
+      activeProfileId,
+      voiceShortcuts,
+    }),
+  )
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -194,7 +216,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   profiles: buildDefaultProfiles(),
   activeProfileId: DEFAULT_PROFILE_ID,
-  voiceSource: 'cloud',
+  voiceSource: 'auto',
   setVoiceSource: (source) => {
     set({ voiceSource: source })
     saveToDisk({ voiceSource: source })
@@ -216,6 +238,9 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ monitorDeviceId: deviceId, monitorDeviceLabel: deviceLabel })
     saveToDisk({ monitorDeviceId: deviceId, monitorDeviceLabel: deviceLabel })
   },
+  edgeUnhealthyUntil: 0,
+  reportEdgeFailure: () => set({ edgeUnhealthyUntil: Date.now() + EDGE_FAILURE_COOLDOWN_MS }),
+  reportEdgeSuccess: () => set({ edgeUnhealthyUntil: 0 }),
   voiceShortcuts: [],
   addVoiceShortcut: (shortcut) => {
     const next = [...get().voiceShortcuts, shortcut]
@@ -281,7 +306,7 @@ if (typeof window !== 'undefined') {
       showExperimentalModels: migrated.showExperimentalModels ?? false,
       profiles: migrated.profiles ?? buildDefaultProfiles(),
       activeProfileId: migrated.activeProfileId ?? DEFAULT_PROFILE_ID,
-      voiceSource: migrated.voiceSource ?? 'cloud',
+      voiceSource: migrated.voiceSource ?? 'auto',
       cloudVoice: migrated.cloudVoice ?? null,
       cableDeviceId: migrated.cableDeviceId ?? null,
       cableDeviceLabel: migrated.cableDeviceLabel ?? null,

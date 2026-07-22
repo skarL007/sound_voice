@@ -21,14 +21,15 @@ import {
 import TTSPage from './pages/TTSPage'
 import SettingsPage from './pages/SettingsPage'
 import VoiceShortcutsPage from './pages/VoiceShortcutsPage'
-import { useAppStore } from './stores/appStore'
+import { isEdgeHealthy, useAppStore } from './stores/appStore'
+import { routeEngine, type EngineRouteInput } from './utils/engineRouter'
 import OnboardingTutorial from './components/OnboardingTutorial'
 import ToastContainer from './components/ToastContainer'
 import { useCommunicationSettings } from './hooks/useCommunicationSettings'
 import { buildHistoryItem, pushHistoryItem, sanitizeCommunicationState, serializeCommunicationState } from './utils/communicationState'
-import { getVisibleInstalledModels, resolveActiveModelForMvp } from './utils/modelSupport'
+import { getVisibleInstalledModels } from './utils/modelSupport'
 import { toast } from './utils/toast'
-import { listOutputAudioDevices, playCloudAudio } from './utils/cloudAudio'
+import { listOutputAudioDevices, playCloudAudio, stopCloudAudio } from './utils/cloudAudio'
 import { pickCableOutput, resolveCableSink } from './utils/virtualMicSetup'
 import { formatHotkeyDisplay } from './utils/voiceShortcuts'
 import type { BackendStatus, ModelInfo } from '../../shared/types'
@@ -58,12 +59,13 @@ function BackendBanner({
   status: BackendStatus
   retrying: boolean
   onRetry: () => void
-  voiceSource: 'local' | 'cloud'
+  voiceSource: 'auto' | 'local' | 'cloud'
 }) {
   if (status.running) return null
 
   const isStarting = status.phase === 'starting'
-  const userOnCloud = voiceSource === 'cloud'
+  // 'auto' e online-first: o backend fora do ar nao bloqueia a fala.
+  const userOnCloud = voiceSource !== 'local'
 
   // Quando o usuario esta na trilha cloud e o backend nao subiu, o banner cheio assusta
   // sem motivo. Mostramos um chip discreto e deixamos o detalhe em Ajustes.
@@ -323,57 +325,118 @@ function CompactView({ backendStatus }: { backendStatus: BackendStatus }) {
     availableModels.find((model) => model.id === defaultModelId) ??
     availableModels[0] ??
     null
-  const canSpeak = Boolean(activeModel) && backendStatus.running
-  const compactStatusText = !backendStatus.running
-    ? backendStatus.phase === 'error'
-      ? 'Backend local indisponivel. Use o retry para restaurar a fala.'
-      : 'Iniciando backend local...'
-    : activeModel
-      ? `${activeModel.name} pronto`
-      : 'Instale um modelo em Modelos para usar o compacto'
-  const statusColor = !backendStatus.running
-    ? 'var(--vl-state-warn)'
-    : activeModel
-      ? 'var(--vl-state-ready)'
-      : 'var(--vl-state-warn)'
 
-  const speak = async (textToSpeak: string) => {
+  const voiceSource = useAppStore((state) => state.voiceSource)
+  const cloudVoice = useAppStore((state) => state.cloudVoice)
+  const cableDeviceId = useAppStore((state) => state.cableDeviceId)
+  const monitorDeviceId = useAppStore((state) => state.monitorDeviceId)
+  const edgeUnhealthyUntil = useAppStore((state) => state.edgeUnhealthyUntil)
+
+  const buildRouteInput = (textLength: number): EngineRouteInput => ({
+    mode: voiceSource,
+    online: navigator.onLine,
+    edgeHealthy: isEdgeHealthy({ edgeUnhealthyUntil }),
+    installedModels: availableModels.map((model) => model.id),
+    textLength,
+    preferredLocalModelId: activeModel?.id,
+  })
+
+  const routePreview = routeEngine(buildRouteInput(text.length))
+  const cloudReady = routePreview.engine === 'edge' && Boolean(cloudVoice)
+  const localReady = Boolean(activeModel) && backendStatus.running
+  const canSpeak = cloudReady || (routePreview.engine !== 'edge' && localReady) || (voiceSource === 'auto' && localReady)
+  const compactStatusText =
+    routePreview.engine === 'edge'
+      ? cloudVoice
+        ? routePreview.label
+        : 'Escolha uma voz online na tela Falar'
+      : routePreview.engine
+        ? localReady
+          ? routePreview.label
+          : 'Backend local iniciando...'
+        : routePreview.label
+  const statusColor = canSpeak ? 'var(--vl-state-ready)' : 'var(--vl-state-warn)'
+
+  const speakLocalCompact = async (textToSpeak: string, localModelId: string): Promise<boolean> => {
     if (!backendStatus.running) {
       toast('Backend iniciando', 'A fala sera liberada quando o backend local terminar de subir.', 'info')
-      return
+      return false
     }
-    if (!textToSpeak.trim() || !activeModel) return
+    const response = await window.electronAPI.synthesize({
+      text: textToSpeak,
+      modelId: localModelId,
+      speed: defaultSpeed,
+    })
+    if (cancelRef.current) return true
+    if (!response.success || !response.audioPath) {
+      if (response.error) toast('Erro na fala', response.error, 'error')
+      return false
+    }
+    await window.electronAPI.playAudio(response.audioPath)
+    if (cancelRef.current) return true
+    addHistoryItem(
+      buildHistoryItem({
+        text: textToSpeak,
+        modelId: localModelId,
+        audioPath: response.audioPath,
+      }),
+    )
+    if (!keepTextAfterSpeak) setText('')
+    return true
+  }
+
+  const speak = async (textToSpeak: string) => {
+    if (!textToSpeak.trim()) return
     if (isSpeaking) {
       cancelRef.current = true
       await window.electronAPI.stopAudio()
+      stopCloudAudio()
       setIsSpeaking(false)
       return
     }
     cancelRef.current = false
     setIsSpeaking(true)
     try {
-      const response = await window.electronAPI.synthesize({
-        text: textToSpeak,
-        modelId: activeModel.id,
-        speed: defaultSpeed,
-      })
-      if (cancelRef.current) return
-      if (response.success && response.audioPath) {
-        await window.electronAPI.playAudio(response.audioPath)
+      const decision = routeEngine(buildRouteInput(textToSpeak.length))
+      if (decision.engine === 'edge' && cloudVoice) {
+        const response = await window.electronAPI.synthesizeCloud({
+          text: textToSpeak,
+          voice: cloudVoice,
+          speed: defaultSpeed,
+        })
         if (cancelRef.current) return
-        addHistoryItem(
-          buildHistoryItem({
-            text: textToSpeak,
-            modelId: activeModel.id,
-            audioPath: response.audioPath,
-          }),
-        )
-        if (!keepTextAfterSpeak) {
-          setText('')
+        if (response.success && response.audioBase64) {
+          useAppStore.getState().reportEdgeSuccess()
+          await playCloudAudio(response.audioBase64, response.mimeType ?? 'audio/webm', {
+            cableDeviceId: virtualMicEnabled ? cableDeviceId : undefined,
+            monitorDeviceId,
+          })
+          if (cancelRef.current) return
+          addHistoryItem(buildHistoryItem({ text: textToSpeak, modelId: `cloud:${cloudVoice}`, voiceId: cloudVoice }))
+          if (!keepTextAfterSpeak) setText('')
+          return
         }
-      } else if (response.error) {
-        toast('Erro na fala', response.error, 'error')
+        useAppStore.getState().reportEdgeFailure()
+        const fallback = voiceSource === 'auto'
+          ? routeEngine({ ...buildRouteInput(textToSpeak.length), online: false })
+          : null
+        if (fallback?.engine && fallback.modelId) {
+          toast('Voz online falhou', `Falando com a voz local (${fallback.engine}).`, 'info')
+          await speakLocalCompact(textToSpeak, fallback.modelId)
+          return
+        }
+        toast('Erro na voz online', response.error || 'Nao foi possivel gerar a voz.', 'error')
+        return
       }
+      if (decision.engine && decision.modelId) {
+        await speakLocalCompact(textToSpeak, decision.modelId)
+        return
+      }
+      if (decision.engine === 'edge' && !cloudVoice) {
+        toast('Sem voz online', 'Escolha uma voz online na tela Falar.', 'warning')
+        return
+      }
+      toast('Sem voz disponivel', `${decision.label}.`, 'warning')
     } catch (error) {
       toast('Erro na fala', String(error), 'error')
     } finally {
@@ -682,8 +745,7 @@ export default function App() {
       ])
       const communication = sanitizeCommunicationState(settings)
       const phrase = communication.quickPhrases[index]
-      const source = settings.voiceSource ?? 'cloud'
-      const cableDeviceId = await ensureCableForSpeak(settings.cableDeviceId, virtualMicOn)
+      const source = settings.voiceSource ?? 'auto'
       const speed = settings.defaultSpeed || 1
 
       if (!phrase) {
@@ -691,8 +753,58 @@ export default function App() {
         return
       }
 
+      const cableDeviceId = await ensureCableForSpeak(settings.cableDeviceId, virtualMicOn)
+
+      const persistHistory = async (entryModelId: string, audioPath?: string) => {
+        const nextCommunication = {
+          ...communication,
+          ttsDraft: communication.keepTextAfterSpeak ? phrase : '',
+          ttsHistory: pushHistoryItem(
+            communication.ttsHistory,
+            buildHistoryItem({ text: phrase, modelId: entryModelId, audioPath }),
+          ),
+        }
+        const serialized = serializeCommunicationState(nextCommunication)
+        await window.electronAPI.saveSettings(serialized)
+        window.dispatchEvent(new CustomEvent('voicelaunch:communication-updated', { detail: serialized }))
+      }
+
+      const routeInput: EngineRouteInput = {
+        mode: source,
+        online: navigator.onLine,
+        edgeHealthy: isEdgeHealthy(useAppStore.getState()),
+        hardwareTier: detectedHardware?.recommendedTier,
+        installedModels: registry.filter((model) => model.installed).map((model) => model.id),
+        textLength: phrase.length,
+        preferredLocalModelId: settings.defaultModelId,
+      }
+
+      const speakLocalPhrase = async (localModelId: string): Promise<boolean> => {
+        if (!runtimeStatus.running) {
+          toast('Backend offline', 'Vozes locais indisponiveis. Troque para Online na aba Falar.', 'info')
+          return false
+        }
+        const response = await window.electronAPI.synthesize({
+          text: phrase,
+          modelId: localModelId,
+          speed,
+        })
+        if (!response.success || !response.audioPath) {
+          toast('Erro na fala', response.error || 'Nao foi possivel gerar o audio.', 'error')
+          return false
+        }
+        await window.electronAPI.playAudio(response.audioPath)
+        await persistHistory(localModelId, response.audioPath)
+        return true
+      }
+
       try {
-        if (source === 'cloud') {
+        const decision = routeEngine(routeInput)
+        if (decision.engine === null) {
+          toast('Sem voz disponivel', `${decision.label}.`, 'warning')
+          return
+        }
+        if (decision.engine === 'edge') {
           const cloudVoice = settings.cloudVoice
           if (!cloudVoice) {
             toast('Sem voz online', 'Escolha uma voz online na aba Falar antes de usar atalhos.', 'warning')
@@ -704,62 +816,27 @@ export default function App() {
             speed,
           })
           if (!response.success || !response.audioBase64) {
+            useAppStore.getState().reportEdgeFailure()
+            // Auto: falhou online, fala com a voz local na mesma acao.
+            const fallback = source === 'auto' ? routeEngine({ ...routeInput, online: false }) : null
+            if (fallback?.engine && fallback.modelId && (await speakLocalPhrase(fallback.modelId))) {
+              toast('Voz online falhou', `Frase falada com a voz local (${fallback.engine}).`, 'info')
+              return
+            }
             toast('Erro na voz online', response.error || 'Nao foi possivel gerar a voz.', 'error')
             return
           }
+          useAppStore.getState().reportEdgeSuccess()
           await playCloudAudio(response.audioBase64, response.mimeType ?? 'audio/webm', {
             cableDeviceId,
             monitorDeviceId: settings.monitorDeviceId,
           })
-          const nextCommunication = {
-            ...communication,
-            ttsDraft: communication.keepTextAfterSpeak ? phrase : '',
-            ttsHistory: pushHistoryItem(
-              communication.ttsHistory,
-              buildHistoryItem({ text: phrase, modelId: `cloud:${cloudVoice}`, voiceId: cloudVoice }),
-            ),
-          }
-          const serialized = serializeCommunicationState(nextCommunication)
-          await window.electronAPI.saveSettings(serialized)
-          window.dispatchEvent(new CustomEvent('voicelaunch:communication-updated', { detail: serialized }))
+          await persistHistory(`cloud:${cloudVoice}`)
           return
         }
-
-        if (!runtimeStatus.running) {
-          toast('Backend offline', 'Vozes locais indisponiveis. Troque para Online na aba Falar.', 'info')
-          return
+        if (decision.modelId) {
+          await speakLocalPhrase(decision.modelId)
         }
-        const activeModel = resolveActiveModelForMvp(
-          registry,
-          detectedHardware,
-          settings.defaultModelId,
-          settings.showExperimentalModels ?? false,
-        )
-        if (!activeModel) {
-          toast('Sem modelo pronto', 'Instale Piper ou Kokoro em Vozes antes de usar atalhos locais.', 'warning')
-          return
-        }
-        const response = await window.electronAPI.synthesize({
-          text: phrase,
-          modelId: activeModel.id,
-          speed,
-        })
-        if (!response.success || !response.audioPath) {
-          toast('Erro na fala', response.error || 'Nao foi possivel gerar o audio.', 'error')
-          return
-        }
-        await window.electronAPI.playAudio(response.audioPath)
-        const nextCommunication = {
-          ...communication,
-          ttsDraft: communication.keepTextAfterSpeak ? phrase : '',
-          ttsHistory: pushHistoryItem(
-            communication.ttsHistory,
-            buildHistoryItem({ text: phrase, modelId: activeModel.id, audioPath: response.audioPath }),
-          ),
-        }
-        const serialized = serializeCommunicationState(nextCommunication)
-        await window.electronAPI.saveSettings(serialized)
-        window.dispatchEvent(new CustomEvent('voicelaunch:communication-updated', { detail: serialized }))
       } catch (error) {
         toast('Erro no atalho', String(error), 'error')
       }
@@ -798,9 +875,11 @@ export default function App() {
     })
 
     const speakVoiceShortcut = async (shortcutId: string) => {
-      const [settings, runtimeStatus, virtualMicOn] = await Promise.all([
+      const [settings, runtimeStatus, detectedHardware, registry, virtualMicOn] = await Promise.all([
         window.electronAPI.loadSettings(),
         window.electronAPI.getBackendStatus(),
+        window.electronAPI.getHardwareInfo(),
+        window.electronAPI.getModelRegistry(),
         window.electronAPI.getVirtualMicStatus(),
       ])
       const shortcuts = Array.isArray(settings.voiceShortcuts) ? settings.voiceShortcuts : []
@@ -810,11 +889,53 @@ export default function App() {
       window.dispatchEvent(new CustomEvent('voicelaunch:shortcut-triggered', { detail: shortcutId }))
       const cableDeviceId = await ensureCableForSpeak(settings.cableDeviceId, virtualMicOn)
 
+      const speakLocalShortcut = async (localModelId: string): Promise<boolean> => {
+        if (!runtimeStatus.running) {
+          toast('Backend offline', 'O atalho local precisa do backend Python ativo.', 'warning')
+          return false
+        }
+        const response = await window.electronAPI.synthesize({
+          text: shortcut.text,
+          modelId: localModelId,
+          speed: shortcut.speed,
+        })
+        if (!response.success || !response.audioPath) {
+          toast('Falha no atalho', response.error || 'Nao foi possivel gerar o audio local.', 'error')
+          return false
+        }
+        await window.electronAPI.playAudio(response.audioPath)
+        return true
+      }
+
+      const localFallbackFor = (textLength: number) =>
+        routeEngine({
+          mode: 'auto',
+          online: false,
+          edgeHealthy: false,
+          hardwareTier: detectedHardware?.recommendedTier,
+          installedModels: registry.filter((model) => model.installed).map((model) => model.id),
+          textLength,
+          preferredLocalModelId: settings.defaultModelId,
+        })
+
       try {
-        if (shortcut.voiceSource === 'cloud') {
+        if (shortcut.voiceSource === 'cloud' || shortcut.voiceSource === 'auto') {
           // Atalhos migrados de frases rapidas podem nao ter voz propria — cai
           // para a voz online global nesse caso.
           const voice = shortcut.voice || settings.cloudVoice
+
+          // Offline ou Edge em cooldown: roteia direto para a voz local.
+          const edgeUsable = navigator.onLine && isEdgeHealthy(useAppStore.getState())
+          if (!edgeUsable) {
+            const fallback = localFallbackFor(shortcut.text.length)
+            if (fallback.engine && fallback.modelId) {
+              await speakLocalShortcut(fallback.modelId)
+              return
+            }
+            toast('Sem voz disponivel', `${fallback.label}.`, 'warning')
+            return
+          }
+
           if (!voice) {
             toast('Sem voz online', 'Escolha uma voz no atalho ou na tela Falar.', 'warning')
             return
@@ -826,29 +947,23 @@ export default function App() {
             pitch: shortcut.pitch,
           })
           if (!response.success || !response.audioBase64) {
+            useAppStore.getState().reportEdgeFailure()
+            const fallback = localFallbackFor(shortcut.text.length)
+            if (fallback.engine && fallback.modelId && (await speakLocalShortcut(fallback.modelId))) {
+              toast('Voz online falhou', `Atalho falado com a voz local (${fallback.engine}).`, 'info')
+              return
+            }
             toast('Falha no atalho', response.error || 'Nao foi possivel gerar a voz.', 'error')
             return
           }
+          useAppStore.getState().reportEdgeSuccess()
           await playCloudAudio(response.audioBase64, response.mimeType ?? 'audio/webm', {
             cableDeviceId,
             monitorDeviceId: settings.monitorDeviceId,
           })
           return
         }
-        if (!runtimeStatus.running) {
-          toast('Backend offline', 'O atalho local precisa do backend Python ativo.', 'warning')
-          return
-        }
-        const response = await window.electronAPI.synthesize({
-          text: shortcut.text,
-          modelId: shortcut.voice,
-          speed: shortcut.speed,
-        })
-        if (!response.success || !response.audioPath) {
-          toast('Falha no atalho', response.error || 'Nao foi possivel gerar o audio local.', 'error')
-          return
-        }
-        await window.electronAPI.playAudio(response.audioPath)
+        await speakLocalShortcut(shortcut.voice)
       } catch (error) {
         toast('Falha no atalho', String(error), 'error')
       }
