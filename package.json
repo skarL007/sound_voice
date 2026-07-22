@@ -1,6 +1,6 @@
 {
   "name": "voicelaunch-tts",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Open-source TTS launcher for assistive communication and Discord/games (online-first) with virtual microphone",
   "main": "./out/main/index.js",
   "author": "VoiceLaunch Team",

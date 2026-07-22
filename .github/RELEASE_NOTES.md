@@ -1,34 +1,54 @@
-## VoiceLaunch TTS v1.2.0
+## VoiceLaunch TTS v1.3.0
 
-Versão online-first: vozes na nuvem que funcionam na hora, microfone virtual que já vem com o instalador e atalhos de voz com a tecla que você quiser. App mais simples, bonito e prático.
+The first public open-source release. Turn your typing into a real microphone for
+Discord and any game — hundreds of natural voices work instantly, and a local
+voice takes over automatically when you go offline.
 
-### Novidades
+### What's new
 
-- **Online-first (Edge TTS)** — centenas de vozes da Microsoft funcionam imediatamente, sem instalar nada. Só precisa de internet.
-- **Microfone virtual já incluso no instalador** — o VB-Audio Virtual Cable é instalado junto com o app. Sem download manual, sem passos extras: abra o Discord/Zoom/jogo e escolha **CABLE Output** como microfone.
-- **Você se ouve enquanto fala (monitor)** — a voz sai ao mesmo tempo no microfone virtual (Discord ouve) e no seu fone (você ouve). Dá pra escolher onde ouvir, ou silenciar.
-- **Atalhos de voz com tecla livre** — grave qualquer combinação (ex.: `Ctrl+Alt+G`) e dispare a frase em qualquer app, com aviso se a tecla já estiver em uso.
-- **Mais simples** — abre direto na tela Falar; navegação enxuta (Falar · Atalhos · Ajustes); perfil único; visual mais sóbrio e responsivo (sem corte em janelas menores).
+- **Smart voice routing (Auto mode)** — the app uses online Edge TTS when you
+  have internet and automatically falls back to a local voice (Kokoro/Piper)
+  when you're offline or the connection drops. The routing decision is shown in
+  the UI ("Auto → Edge (online)" / "Auto → Piper (offline)").
+- **Virtual mic that just works** — the generated voice reaches Discord and any
+  game reliably from every speak path (main button, global shortcut, compact
+  quick-fire). Failures are never silent: if the voice can't reach the cable,
+  the app tells you why.
+- **Fully English UI and documentation** — the whole app and docs are now in
+  English.
+- **Hardened local backend** — the Python backend requires a per-session token,
+  validates model downloads against pinned SHA-256 checksums, and no longer
+  leaks internal error details.
+- **Bundled virtual microphone** — VB-Audio Virtual Cable ships inside the
+  installer and sets itself up. In Discord/Zoom/games, select **CABLE Output**
+  as the microphone.
 
-### Instalação
+### Install
 
-1. Baixe **`VoiceLaunch-TTS-Setup-1.2.0.exe`** abaixo.
-2. Execute. No aviso do **Windows SmartScreen** (build sem assinatura de código), clique em **Mais informações → Executar assim mesmo**.
-3. Durante a instalação, o **microfone virtual (VB-Cable)** é instalado automaticamente. Se o Windows pedir, **reinicie** o computador.
-4. Abra o app, escreva e fale. Para usar no Discord/Zoom/jogo: ative o microfone virtual no app e, no outro programa, selecione **CABLE Output** como microfone.
+1. Download **`VoiceLaunch-TTS-Setup-1.3.0.exe`** below.
+2. Run it. On the **Windows SmartScreen** prompt (this is an unsigned build),
+   click **More info → Run anyway**.
+3. During install, the **virtual microphone (VB-Cable)** is set up automatically.
+   Restart Windows if prompted.
+4. Open the app, type, and Speak. To use it in Discord/games, enable the virtual
+   mic in the app and select **CABLE Output** as the microphone in the other app.
 
-### Verificar o download (opcional)
+### Verify the download (recommended)
 
 ```powershell
-(Get-FileHash VoiceLaunch-TTS-Setup-1.2.0.exe -Algorithm SHA256).Hash
+Get-FileHash -Algorithm SHA256 .\VoiceLaunch-TTS-Setup-1.3.0.exe
 ```
 
-### Limitações conhecidas
+<!-- Paste the SHA-256 of the published installer here before publishing the release. -->
+**SHA-256:** `<fill in from the built installer>`
 
-- Somente Windows 10/11 x64.
-- Instalador sem assinatura de código — o aviso do SmartScreen é esperado.
-- Se o microfone virtual não aparecer logo após instalar, reinicie o Windows.
+### Known limitations
 
-### Changelog completo
+- Windows 10/11 x64 only.
+- The installer is unsigned — the SmartScreen prompt is expected. The SHA-256
+  above lets you verify authenticity.
+- If the virtual microphone doesn't appear right after installing, restart Windows.
 
-Veja [CHANGELOG.md](https://github.com/skarL007/sound_voice/blob/main/CHANGELOG.md).
+### Full changelog
+
+See [CHANGELOG.md](https://github.com/skarL007/sound_voice/blob/main/CHANGELOG.md).

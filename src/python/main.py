@@ -30,7 +30,7 @@ from security_validators import validate_voice_id
 from virtual_mic import VirtualMicController
 from voice_cloner import VoiceCloner
 
-app = FastAPI(title="VoiceLaunch TTS Backend", version="1.0.0")
+app = FastAPI(title="VoiceLaunch TTS Backend", version="1.3.0")
 
 # Shared-secret auth: the Electron main process generates a per-session token and
 # injects it via env. Every HTTP request (except /health) and the WebSocket must
@@ -145,7 +145,7 @@ class InstallDepsRequest(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "version": "1.0.0"}
+    return {"status": "ok", "version": "1.3.0"}
 
 
 @app.get("/hardware")

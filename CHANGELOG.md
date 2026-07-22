@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.3.0] - 2026-07-22 (first public open-source release)
+
+### Added
+
+- **Smart voice routing (Auto mode)** — a pure `engineRouter` picks the engine per utterance: online Edge TTS when reachable, automatic fallback to a local voice (Kokoro/Piper) by hardware tier and text length when offline or when Edge fails. Auto is the new default `voiceSource`; the decision and reason are shown in the UI. Wired into all four speak paths (Speak screen, global shortcuts, quick phrases, compact mode).
+- **Backend session-token auth** — the Python backend requires a per-session `X-VoiceLaunch-Token` on every HTTP request (except `/health`) and on the WebSocket, closing the localhost drive-by surface.
+- **Pinned model checksums** — `assets/model-registry.json` carries SHA-256 for Piper and Kokoro; downloads without a pinned checksum are blocked.
+- **Playwright E2E** — Electron end-to-end journeys (launch, mic-not-detected graceful state, settings and shortcut persistence) with an offline Edge TTS mock, plus a FastAPI `TestClient` suite. Both run in CI.
+- **New docs** — `docs/ARCHITECTURE.md` (process model, the two audio paths, token handshake, build pipeline) and `docs/RELEASE_VALIDATION.md` (clean-machine Discord + game protocol).
+
+### Changed
+
+- **Virtual mic robustness** — the CABLE Input sink is resolved from a single module and kept current from app boot and on `devicechange`, fixing a silent failure where global shortcuts fired before opening the Speak screen didn't reach Discord. Mic-permission denial and local-path routing fallbacks now surface explicit warnings.
+- **Full English conversion** — all UI strings, docs, the model registry, and NSIS installer text are now in English (PT-BR i18n is a post-MVP item).
+- **CI** — `test.yml` adds type-check, Python API tests, and E2E; `release.yml` adds type-check and a packaged-backend smoke before publishing; `build-python.yml` moved to Python 3.12.
+
+### Removed
+
+- Dead code: the orphaned `ModelsPage`, `ClonePage`, and the `voices/` tab components; internal PT working docs moved to `docs/archive/`.
+
+### Security
+
+- Generic error responses (no exception-text leakage) on `/play` and `/voice/clone`; `modelId` validation on `/models/install-deps`.
+
 ## [1.2.0] - 2026-06-02 (pivo online-first + mic facil + simplificacao)
 
 ### Adicionado

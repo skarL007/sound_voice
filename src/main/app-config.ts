@@ -60,7 +60,7 @@ export function getModelRegistryPath(): string {
 
 export const APP_CONFIG = {
   name: 'VoiceLaunch TTS',
-  version: '1.0.0',
+  version: '1.3.0',
   backendPort: 9472,
   backendHost: '127.0.0.1',
   get userDataPath() { return getUserData() },
