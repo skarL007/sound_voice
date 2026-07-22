@@ -5,6 +5,7 @@ FastAPI server for TTS inference, voice cloning, and virtual microphone control.
 
 import argparse
 import asyncio
+import hmac
 import os
 import sys
 import json
@@ -16,9 +17,8 @@ from typing import Optional, List
 import numpy as np
 import sounddevice as sd
 import soundfile as sf
-from fastapi import FastAPI, WebSocket, UploadFile, File, Form
+from fastapi import FastAPI, Request, WebSocket, UploadFile, File, Form
 from fastapi.responses import FileResponse, JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, field_validator
 
 # Add tts_engines to path
@@ -32,14 +32,27 @@ from voice_cloner import VoiceCloner
 
 app = FastAPI(title="VoiceLaunch TTS Backend", version="1.0.0")
 
-# CORS — restrict to Electron origins only
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:*", "http://127.0.0.1:*", "file://"],
-    allow_credentials=True,
-    allow_methods=["GET", "POST"],
-    allow_headers=["Content-Type"],
-)
+# Shared-secret auth: the Electron main process generates a per-session token and
+# injects it via env. Every HTTP request (except /health) and the WebSocket must
+# present it. This closes the localhost drive-by surface (a web page POSTing to
+# 127.0.0.1:9472) regardless of CORS, so no CORS middleware is needed — the only
+# legitimate client is the main process, which sends no Origin header.
+# When the env var is absent (standalone dev runs, pytest, smoke scripts) the
+# backend runs open on localhost.
+BACKEND_TOKEN = os.environ.get("VOICELAUNCH_BACKEND_TOKEN", "")
+
+
+def _token_ok(provided: str) -> bool:
+    return hmac.compare_digest(provided, BACKEND_TOKEN)
+
+
+@app.middleware("http")
+async def require_auth_token(request: Request, call_next):
+    if BACKEND_TOKEN and request.url.path != "/health":
+        provided = request.headers.get("x-voicelaunch-token", "")
+        if not _token_ok(provided):
+            return JSONResponse(status_code=401, content={"success": False, "error": "Unauthorized"})
+    return await call_next(request)
 
 # Global state
 USER_DATA = get_user_data_dir()
@@ -119,6 +132,13 @@ class DeleteVoiceRequest(BaseModel):
 
 class InstallDepsRequest(BaseModel):
     modelId: str
+
+    @field_validator('modelId')
+    @classmethod
+    def validate_model_id(cls, v: str) -> str:
+        if not v or not v.replace("_", "").replace("-", "").isalnum():
+            raise ValueError("Invalid modelId")
+        return v
 
 
 # ============== Health & Info ==============
@@ -245,8 +265,10 @@ def play_audio(request: PlayRequest):
             "fallbackReason": routing["fallback_reason"],
             "deviceName": routing["device_name"],
         }
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
+    except Exception:
+        import traceback
+        traceback.print_exc()
+        return JSONResponse(status_code=500, content={"success": False, "error": "Playback failed"})
 
 
 @app.post("/stop")
@@ -259,6 +281,11 @@ def stop_audio():
 
 @app.websocket("/ws/tts-stream")
 async def tts_stream(websocket: WebSocket):
+    if BACKEND_TOKEN:
+        provided = websocket.headers.get("x-voicelaunch-token") or websocket.query_params.get("token") or ""
+        if not _token_ok(provided):
+            await websocket.close(code=4401)
+            return
     await websocket.accept()
     try:
         while True:
@@ -311,8 +338,10 @@ def clone_voice(request: CloneRequest):
             description=request.description
         )
         return result
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
+    except Exception:
+        import traceback
+        traceback.print_exc()
+        return JSONResponse(status_code=500, content={"success": False, "error": "Voice cloning failed"})
 
 
 @app.get("/voice/list")

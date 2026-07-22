@@ -146,8 +146,8 @@ export interface CloudVoice {
 }
 
 export interface BackendDiagnostics {
-  authMode: 'none'
-  authenticated: null
+  authMode: 'none' | 'token'
+  authenticated: boolean | null
   cliAvailable: boolean
   runnable: boolean
   command: string

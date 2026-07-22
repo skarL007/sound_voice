@@ -45,6 +45,17 @@ function getBackendUrl(): string {
   return `http://127.0.0.1:${port}`
 }
 
+// Toda chamada ao backend leva o token de sessao — sem ele o FastAPI responde 401.
+// Isso fecha a superficie de drive-by (paginas web fazendo POST em localhost:9472).
+function backendFetch(path: string, init?: RequestInit): Promise<Response> {
+  const token = getBackendManager()?.getAuthToken() ?? ''
+  const headers: Record<string, string> = {
+    ...((init?.headers as Record<string, string> | undefined) ?? {}),
+    'X-VoiceLaunch-Token': token,
+  }
+  return fetch(`${getBackendUrl()}${path}`, { ...init, headers })
+}
+
 export function registerIpcHandlers(): void {
   // Window controls
   ipcMain.on('window:minimize', () => {
@@ -130,6 +141,17 @@ export function registerIpcHandlers(): void {
       ? model.variants[variant].url
       : model.downloadUrl
 
+    // Checksum obrigatorio: modelo sem sha256 pinado no registry nao baixa.
+    if (!model.checksum || (model.configUrl && !model.configChecksum)) {
+      logMain('WARN', `Blocked model:download for ${modelId}: registry entry has no pinned sha256 checksum`)
+      window.webContents.send('model:download:complete', {
+        modelId,
+        success: false,
+        error: 'Download blocked: this model has no pinned checksum in the registry.',
+      })
+      return false
+    }
+
     const destination = join(MODELS_DIR, modelId, model.filename || 'model.bin')
 
     // Download main model file
@@ -147,6 +169,7 @@ export function registerIpcHandlers(): void {
         modelId: `${modelId}_config`,
         url: model.configUrl,
         destination: configDest,
+        checksum: model.configChecksum,
       }, window).catch(() => {
         // Config download failure is non-fatal
       })
@@ -164,7 +187,7 @@ export function registerIpcHandlers(): void {
     }
     try {
       const query = new URLSearchParams({ modelId })
-      const response = await fetch(`${getBackendUrl()}/models/load?${query.toString()}`, {
+      const response = await backendFetch(`/models/load?${query.toString()}`, {
         method: 'POST',
       })
       return await response.json()
@@ -182,7 +205,7 @@ export function registerIpcHandlers(): void {
     }
     try {
       const query = new URLSearchParams({ modelId })
-      const response = await fetch(`${getBackendUrl()}/models/unload?${query.toString()}`, {
+      const response = await backendFetch(`/models/unload?${query.toString()}`, {
         method: 'POST',
       })
       return await response.json()
@@ -216,7 +239,7 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('model:install-deps', async (_, modelId: string) => {
     try {
-      const response = await fetch(`${getBackendUrl()}/models/install-deps`, {
+      const response = await backendFetch(`/models/install-deps`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ modelId })
@@ -229,7 +252,7 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('model:deps-status', async (_, modelId: string) => {
     try {
-      const response = await fetch(`${getBackendUrl()}/models/deps-status/${modelId}`)
+      const response = await backendFetch(`/models/deps-status/${modelId}`)
       return await response.json()
     } catch {
       return { installed: false }
@@ -238,7 +261,7 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('model:registry', async () => {
     try {
-      const response = await fetch(`${getBackendUrl()}/models`)
+      const response = await backendFetch(`/models`)
       return await response.json()
     } catch {
       return []
@@ -248,7 +271,7 @@ export function registerIpcHandlers(): void {
   // TTS
   ipcMain.handle('tts:synthesize', async (_, request) => {
     try {
-      const response = await fetch(`${getBackendUrl()}/tts`, {
+      const response = await backendFetch(`/tts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(request)
@@ -261,7 +284,7 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('tts:play', async (_, audioPath: string) => {
     try {
-      await fetch(`${getBackendUrl()}/play`, {
+      await backendFetch(`/play`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ audioPath })
@@ -274,7 +297,7 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('tts:stop', async () => {
     try {
-      await fetch(`${getBackendUrl()}/stop`, { method: 'POST' })
+      await backendFetch(`/stop`, { method: 'POST' })
       return true
     } catch {
       return false
@@ -293,7 +316,7 @@ export function registerIpcHandlers(): void {
   // Voice cloning
   ipcMain.handle('voice:clone', async (_, request) => {
     try {
-      const response = await fetch(`${getBackendUrl()}/voice/clone`, {
+      const response = await backendFetch(`/voice/clone`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(request)
@@ -306,7 +329,7 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('voice:list', async () => {
     try {
-      const response = await fetch(`${getBackendUrl()}/voice/list`)
+      const response = await backendFetch(`/voice/list`)
       return await response.json()
     } catch {
       return []
@@ -315,7 +338,7 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('voice:delete', async (_, voiceId: string) => {
     try {
-      const response = await fetch(`${getBackendUrl()}/voice/delete`, {
+      const response = await backendFetch(`/voice/delete`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ voiceId })
@@ -329,7 +352,7 @@ export function registerIpcHandlers(): void {
   // Virtual mic
   ipcMain.handle('mic:route', async (_, enabled: boolean) => {
     try {
-      const response = await fetch(`${getBackendUrl()}/mic/route`, {
+      const response = await backendFetch(`/mic/route`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ enabled })
@@ -342,7 +365,7 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('mic:status', async () => {
     try {
-      const response = await fetch(`${getBackendUrl()}/mic/status`)
+      const response = await backendFetch(`/mic/status`)
       return (await response.json()).enabled
     } catch {
       return false
@@ -353,7 +376,7 @@ export function registerIpcHandlers(): void {
   // sem precisar reiniciar o app.
   ipcMain.handle('mic:refresh', async () => {
     try {
-      const response = await fetch(`${getBackendUrl()}/mic/refresh`, { method: 'POST' })
+      const response = await backendFetch(`/mic/refresh`, { method: 'POST' })
       return await response.json()
     } catch (error) {
       return { success: false, enabled: false, available: false, deviceName: null, error: String(error) }
@@ -362,7 +385,7 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('audio:devices', async () => {
     try {
-      const response = await fetch(`${getBackendUrl()}/audio/devices`)
+      const response = await backendFetch(`/audio/devices`)
       return await response.json()
     } catch {
       return []

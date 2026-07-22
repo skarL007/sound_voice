@@ -1,4 +1,5 @@
 import { spawn, ChildProcess, execFileSync } from 'child_process'
+import { randomBytes } from 'crypto'
 import { app } from 'electron'
 import { dirname, join } from 'path'
 import { existsSync } from 'fs'
@@ -21,6 +22,9 @@ interface BackendLaunchPlan {
 }
 
 export class PythonBackendManager {
+  // Segredo compartilhado por sessao: injetado no backend via env e exigido em
+  // toda requisicao HTTP/WS (exceto /health). Nunca sai do processo main.
+  private readonly authToken: string = randomBytes(32).toString('hex')
   private process: ChildProcess | null = null
   private port: number = BACKEND_PORT
   private isRunning: boolean = false
@@ -100,6 +104,7 @@ export class PythonBackendManager {
       if (launchPlan.pythonPath) env.PYTHONPATH = launchPlan.pythonPath
       env[VOICELAUNCH_ENV.userData] = APP_CONFIG.userDataPath
       env[VOICELAUNCH_ENV.modelRegistryPath] = APP_CONFIG.modelRegistryPath
+      env[VOICELAUNCH_ENV.backendToken] = this.authToken
 
       this.process = spawn(launchPlan.executable, launchPlan.args, {
         cwd: launchPlan.cwd,
@@ -265,6 +270,10 @@ export class PythonBackendManager {
     return this.stop().then(() => this.start())
   }
 
+  getAuthToken(): string {
+    return this.authToken
+  }
+
   getStatus() {
     return {
       running: this.isRunning,
@@ -351,8 +360,8 @@ export class PythonBackendManager {
     overrides: Partial<Pick<BackendDiagnostics, 'cliAvailable' | 'runnable' | 'detail'>> = {}
   ): BackendDiagnostics {
     return {
-      authMode: 'none',
-      authenticated: null,
+      authMode: 'token',
+      authenticated: true,
       cliAvailable: overrides.cliAvailable ?? false,
       runnable: overrides.runnable ?? false,
       command: this.formatCommand(plan),

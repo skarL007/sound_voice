@@ -5,6 +5,7 @@ export const VOICELAUNCH_ENV = {
   modelRegistryPath: 'VOICELAUNCH_MODEL_REGISTRY_PATH',
   userData: 'VOICELAUNCH_USER_DATA',
   pythonPath: 'VOICELAUNCH_PYTHON_PATH',
+  backendToken: 'VOICELAUNCH_BACKEND_TOKEN',
 } as const
 
 const USER_DATA_DIRNAME = 'voicelaunch-tts'

@@ -14,8 +14,10 @@
       "license": "MIT",
       "sizeMB": 50,
       "downloadUrl": "https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/pt/pt_BR/faber/medium/pt_BR-faber-medium.onnx?download=true",
+      "checksum": "858555e3a064209c57088fe6bd70c4c3dc54d03eaa00c45d5ecaf43a33f95aa7",
       "filename": "pt_BR-faber-medium.onnx",
       "configUrl": "https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/pt/pt_BR/faber/medium/pt_BR-faber-medium.onnx.json?download=true",
+      "configChecksum": "7e694de195ae3fc36dd732c445eb04fb49b649854893cb5506b978f0d50a1d6f",
       "tags": ["CPU", "Leve", "PT-BR", "Rápido", "Acessibilidade"]
     },
     {
@@ -31,8 +33,10 @@
       "license": "Apache 2.0",
       "sizeMB": 300,
       "downloadUrl": "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx",
+      "checksum": "7d5df8ecf7d4b1878015a32686053fd0eebe2bc377234608764cc0ef3636a6c5",
       "filename": "kokoro-v1.0.onnx",
       "configUrl": "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin",
+      "configChecksum": "bca610b8308e8d99f32e6fe4197e7ec01679264efed0cac9140fe9c29f1fbf7d",
       "configFilename": "voices-v1.0.bin",
       "tags": ["Qualidade", "Eficiente", "PT-BR", "Apache"]
     },
