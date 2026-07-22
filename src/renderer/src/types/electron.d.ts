@@ -11,6 +11,7 @@ import type {
   ClonedVoice,
   AudioDevice,
   BackendStatus,
+  PlaybackRoutingResult,
   ModelInfo,
   AppSettings,
   ModelRuntimeResponse,
@@ -36,7 +37,7 @@ export interface Api {
   loadModel: (modelId: string) => Promise<ModelRuntimeResponse>
   unloadModel: (modelId: string) => Promise<ModelRuntimeResponse>
   synthesize: (request: TTSRequest) => Promise<TTSResponse>
-  playAudio: (audioPath: string) => Promise<void>
+  playAudio: (audioPath: string) => Promise<PlaybackRoutingResult>
   stopAudio: () => Promise<void>
   startStream: (request: TTSRequest) => Promise<void>
   stopStream: () => Promise<void>

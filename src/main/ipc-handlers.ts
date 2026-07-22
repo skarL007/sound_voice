@@ -284,14 +284,18 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('tts:play', async (_, audioPath: string) => {
     try {
-      await backendFetch(`/play`, {
+      const response = await backendFetch(`/play`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ audioPath })
       })
-      return true
+      // Propaga o diagnostico de roteamento (routedToVirtualMic/fallbackReason)
+      // para a UI poder avisar quando a voz nao chegou ao cabo.
+      const data = await response.json().catch(() => null)
+      if (data && typeof data === 'object') return data
+      return { success: response.ok }
     } catch {
-      return false
+      return { success: false }
     }
   })
 

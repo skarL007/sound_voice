@@ -27,34 +27,10 @@ import { buildHistoryItem } from '../utils/communicationState'
 import { isModelVisibleInMvp } from '../utils/modelSupport'
 import { playCloudAudio, stopCloudAudio } from '../utils/cloudAudio'
 import { buildCsv, downloadCsv } from '../utils/historyExport'
-import { detectVBCable } from '../utils/virtualMicSetup'
+import { detectVBCable, resolveCableSink } from '../utils/virtualMicSetup'
 import { ShortcutCard } from '../components/ShortcutControls'
 import { useVoiceShortcuts } from '../hooks/useVoiceShortcuts'
 import { formatHotkeyDisplay } from '../utils/voiceShortcuts'
-
-/**
- * Acha o dispositivo de saida "CABLE Input" para rotear a voz online (Edge TTS)
- * pelo navegador (setSinkId). Pede permissao de microfone se os nomes vierem
- * vazios. Retorna null se nao encontrar.
- */
-async function autoSelectCableOutput(): Promise<{ id: string; label: string } | null> {
-  if (!navigator.mediaDevices?.enumerateDevices) return null
-  const pick = (list: MediaDeviceInfo[]) => {
-    const outs = list.filter((d) => d.kind === 'audiooutput')
-    return outs.find((d) => /cable input/i.test(d.label)) || outs.find((d) => /cable/i.test(d.label)) || null
-  }
-  let found = pick(await navigator.mediaDevices.enumerateDevices())
-  if (!found && navigator.mediaDevices.getUserMedia) {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      stream.getTracks().forEach((t) => t.stop())
-      found = pick(await navigator.mediaDevices.enumerateDevices())
-    } catch {
-      /* permissao negada — sem nomes nao da pra auto-selecionar */
-    }
-  }
-  return found ? { id: found.deviceId, label: found.label || 'CABLE Input' } : null
-}
 
 export default function TTSPage() {
   const {
@@ -277,8 +253,19 @@ export default function TTSPage() {
         if (cancelRef.current) return
         setIsSynthesizing(false)
         if (response.success && response.audioPath) {
-          await window.electronAPI.playAudio(response.audioPath)
+          const playResult = await window.electronAPI.playAudio(response.audioPath)
           if (cancelRef.current) return
+          // Diagnostico do backend: mic ligado mas a voz nao chegou ao cabo.
+          if (virtualMicEnabled && playResult && playResult.routedToVirtualMic === false) {
+            const reason = playResult.fallbackReason === 'device_not_found'
+              ? 'CABLE Input nao encontrado'
+              : playResult.fallbackReason || 'cabo indisponivel'
+            toast(
+              'Voz fora do microfone virtual',
+              `A voz tocou no alto-falante (${reason}) — o Discord nao ouviu.`,
+              'warning',
+            )
+          }
           addHistoryItem(
             buildHistoryItem({
               text: textToSpeak,
@@ -337,10 +324,17 @@ export default function TTSPage() {
   const activateVirtualMic = async (announce = true): Promise<boolean> => {
     let deviceId = cableDeviceId
     if (!deviceId) {
-      const cable = await autoSelectCableOutput()
-      if (cable) {
+      const cable = await resolveCableSink({ requestPermission: true })
+      if (cable.status === 'found') {
         setCableDevice(cable.id, cable.label)
         deviceId = cable.id
+      } else if (cable.status === 'permission-denied' && announce) {
+        toast(
+          'Permissao de microfone negada',
+          'Sem ela o app nao enxerga os nomes dos dispositivos e nao acha o CABLE Input. Permita o acesso e tente de novo.',
+          'warning',
+        )
+        return false
       }
     }
     if (!deviceId) {

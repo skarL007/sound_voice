@@ -28,7 +28,8 @@ import { useCommunicationSettings } from './hooks/useCommunicationSettings'
 import { buildHistoryItem, pushHistoryItem, sanitizeCommunicationState, serializeCommunicationState } from './utils/communicationState'
 import { getVisibleInstalledModels, resolveActiveModelForMvp } from './utils/modelSupport'
 import { toast } from './utils/toast'
-import { playCloudAudio } from './utils/cloudAudio'
+import { listOutputAudioDevices, playCloudAudio } from './utils/cloudAudio'
+import { pickCableOutput, resolveCableSink } from './utils/virtualMicSetup'
 import { formatHotkeyDisplay } from './utils/voiceShortcuts'
 import type { BackendStatus, ModelInfo } from '../../shared/types'
 
@@ -599,7 +600,78 @@ export default function App() {
     }
   }
 
+  // Mantem o CABLE Input resolvido desde o boot (e a cada troca de devices).
+  // Sem isso, atalhos globais disparados antes de abrir a tela Falar roteavam
+  // com cableDeviceId null e o Discord ficava mudo — falha silenciosa P0.
+  // So auto-define quando nao ha escolha valida do usuario (null ou device
+  // removido); nunca sobrescreve uma selecao manual que ainda existe.
   useEffect(() => {
+    let disposed = false
+
+    const syncCableDevice = async () => {
+      const state = useAppStore.getState()
+      if (!state._hydrated || disposed) return
+      const outputs = await listOutputAudioDevices()
+      if (disposed) return
+      const stillExists = state.cableDeviceId
+        ? outputs.some((device) => device.deviceId === state.cableDeviceId)
+        : false
+      if (stillExists) return
+      const pick = pickCableOutput(outputs)
+      if (pick && pick.id !== state.cableDeviceId) {
+        state.setCableDevice(pick.id, pick.label)
+      } else if (!pick && state.cableDeviceId) {
+        // Device sumiu (VB-Cable desinstalado?) — zera para a UI mostrar o estado real.
+        state.setCableDevice(null, null)
+      }
+    }
+
+    const waitHydrationThenSync = () => {
+      if (useAppStore.getState()._hydrated) {
+        void syncCableDevice()
+        return () => undefined
+      }
+      const unsub = useAppStore.subscribe((s) => {
+        if (s._hydrated) {
+          unsub()
+          void syncCableDevice()
+        }
+      })
+      return unsub
+    }
+
+    const unsubHydration = waitHydrationThenSync()
+    const onDeviceChange = () => void syncCableDevice()
+    navigator.mediaDevices?.addEventListener?.('devicechange', onDeviceChange)
+    return () => {
+      disposed = true
+      unsubHydration()
+      navigator.mediaDevices?.removeEventListener?.('devicechange', onDeviceChange)
+    }
+  }, [])
+
+  useEffect(() => {
+    // Resolve o cabo na hora do disparo global. Se o mic esta ligado mas nao ha
+    // cabo utilizavel, avisa — a voz vai tocar no alto-falante, nao no Discord.
+    const ensureCableForSpeak = async (
+      stored: string | null | undefined,
+      micOn: boolean,
+    ): Promise<string | undefined> => {
+      if (!micOn) return undefined
+      if (stored) return stored
+      const result = await resolveCableSink()
+      if (result.status === 'found') {
+        void window.electronAPI.saveSettings({ cableDeviceId: result.id, cableDeviceLabel: result.label })
+        return result.id
+      }
+      toast(
+        'Mic virtual sem cabo',
+        'A voz vai tocar no alto-falante, nao no Discord. Abra Ajustes > Microfone Virtual.',
+        'warning',
+      )
+      return undefined
+    }
+
     const speakQuickPhrase = async (index: number) => {
       const [settings, runtimeStatus, detectedHardware, registry, virtualMicOn] = await Promise.all([
         window.electronAPI.loadSettings(),
@@ -611,7 +683,7 @@ export default function App() {
       const communication = sanitizeCommunicationState(settings)
       const phrase = communication.quickPhrases[index]
       const source = settings.voiceSource ?? 'cloud'
-      const cableDeviceId = settings.cableDeviceId ?? null
+      const cableDeviceId = await ensureCableForSpeak(settings.cableDeviceId, virtualMicOn)
       const speed = settings.defaultSpeed || 1
 
       if (!phrase) {
@@ -636,7 +708,7 @@ export default function App() {
             return
           }
           await playCloudAudio(response.audioBase64, response.mimeType ?? 'audio/webm', {
-            cableDeviceId: virtualMicOn ? cableDeviceId : undefined,
+            cableDeviceId,
             monitorDeviceId: settings.monitorDeviceId,
           })
           const nextCommunication = {
@@ -736,7 +808,7 @@ export default function App() {
       if (!shortcut || !shortcut.enabled) return
       // Feedback visual imediato na página de atalhos
       window.dispatchEvent(new CustomEvent('voicelaunch:shortcut-triggered', { detail: shortcutId }))
-      const cableDeviceId = settings.cableDeviceId ?? null
+      const cableDeviceId = await ensureCableForSpeak(settings.cableDeviceId, virtualMicOn)
 
       try {
         if (shortcut.voiceSource === 'cloud') {
@@ -758,7 +830,7 @@ export default function App() {
             return
           }
           await playCloudAudio(response.audioBase64, response.mimeType ?? 'audio/webm', {
-            cableDeviceId: virtualMicOn ? cableDeviceId : undefined,
+            cableDeviceId,
             monitorDeviceId: settings.monitorDeviceId,
           })
           return

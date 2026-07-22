@@ -39,6 +39,10 @@ class VirtualMicController:
                     self._cable_input = i
                     self._cable_name = name
                     break
+                # "CABLE Output" e o lado de captura (Discord le dele); nunca
+                # serve como destino de playback, mesmo como fallback.
+                if "cable output" in lname:
+                    continue
                 if fallback is None:
                     fallback = (i, name)
             if self._cable_input is None and fallback is not None:

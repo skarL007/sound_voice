@@ -56,6 +56,14 @@ export interface TTSResponse {
   error?: string
 }
 
+/** Diagnostico devolvido pelo /play do backend: a voz chegou mesmo ao cabo? */
+export interface PlaybackRoutingResult {
+  success: boolean
+  routedToVirtualMic?: boolean
+  fallbackReason?: string | null
+  deviceName?: string | null
+}
+
 export interface TTSHistoryItem {
   id: string
   text: string
