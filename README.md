@@ -11,6 +11,8 @@ Type a phrase → hear a natural voice → it comes out of your **virtual microp
 
 > Built for people who can't or prefer not to speak, for gamers who want a voice in chat, and for anyone who needs fast, private, assistive communication.
 
+**🌐 Website: [skarl007.github.io/sound_voice](https://skarl007.github.io/sound_voice/)** · **⬇️ [Download](https://github.com/skarL007/sound_voice/releases/latest)**
+
 ---
 
 ## Why VoiceLaunch
