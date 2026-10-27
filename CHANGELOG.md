@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.3.1] - 2026-10-27
+
+### Fixed
+
+- **Version label** — the sidebar footer showed a hardcoded `VoiceLaunch TTS v1.0` on every build; it now reads the real version from the main process (`app.getVersion()`), so installed builds show what they are ([#4](https://github.com/skarL007/sound_voice/issues/4)).
+
+### Notes
+
+- First published installer of the 1.3 line: 1.3.0 was never tagged, so the latest download was still the Portuguese 1.2.0. This release ships the English UI described in 1.3.0.
+
 ## [1.3.0] - 2026-07-22 (first public open-source release)
 
 ### Added
