@@ -241,6 +241,23 @@ function TitleBar({
 }
 
 function Sidebar() {
+  const [appVersion, setAppVersion] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    window.electronAPI
+      .getAppVersion()
+      .then((version) => {
+        if (!cancelled) setAppVersion(version)
+      })
+      .catch(() => {
+        // Sem versao (ex.: IPC indisponivel): o rodape mostra so o nome.
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   return (
     <nav
       className="flex h-full w-20 flex-col px-3 py-4 lg:w-64 transition-[width] duration-200 ease-in-out"
@@ -277,7 +294,7 @@ function Sidebar() {
 
       <div className="mt-auto px-1 py-3 space-y-3">
         <div className="hidden lg:block text-xs text-ink-mute px-3">
-          <p>VoiceLaunch TTS v1.0</p>
+          <p>VoiceLaunch TTS{appVersion ? ` v${appVersion}` : ''}</p>
           <p>Online voice (Edge TTS) · Open Source</p>
         </div>
       </div>
