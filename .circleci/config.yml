@@ -1,0 +1,116 @@
+# CircleCI: CI/CD of VoiceLaunch TTS. The account's GitHub Actions is blocked by billing,
+# so CircleCI (Free plan) runs what the workflows in .github/workflows used to run.
+#
+#   GitHub Actions   → CircleCI
+#   test.yml         → job test-windows: the same steps, on Windows (keep both in sync)
+#   pages.yml        → job deploy-landing: on main only, copies landing/ to the gh-pages branch,
+#                      which GitHub Pages serves ("Deploy from a branch": gh-pages, /).
+#                      GITHUB_TOKEN comes from the `github-pages` context: a fine-grained token
+#                      for this repository only, with Contents: read and write.
+#   release.yml and build-python.yml stay on GitHub Actions for now.
+#
+# When Actions is back: switch Pages back to "GitHub Actions" before re-enabling pages.yml,
+# or the two deploys will fight over the site.
+version: 2.1
+
+executors:
+  windows:
+    machine:
+      image: windows-server-2022-gui:current
+    resource_class: windows.medium
+    shell: bash.exe
+  linux:
+    docker:
+      - image: cimg/base:current
+    resource_class: small
+
+jobs:
+  test-windows:
+    executor: windows
+    steps:
+      - checkout
+      - run:
+          name: Node.js 20
+          command: |
+            nvm install 20
+            nvm use 20
+            node --version && npm --version
+      - restore_cache:
+          keys:
+            - npm-win-v1-{{ checksum "package-lock.json" }}
+      - run:
+          name: Install dependencies
+          command: npm ci
+      - save_cache:
+          key: npm-win-v1-{{ checksum "package-lock.json" }}
+          paths:
+            - ~/AppData/Local/npm-cache
+      - run:
+          name: Type check
+          command: npx tsc --noEmit
+      - run:
+          name: Run tests
+          command: npm test
+      - run:
+          name: Python 3.12
+          command: |
+            if ! py -3.12 --version >/dev/null 2>&1; then
+              choco install python312 -y --no-progress
+            fi
+            py -3.12 -m venv ~/py
+            echo 'export PATH="$HOME/py/Scripts:$PATH"' >> "$BASH_ENV"
+      - run:
+          name: Install backend test dependencies
+          command: |
+            python --version
+            python -m pip install -q fastapi "httpx<0.28" pytest psutil numpy soundfile sounddevice requests
+      - run:
+          name: Run Python API tests
+          command: python -m pytest src/python/tests src/python/test_security_validators.py -q
+      - run:
+          name: Build (no installer)
+          command: npm run build
+      # Electron E2E uses the app's own Electron binary (installed by npm ci), so no browser
+      # download is needed. Tests tagged @online need the network and stay out, as on Actions.
+      - run:
+          name: Run E2E tests (Electron, offline)
+          command: npx playwright test --grep-invert '@online'
+          no_output_timeout: 15m
+      - store_artifacts:
+          path: test-results
+          destination: playwright
+
+  deploy-landing:
+    executor: linux
+    steps:
+      - checkout
+      - run:
+          name: Publish landing/ to the gh-pages branch
+          command: |
+            set -euo pipefail
+            : "${GITHUB_TOKEN:?missing: add it to the github-pages context}"
+            REPO="${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
+            OUT="$(mktemp -d)"
+            cp -R landing/. "$OUT"
+            touch "$OUT/.nojekyll"
+            cd "$OUT"
+            git init -q -b gh-pages
+            git config user.name "Marcelo Machuca"
+            git config user.email "100003435+skarL007@users.noreply.github.com"
+            git add -A
+            git commit -q -m "Deploy landing from ${CIRCLE_SHA1:0:7}"
+            # The token goes in a header, never in the URL, so it cannot show up in an error message.
+            AUTH="$(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64 -w0)"
+            git -c http.extraHeader="Authorization: Basic ${AUTH}" push -q --force "https://github.com/${REPO}.git" gh-pages
+            echo "Published landing/ from ${CIRCLE_SHA1:0:7} to gh-pages."
+
+workflows:
+  ci:
+    jobs:
+      - test-windows
+      # Independent of the tests, as pages.yml was: a flaky E2E must not hold back a landing fix.
+      - deploy-landing:
+          context: github-pages
+          filters:
+            branches:
+              only: main

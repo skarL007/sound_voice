@@ -5,9 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>VoiceLaunch TTS — your typing becomes a mic in Discord and any game</title>
   <meta name="description" content="Free, open-source text-to-speech launcher for Windows. Turn what you type into a real microphone for Discord and any game. Online-first with automatic local fallback. No account, no telemetry." />
-  <meta property="og:title" content="VoiceLaunch TTS" />
-  <meta property="og:description" content="Turn your typing into a real microphone for Discord and any game. Free, open source, no account." />
   <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="VoiceLaunch TTS" />
+  <meta property="og:title" content="VoiceLaunch TTS — your typing becomes a real mic in Discord and any game" />
+  <meta property="og:description" content="Turn your typing into a real microphone for Discord and any game. Free, open source, no account." />
+  <meta property="og:url" content="https://skarl007.github.io/sound_voice/" />
+  <meta property="og:image" content="https://skarl007.github.io/sound_voice/og-image.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="VoiceLaunch TTS landing page: your typing becomes a real mic in Discord and any game" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="VoiceLaunch TTS — your typing becomes a real mic in Discord and any game" />
+  <meta name="twitter:description" content="Turn your typing into a real microphone for Discord and any game. Free, open source, no account." />
+  <meta name="twitter:image" content="https://skarl007.github.io/sound_voice/og-image.png" />
+  <meta name="twitter:image:alt" content="VoiceLaunch TTS landing page: your typing becomes a real mic in Discord and any game" />
+  <link rel="canonical" href="https://skarl007.github.io/sound_voice/" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%236d5ae6'/%3E%3Cpath d='M11 10v12M16 7v18M21 12v8' stroke='white' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -89,7 +102,9 @@
     h1 { font-size: clamp(34px, 5.2vw, 56px); line-height: 1.08; letter-spacing: -.02em; margin: 18px 0 20px; }
     h1 .accent { background: linear-gradient(120deg, var(--brand), var(--live)); -webkit-background-clip: text; background-clip: text; color: transparent; }
     .lede { font-size: clamp(17px, 2vw, 20px); color: var(--ink-soft); max-width: 34em; }
-    .cta-row { display: flex; flex-wrap: wrap; gap: 14px; margin: 30px 0 16px; }
+    .cta-row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 14px; margin: 30px 0 16px; }
+    .dl { display: inline-flex; flex-direction: column; align-items: center; gap: 7px; }
+    .dl-meta { font-size: 13px; color: var(--ink-mute); white-space: nowrap; }
     .trust { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 14px; color: var(--ink-mute); }
     .trust span { display: inline-flex; align-items: center; gap: 7px; }
     .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ok); }
@@ -177,6 +192,9 @@
     .foot-links { display: flex; flex-wrap: wrap; gap: 10px 24px; font-size: 15px; color: var(--ink-soft); }
     .foot-links a:hover { color: var(--ink); }
     .foot-note { font-size: 13.5px; color: var(--ink-mute); margin-top: 20px; max-width: 46em; }
+    .foot-credit { font-size: 14px; color: var(--ink-mute); margin-top: 14px; }
+    .foot-credit a { color: var(--ink-soft); }
+    .foot-credit a:hover { color: var(--ink); }
     .accent-check { color: var(--ok); }
 
     /* a11y strip */
@@ -218,10 +236,13 @@
             instantly, and a local voice takes over automatically when you go offline.
           </p>
           <div class="cta-row">
-            <a class="btn btn-primary" href="https://github.com/skarL007/sound_voice/releases/latest">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              Download for Windows
-            </a>
+            <div class="dl">
+              <a class="btn btn-primary" href="https://github.com/skarL007/sound_voice/releases/latest" aria-describedby="dl-meta-hero">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Download for Windows
+              </a>
+              <span class="dl-meta" id="dl-meta-hero">v1.2.0 · 323 MB · Windows 10/11</span>
+            </div>
             <a class="btn btn-ghost" href="https://github.com/skarL007/sound_voice">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49l-.01-1.72c-2.78.62-3.37-1.37-3.37-1.37-.46-1.18-1.11-1.49-1.11-1.49-.9-.64.07-.62.07-.62 1 .07 1.53 1.05 1.53 1.05.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.55-1.14-4.55-5.06 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.28 2.75 1.05a9.3 9.3 0 0 1 5 0c1.91-1.33 2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.93-2.34 4.79-4.57 5.05.36.32.68.94.68 1.9l-.01 2.82c0 .27.18.6.69.49A10.02 10.02 0 0 0 22 12.25C22 6.58 17.52 2 12 2Z"/></svg>
               View on GitHub
@@ -357,7 +378,7 @@
           <div class="step">
             <div class="n">1</div>
             <h3>Download</h3>
-            <p>Grab the latest <code>VoiceLaunch-TTS-Setup.exe</code> from GitHub Releases and run it. VB-Cable installs automatically.</p>
+            <p>Grab the latest <code>VoiceLaunch-TTS-Setup-&lt;version&gt;.exe</code> from GitHub Releases and run it. VB-Cable installs automatically.</p>
           </div>
           <div class="step">
             <div class="n">2</div>
@@ -376,8 +397,8 @@
           the installer's SHA-256 so you can verify it first:
         </div>
         <div class="code">
-          <button class="copy" data-copy="Get-FileHash -Algorithm SHA256 .\VoiceLaunch-TTS-Setup.exe">Copy</button>
-          <pre>Get-FileHash -Algorithm SHA256 .\VoiceLaunch-TTS-Setup.exe</pre>
+          <button class="copy" data-copy="Get-FileHash -Algorithm SHA256 .\VoiceLaunch-TTS-Setup-*.exe">Copy</button>
+          <pre>Get-FileHash -Algorithm SHA256 .\VoiceLaunch-TTS-Setup-*.exe</pre>
         </div>
       </div>
     </section>
@@ -410,7 +431,10 @@
           <h2>Give yourself a voice in every call.</h2>
           <p>Free, open source, no account. Download it, enable the mic, and you're talking in Discord in under a minute.</p>
           <div class="cta-row">
-            <a class="btn btn-primary" href="https://github.com/skarL007/sound_voice/releases/latest">Download for Windows</a>
+            <div class="dl">
+              <a class="btn btn-primary" href="https://github.com/skarL007/sound_voice/releases/latest" aria-describedby="dl-meta-band">Download for Windows</a>
+              <span class="dl-meta" id="dl-meta-band">v1.2.0 · 323 MB · Windows 10/11</span>
+            </div>
             <a class="btn btn-ghost" href="https://github.com/skarL007/sound_voice">Star on GitHub</a>
           </div>
         </div>
@@ -440,6 +464,7 @@
         The installer is currently unsigned; verify the published SHA-256 before running.
         Cloud voices send only the text you type to Microsoft's public Edge Read-Aloud endpoint; local synthesis stays on your machine.
       </p>
+      <p class="foot-credit">Made by Marcelo Machuca · <a href="https://skarl007.github.io/en/" target="_blank" rel="noopener">portfolio</a></p>
     </div>
   </footer>
 
