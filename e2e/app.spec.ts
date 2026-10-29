@@ -75,6 +75,9 @@ test('a created voice shortcut persists across relaunch', async () => {
 
   await dismissOnboarding(first.page)
   await first.page.getByRole('link', { name: 'Shortcuts' }).click()
+  // The Speak page has a field with the same placeholder; wait for the route to
+  // switch, or the phrase lands there and Add on this page sees an empty draft.
+  await expect(first.page.getByRole('heading', { name: 'Voice shortcuts', level: 1 })).toBeVisible()
 
   const phrase = 'E2E persisted shortcut'
   await first.page.getByPlaceholder(/what should the shortcut say/i).fill(phrase)
