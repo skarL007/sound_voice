@@ -78,6 +78,9 @@ test('a created voice shortcut persists across relaunch', async () => {
 
   const phrase = 'E2E persisted shortcut'
   await first.page.getByPlaceholder(/what should the shortcut say/i).fill(phrase)
+  // The voice list loads async on mount; clicking Add before it arrives only
+  // shows the "Choose a voice" toast. Picking the mock voice waits for it.
+  await first.page.getByRole('combobox', { name: 'New shortcut voice' }).selectOption('en-US-MockNeural')
   await first.page.getByRole('button', { name: /^Add$/ }).click()
   await expect(first.page.getByText(phrase).first()).toBeVisible()
 
