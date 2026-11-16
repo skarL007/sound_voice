@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="fr" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>VoiceLaunch TTS : votre saisie devient un micro dans Discord et dans n'importe quel jeu</title>
+  <meta name="description" content="Lanceur de synthèse vocale gratuit et open source pour Windows. Transformez ce que vous tapez en véritable microphone pour Discord et n'importe quel jeu. En ligne d'abord, avec repli local automatique. Aucun compte, aucune télémétrie." />
+  <meta property="og:title" content="VoiceLaunch TTS" />
+  <meta property="og:description" content="Transformez votre saisie en véritable microphone pour Discord et n'importe quel jeu. Gratuit, open source, sans compte." />
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="fr_FR" />
+  <link rel="alternate" hreflang="en" href="https://skarl007.github.io/sound_voice/" />
+  <link rel="alternate" hreflang="fr" href="https://skarl007.github.io/sound_voice/fr/" />
+  <link rel="alternate" hreflang="x-default" href="https://skarl007.github.io/sound_voice/" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%236d5ae6'/%3E%3Cpath d='M11 10v12M16 7v18M21 12v8' stroke='white' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0a0b11;
+      --bg-grad: radial-gradient(1200px 600px at 78% -10%, rgba(109,90,230,.20), transparent 60%),
+                 radial-gradient(900px 500px at 5% 8%, rgba(57,208,216,.08), transparent 55%);
+      --surface: #12141d;
+      --surface-2: #171a25;
+      --border: #262a38;
+      --border-soft: #1e2230;
+      --brand: #7c6cf0;
+      --brand-strong: #6d5ae6;
+      --live: #39d0d8;
+      --ink: #f3f4f8;
+      --ink-soft: #aeb2c4;
+      --ink-mute: #737892;
+      --ok: #47c98a;
+      --radius: 16px;
+      --maxw: 1120px;
+      --font: 'Atkinson Hyperlegible', 'Segoe UI', system-ui, -apple-system, sans-serif;
+      --mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', Consolas, monospace;
+    }
+    @media (prefers-color-scheme: light) {
+      :root[data-theme="auto"] {
+        --bg: #f7f8fc; --surface: #ffffff; --surface-2: #f2f3f9;
+        --border: #e2e4ee; --border-soft: #edeef5;
+        --ink: #14161f; --ink-soft: #4c5164; --ink-mute: #878ca3;
+        --bg-grad: radial-gradient(1200px 600px at 78% -10%, rgba(109,90,230,.12), transparent 60%);
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      background-image: var(--bg-grad);
+      color: var(--ink);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    a { color: inherit; text-decoration: none; }
+    .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
+    .eyebrow {
+      font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+      color: var(--brand); display: inline-flex; align-items: center; gap: 8px;
+    }
+
+    /* Nav */
+    header.nav { position: sticky; top: 0; z-index: 20;
+      background: color-mix(in srgb, var(--bg) 82%, transparent);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-soft); }
+    .nav-in { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+    .brand { display: flex; align-items: center; gap: 11px; font-weight: 700; font-size: 17px; }
+    .logo { width: 30px; height: 30px; border-radius: 9px; background: linear-gradient(135deg, var(--brand), var(--brand-strong)); display: grid; place-items: center; box-shadow: 0 4px 16px rgba(109,90,230,.4); }
+    .nav-links { display: flex; align-items: center; gap: 26px; font-size: 15px; color: var(--ink-soft); }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-links .ghost { display: none; }
+    @media (min-width: 780px) { .nav-links .ghost { display: inline; } }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 9px; font-weight: 700; font-size: 15px;
+      padding: 11px 20px; border-radius: 12px; border: 1px solid transparent; cursor: pointer;
+      transition: transform .12s ease, box-shadow .2s ease, background .2s ease;
+    }
+    .btn-primary { background: linear-gradient(135deg, var(--brand), var(--brand-strong)); color: #fff; box-shadow: 0 6px 22px rgba(109,90,230,.38); }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 10px 30px rgba(109,90,230,.5); }
+    .btn-ghost { background: var(--surface); border-color: var(--border); color: var(--ink); }
+    .btn-ghost:hover { border-color: var(--brand); }
+
+    /* Hero */
+    .hero { padding: 72px 0 40px; }
+    .hero-grid { display: grid; gap: 48px; align-items: center; }
+    @media (min-width: 940px) { .hero-grid { grid-template-columns: 1.05fr .95fr; } }
+    h1 { font-size: clamp(34px, 5.2vw, 56px); line-height: 1.08; letter-spacing: -.02em; margin: 18px 0 20px; }
+    h1 .accent { background: linear-gradient(120deg, var(--brand), var(--live)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .lede { font-size: clamp(17px, 2vw, 20px); color: var(--ink-soft); max-width: 34em; }
+    .cta-row { display: flex; flex-wrap: wrap; gap: 14px; margin: 30px 0 16px; }
+    .trust { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 14px; color: var(--ink-mute); }
+    .trust span { display: inline-flex; align-items: center; gap: 7px; }
+    .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ok); }
+
+    /* App mockup */
+    .mock { border: 1px solid var(--border); border-radius: 18px; background: var(--surface); overflow: hidden; box-shadow: 0 30px 80px -30px rgba(0,0,0,.7); }
+    .mock-bar { display: flex; align-items: center; gap: 8px; padding: 13px 16px; border-bottom: 1px solid var(--border-soft); background: var(--surface-2); }
+    .mock-bar i { width: 11px; height: 11px; border-radius: 50%; background: #3a3f52; display: inline-block; }
+    .mock-title { margin-left: 10px; font-size: 12.5px; color: var(--ink-mute); font-family: var(--mono); }
+    .mock-body { padding: 20px; display: grid; gap: 14px; }
+    .pill-row { display: flex; flex-wrap: wrap; gap: 8px; }
+    .pill { font-size: 12.5px; font-weight: 700; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--border); color: var(--ink-soft); display: inline-flex; align-items: center; gap: 7px; }
+    .pill.live { border-color: color-mix(in srgb, var(--live) 45%, transparent); color: var(--live); background: color-mix(in srgb, var(--live) 10%, transparent); }
+    .pill.live .dot { background: var(--live); box-shadow: 0 0 0 3px color-mix(in srgb, var(--live) 22%, transparent); }
+    .mock-input { border: 1px solid var(--border); border-radius: 12px; background: var(--bg); padding: 16px; font-family: var(--mono); font-size: 15px; color: var(--ink); min-height: 96px; }
+    .mock-input .cursor { color: var(--brand); animation: blink 1.1s steps(2) infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+    .mock-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .mock-route { font-size: 13px; color: var(--ink-mute); font-family: var(--mono); }
+    .mock-route b { color: var(--live); }
+    .mock-speak { background: linear-gradient(135deg, var(--brand), var(--brand-strong)); color: #fff; font-weight: 700; padding: 10px 22px; border-radius: 11px; font-size: 14px; }
+
+    /* Sections */
+    section { padding: 68px 0; }
+    .section-head { max-width: 40em; margin-bottom: 40px; }
+    .section-head h2 { font-size: clamp(26px, 3.4vw, 36px); letter-spacing: -.01em; margin: 12px 0 12px; }
+    .section-head p { color: var(--ink-soft); font-size: 17px; }
+
+    .grid { display: grid; gap: 18px; grid-template-columns: 1fr; }
+    @media (min-width: 640px) { .grid { grid-template-columns: 1fr 1fr; } }
+    @media (min-width: 940px) { .grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; } }
+    .card { border: 1px solid var(--border); background: var(--surface); border-radius: var(--radius); padding: 24px; transition: border-color .2s ease, transform .2s ease; }
+    .card:hover { border-color: color-mix(in srgb, var(--brand) 55%, var(--border)); transform: translateY(-2px); }
+    .card .ic { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: color-mix(in srgb, var(--brand) 15%, transparent); color: var(--brand); margin-bottom: 16px; }
+    .card h3 { font-size: 18px; margin-bottom: 8px; }
+    .card p { color: var(--ink-soft); font-size: 15px; }
+
+    /* Flow */
+    .flow { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); padding: 28px; overflow-x: auto; }
+    .flow-row { display: flex; align-items: center; gap: 14px; min-width: 720px; }
+    .node { flex: 1; text-align: center; padding: 18px 14px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface-2); }
+    .node .k { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-mute); font-weight: 700; }
+    .node .v { font-size: 14.5px; margin-top: 6px; color: var(--ink); }
+    .node.brand { border-color: color-mix(in srgb, var(--brand) 50%, transparent); }
+    .node.live { border-color: color-mix(in srgb, var(--live) 45%, transparent); }
+    .arrow { color: var(--brand); flex: 0 0 auto; }
+
+    /* Table */
+    .table-wrap { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 560px; }
+    th, td { text-align: left; padding: 15px 20px; font-size: 15px; border-bottom: 1px solid var(--border-soft); }
+    thead th { background: var(--surface-2); font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-mute); }
+    tbody tr:last-child td { border-bottom: none; }
+    td b { color: var(--ink); }
+    .tag { font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; }
+    .tag.default { background: color-mix(in srgb, var(--brand) 18%, transparent); color: var(--brand); }
+    .tag.stable { background: color-mix(in srgb, var(--ok) 16%, transparent); color: var(--ok); }
+    .tag.adv { background: color-mix(in srgb, var(--live) 14%, transparent); color: var(--live); }
+    .tag.exp { background: var(--surface-2); color: var(--ink-mute); }
+
+    /* Install */
+    .steps { display: grid; gap: 16px; }
+    @media (min-width: 780px) { .steps { grid-template-columns: repeat(3, 1fr); } }
+    .step { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); padding: 24px; }
+    .step .n { width: 34px; height: 34px; border-radius: 10px; background: linear-gradient(135deg, var(--brand), var(--brand-strong)); color: #fff; font-weight: 700; display: grid; place-items: center; margin-bottom: 14px; }
+    .step h3 { font-size: 16.5px; margin-bottom: 6px; }
+    .step p { font-size: 14.5px; color: var(--ink-soft); }
+    .note { margin-top: 22px; border: 1px solid color-mix(in srgb, #e0a83a 40%, var(--border)); background: color-mix(in srgb, #e0a83a 8%, transparent); border-radius: 12px; padding: 16px 18px; font-size: 14.5px; color: var(--ink-soft); }
+    .note b { color: var(--ink); }
+    .code { margin-top: 16px; position: relative; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); font-family: var(--mono); font-size: 13.5px; }
+    .code pre { padding: 16px 18px; overflow-x: auto; color: var(--ink-soft); }
+    .code .copy { position: absolute; top: 10px; right: 10px; font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--ink-soft); cursor: pointer; }
+    .code .copy:hover { color: var(--ink); border-color: var(--brand); }
+
+    /* CTA band */
+    .band { border: 1px solid var(--border); border-radius: 22px; background:
+      linear-gradient(135deg, color-mix(in srgb, var(--brand) 18%, var(--surface)), var(--surface));
+      padding: clamp(32px, 5vw, 56px); text-align: center; }
+    .band h2 { font-size: clamp(26px, 3.6vw, 38px); letter-spacing: -.01em; margin-bottom: 14px; }
+    .band p { color: var(--ink-soft); font-size: 17px; max-width: 34em; margin: 0 auto 26px; }
+    .band .cta-row { justify-content: center; }
+
+    footer { border-top: 1px solid var(--border-soft); padding: 44px 0 60px; margin-top: 40px; }
+    .foot-grid { display: flex; flex-wrap: wrap; gap: 24px; justify-content: space-between; align-items: flex-start; }
+    .foot-links { display: flex; flex-wrap: wrap; gap: 10px 24px; font-size: 15px; color: var(--ink-soft); }
+    .foot-links a:hover { color: var(--ink); }
+    .foot-note { font-size: 13.5px; color: var(--ink-mute); margin-top: 20px; max-width: 46em; }
+    .accent-check { color: var(--ok); }
+
+    /* a11y strip */
+    .a11y { display: flex; flex-wrap: wrap; gap: 12px; }
+    .a11y .chip { font-size: 14px; color: var(--ink-soft); border: 1px solid var(--border); border-radius: 999px; padding: 8px 16px; display: inline-flex; gap: 8px; align-items: center; }
+    :focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; border-radius: 6px; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; scroll-behavior: auto; } }
+  </style>
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap nav-in">
+      <a class="brand" href="#top">
+        <span class="logo" aria-hidden="true">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M8 8v8M12 5v14M16 9v6" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>
+        </span>
+        VoiceLaunch TTS
+      </a>
+      <nav class="nav-links" aria-label="Principale">
+        <a class="ghost" href="#features">Fonctionnalités</a>
+        <a class="ghost" href="#how">Fonctionnement</a>
+        <a class="ghost" href="#install">Installation</a>
+        <a href="https://github.com/skarL007/sound_voice">GitHub</a>
+        <a href="../" hreflang="en" lang="en" aria-label="English version">EN</a>
+        <a class="btn btn-primary" href="https://github.com/skarL007/sound_voice/releases/latest">Télécharger</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+    <!-- HERO -->
+    <section class="hero">
+      <div class="wrap hero-grid">
+        <div>
+          <span class="eyebrow"><span class="dot" style="background:var(--brand)"></span> Gratuit &amp; open source · Windows</span>
+          <h1>Votre saisie devient un <span class="accent">vrai micro</span> dans Discord et dans n'importe quel jeu.</h1>
+          <p class="lede">
+            Tapez une phrase, entendez une voix naturelle : elle sort par votre micro virtuel,
+            et toutes les personnes de votre appel ou de votre chat vocal en jeu l'entendent.
+            Des centaines de voix fonctionnent immédiatement, et une voix locale prend le relais
+            automatiquement quand vous êtes hors ligne.
+          </p>
+          <div class="cta-row">
+            <a class="btn btn-primary" href="https://github.com/skarL007/sound_voice/releases/latest">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Télécharger pour Windows
+            </a>
+            <a class="btn btn-ghost" href="https://github.com/skarL007/sound_voice">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49l-.01-1.72c-2.78.62-3.37-1.37-3.37-1.37-.46-1.18-1.11-1.49-1.11-1.49-.9-.64.07-.62.07-.62 1 .07 1.53 1.05 1.53 1.05.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.55-1.14-4.55-5.06 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.28 2.75 1.05a9.3 9.3 0 0 1 5 0c1.91-1.33 2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.93-2.34 4.79-4.57 5.05.36.32.68.94.68 1.9l-.01 2.82c0 .27.18.6.69.49A10.02 10.02 0 0 0 22 12.25C22 6.58 17.52 2 12 2Z"/></svg>
+              Voir sur GitHub
+            </a>
+          </div>
+          <div class="trust">
+            <span><span class="dot"></span> Aucun compte</span>
+            <span><span class="dot"></span> Aucune télémétrie</span>
+            <span><span class="dot"></span> Fonctionne dans tous les jeux</span>
+            <span><span class="dot"></span> Licence MIT</span>
+          </div>
+        </div>
+
+        <!-- App mockup -->
+        <div class="mock" role="img" aria-label="Écran Parler de VoiceLaunch TTS : saisie d'une phrase acheminée vers le micro virtuel">
+          <div class="mock-bar">
+            <i></i><i></i><i></i>
+            <span class="mock-title">VoiceLaunch TTS : Parler</span>
+          </div>
+          <div class="mock-body">
+            <div class="pill-row">
+              <span class="pill live"><span class="dot"></span> Micro virtuel activé</span>
+              <span class="pill">Edge · fr-FR-DeniseNeural</span>
+              <span class="pill">Auto</span>
+            </div>
+            <div class="mock-input">Salut l'équipe, j'avance sur B : couvrez-moi !<span class="cursor">▌</span></div>
+            <div class="mock-actions">
+              <span class="mock-route">Auto → <b>Edge (en ligne)</b> → CABLE Input</span>
+              <span class="mock-speak">Parler ▸</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section id="features">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">Pourquoi VoiceLaunch</span>
+          <h2>Une voix là où vous parlez vraiment.</h2>
+          <p>Conçu pour les personnes qui ne peuvent pas ou préfèrent ne pas parler, pour les joueurs qui veulent une voix dans le chat, et pour toute personne qui a besoin d'une communication assistée, rapide et privée.</p>
+        </div>
+        <div class="grid cols-3">
+          <div class="card">
+            <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 3a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3Z" stroke="currentColor" stroke-width="2"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+            <h3>Micro virtuel pour Discord &amp; les jeux</h3>
+            <p>La voix générée est acheminée vers un micro virtuel (VB-Cable, inclus dans l'installateur). Toute application qui lit un micro l'entend : Discord, Zoom, chat vocal en jeu.</p>
+          </div>
+          <div class="card">
+            <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 7h10M4 12h7M4 17h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M17 5l3 3-3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <h3>Routage Auto intelligent</h3>
+            <p>Edge TTS en ligne quand vous avez internet, repli instantané sur une voix locale (Kokoro/Piper) quand vous êtes hors ligne ou que la connexion tombe. Aucun réglage à changer.</p>
+          </div>
+          <div class="card">
+            <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M13 3L4 14h7l-1 7 9-11h-7l1-7Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></div>
+            <h3>Instantané, sans compte</h3>
+            <p>Des centaines de voix Microsoft Edge naturelles fonctionnent dès l'ouverture de l'application. Rien à télécharger, aucune inscription, aucune télémétrie.</p>
+          </div>
+          <div class="card">
+            <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="12" rx="2" stroke="currentColor" stroke-width="2"/><path d="M7 10h.01M11 10h.01M15 10h2M8 14h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+            <h3>Raccourcis vocaux globaux</h3>
+            <p>Associez une phrase à un raccourci et déclenchez-la depuis un jeu sans quitter la fenêtre. « GG », « couvrez-moi » ou vos propres phrases : une seule touche.</p>
+          </div>
+          <div class="card">
+            <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="7" r="3.2" stroke="currentColor" stroke-width="2"/><path d="M5 21c0-3.9 3.1-7 7-7s7 3.1 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+            <h3>Pensé pour l'accessibilité</h3>
+            <p>Historique et brouillon persistants, phrases rapides, clavier virtuel, modes contraste élevé et grande police, navigation complète au clavier, focus visible.</p>
+          </div>
+          <div class="card">
+            <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.5 6.5L21 9l-5 4 1.5 7L12 16l-5.5 4L8 13 3 9l6.5-.5L12 2Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></div>
+            <h3>Gratuit &amp; open source</h3>
+            <p>Licence MIT, pas de version payante, aucune collecte de données. La synthèse locale ne quitte jamais votre machine. Contributions bienvenues.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section id="how">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">Fonctionnement</span>
+          <h2>Tapez → routage → parlez dans n'importe quel chat vocal.</h2>
+          <p>Le mode Auto choisit le meilleur moteur pour chaque phrase et diffuse l'audio vers votre micro virtuel pour que Discord et les jeux l'entendent, tout en vous laissant vous entendre vous-même.</p>
+        </div>
+        <div class="flow">
+          <div class="flow-row">
+            <div class="node brand"><div class="k">1 · Vous</div><div class="v">Tapez une phrase ou déclenchez un raccourci</div></div>
+            <span class="arrow"><svg width="26" height="20" viewBox="0 0 26 20" fill="none"><path d="M2 10h20m0 0l-5-5m5 5l-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <div class="node"><div class="k">2 · Routage auto</div><div class="v">Edge en ligne · Kokoro/Piper hors ligne</div></div>
+            <span class="arrow"><svg width="26" height="20" viewBox="0 0 26 20" fill="none"><path d="M2 10h20m0 0l-5-5m5 5l-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <div class="node live"><div class="k">3 · Micro virtuel</div><div class="v">CABLE Input (VB-Cable)</div></div>
+            <span class="arrow"><svg width="26" height="20" viewBox="0 0 26 20" fill="none"><path d="M2 10h20m0 0l-5-5m5 5l-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <div class="node"><div class="k">4 · Ils entendent</div><div class="v">Discord, Zoom &amp; jeux</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VOICES -->
+    <section>
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">Voix</span>
+          <h2>Qualité cloud par défaut, local quand il le faut.</h2>
+          <p>Le mode Auto choisit le moteur local selon votre matériel. Le parcours local recommandé est Piper d'abord, puis Kokoro pour une meilleure qualité.</p>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Moteur</th><th>Statut</th><th>Remarques</th></tr></thead>
+            <tbody>
+              <tr><td><b>Edge TTS</b> (cloud)</td><td><span class="tag default">Par défaut</span></td><td>Des centaines de voix, sans installation, nécessite internet</td></tr>
+              <tr><td><b>Piper</b></td><td><span class="tag stable">Stable · local</span></td><td>Léger, uniquement CPU, fonctionne hors ligne</td></tr>
+              <tr><td><b>Kokoro</b></td><td><span class="tag stable">Stable · local</span></td><td>Meilleure qualité (MOS 4,2), reste adapté au CPU</td></tr>
+              <tr><td><b>XTTS v2</b></td><td><span class="tag adv">Avancé</span></td><td>Clonage de voix ; NVIDIA + CUDA uniquement</td></tr>
+              <tr><td>MeloTTS · Fish Speech · Bark</td><td><span class="tag exp">Expérimental</span></td><td>En dehors du parcours principal</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- INSTALL -->
+    <section id="install">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">Installation</span>
+          <h2>Opérationnel en trois étapes.</h2>
+          <p>Windows 10/11 x64. Le micro virtuel est inclus et se configure tout seul.</p>
+        </div>
+        <div class="steps">
+          <div class="step">
+            <div class="n">1</div>
+            <h3>Télécharger</h3>
+            <p>Récupérez le dernier <code>VoiceLaunch-TTS-Setup.exe</code> sur les Releases GitHub et lancez-le. VB-Cable s'installe automatiquement.</p>
+          </div>
+          <div class="step">
+            <div class="n">2</div>
+            <h3>Activer le micro</h3>
+            <p>Ouvrez l'application, activez le micro virtuel (il sélectionne automatiquement CABLE Input), tapez une phrase et cliquez sur Parler.</p>
+          </div>
+          <div class="step">
+            <div class="n">3</div>
+            <h3>Pointer Discord dessus</h3>
+            <p>Dans Discord (ou n'importe quel jeu), définissez le périphérique d'entrée sur <b>CABLE Output</b>. Toutes les personnes du salon entendent désormais votre voix.</p>
+          </div>
+        </div>
+        <div class="note">
+          <b>Windows SmartScreen :</b> cette version open source n'est pas signée : Windows affiche
+          « Windows a protégé votre ordinateur ». Cliquez sur <b>Informations complémentaires → Exécuter quand même</b>.
+          Chaque version publie le SHA-256 de l'installateur pour que vous puissiez le vérifier au préalable :
+        </div>
+        <div class="code">
+          <button class="copy" data-copy="Get-FileHash -Algorithm SHA256 .\VoiceLaunch-TTS-Setup.exe">Copier</button>
+          <pre>Get-FileHash -Algorithm SHA256 .\VoiceLaunch-TTS-Setup.exe</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ACCESSIBILITY -->
+    <section>
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">L'accessibilité d'abord</span>
+          <h2>Un poste de voix, pas un simple gadget.</h2>
+          <p>Conçu pour un véritable usage assistif : chaque état associe couleur, icône et libellé, et rien ne dépend de la couleur seule.</p>
+        </div>
+        <div class="a11y">
+          <span class="chip"><span class="accent-check">✓</span> Mode contraste élevé</span>
+          <span class="chip"><span class="accent-check">✓</span> Mode grande police</span>
+          <span class="chip"><span class="accent-check">✓</span> Navigation complète au clavier</span>
+          <span class="chip"><span class="accent-check">✓</span> Anneaux de focus visibles</span>
+          <span class="chip"><span class="accent-check">✓</span> Respect de la réduction des animations</span>
+          <span class="chip"><span class="accent-check">✓</span> Historique &amp; brouillon persistants</span>
+          <span class="chip"><span class="accent-check">✓</span> Clavier virtuel</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA BAND -->
+    <section>
+      <div class="wrap">
+        <div class="band">
+          <span class="eyebrow">Pour commencer</span>
+          <h2>Donnez-vous une voix dans chaque appel.</h2>
+          <p>Gratuit, open source, sans compte. Téléchargez-le, activez le micro, et vous parlez dans Discord en moins d'une minute.</p>
+          <div class="cta-row">
+            <a class="btn btn-primary" href="https://github.com/skarL007/sound_voice/releases/latest">Télécharger pour Windows</a>
+            <a class="btn btn-ghost" href="https://github.com/skarL007/sound_voice">Mettre une étoile sur GitHub</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <div class="foot-grid">
+        <a class="brand" href="#top">
+          <span class="logo" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M8 8v8M12 5v14M16 9v6" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg></span>
+          VoiceLaunch TTS
+        </a>
+        <nav class="foot-links" aria-label="Pied de page">
+          <a href="https://github.com/skarL007/sound_voice">Dépôt</a>
+          <a href="https://github.com/skarL007/sound_voice/releases/latest">Versions</a>
+          <a href="https://github.com/skarL007/sound_voice/blob/main/docs/fr/ARCHITECTURE.md">Architecture</a>
+          <a href="https://github.com/skarL007/sound_voice/blob/main/docs/fr/ACCESSIBILITY.md">Accessibilité</a>
+          <a href="https://github.com/skarL007/sound_voice/blob/main/SECURITY.md">Sécurité</a>
+          <a href="https://github.com/skarL007/sound_voice/issues">Issues</a>
+          <a href="../" hreflang="en" lang="en">English</a>
+          <a href="https://github.com/skarL007/sound_voice/blob/main/LICENSE">Licence MIT</a>
+        </nav>
+      </div>
+      <p class="foot-note">
+        VoiceLaunch TTS est développé par la communauté et n'est affilié ni à Microsoft, ni à Discord, ni à VB-Audio.
+        L'installateur n'est actuellement pas signé : vérifiez le SHA-256 publié avant de le lancer.
+        Les voix cloud n'envoient que le texte que vous tapez au point d'accès public Edge Read-Aloud de Microsoft ; la synthèse locale reste sur votre machine.
+      </p>
+    </div>
+  </footer>
+
+  <script>
+    document.querySelectorAll('.copy').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var t = b.getAttribute('data-copy');
+        navigator.clipboard.writeText(t).then(function () {
+          var old = b.textContent; b.textContent = 'Copié'; setTimeout(function () { b.textContent = old; }, 1600);
+        });
+      });
+    });
+  </script>
+</body>
+</html>

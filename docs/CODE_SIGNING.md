@@ -1,3 +1,5 @@
+**English** · [Français](fr/CODE_SIGNING.md)
+
 # Code Signing Guide - VoiceLaunch TTS
 
 > Windows executables and installers must be signed before any public release.

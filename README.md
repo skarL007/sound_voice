@@ -1,3 +1,5 @@
+**English** · [Français](README.fr.md)
+
 # VoiceLaunch TTS
 
 [![Tests](https://github.com/skarL007/sound_voice/actions/workflows/test.yml/badge.svg)](https://github.com/skarL007/sound_voice/actions/workflows/test.yml)

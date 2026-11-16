@@ -1,3 +1,5 @@
+**English** · [Français](fr/MODELS.md)
+
 # TTS Model Catalog
 
 ## Piper TTS

@@ -1,3 +1,5 @@
+**English** · [Français](fr/VIRTUAL_MIC.md)
+
 # Virtual Microphone - Technical Guide
 
 ## How It Works
