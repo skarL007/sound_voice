@@ -76,6 +76,9 @@ test('a created voice shortcut persists across relaunch', async () => {
   await dismissOnboarding(first.page)
   await first.page.getByRole('link', { name: 'Shortcuts' }).click()
 
+  // Add needs a resolved voice: wait for the voice list to load (the select replaces "Loading voices...").
+  await expect(first.page.getByRole('combobox', { name: 'New shortcut voice' })).toBeVisible()
+
   const phrase = 'E2E persisted shortcut'
   await first.page.getByPlaceholder(/what should the shortcut say/i).fill(phrase)
   await first.page.getByRole('button', { name: /^Add$/ }).click()
