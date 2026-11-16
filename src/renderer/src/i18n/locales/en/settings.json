@@ -1,0 +1,81 @@
+{
+  "title": "Settings",
+  "language": {
+    "title": "Language",
+    "label": "Interface language",
+    "hint": "Applies immediately and is remembered."
+  },
+  "backend": {
+    "title": "Python backend (local voices)",
+    "port": "Port",
+    "uptime": "Uptime",
+    "restart": "Restart backend",
+    "restartAria": "Restart Python backend",
+    "status": {
+      "running": "Online",
+      "starting": "Starting",
+      "error": "Failed",
+      "offline": "Offline"
+    }
+  },
+  "voiceSource": {
+    "title": "Voice source",
+    "description": "In Auto mode the app uses the online voice (Edge) when there's internet and falls back to the local voice (Kokoro/Piper) when offline or when Edge fails.",
+    "groupLabel": "Voice source",
+    "auto": {
+      "title": "Auto (recommended)",
+      "hint": "Online when possible, local when needed"
+    },
+    "cloud": {
+      "title": "Always online",
+      "hint": "Edge TTS; no local fallback"
+    },
+    "local": {
+      "title": "Always local",
+      "hint": "Piper/Kokoro; works offline"
+    }
+  },
+  "virtualMic": {
+    "title": "Virtual microphone",
+    "installed": "Virtual microphone installed. In Discord/Zoom/games, choose CABLE Output as the microphone.",
+    "missing": "Virtual microphone not detected yet. It comes with the app installer — restart Windows if you just installed it."
+  },
+  "accessibility": {
+    "title": "Accessibility",
+    "highContrast": {
+      "title": "High contrast",
+      "hint": "High-contrast colors for better visibility"
+    },
+    "largeFont": {
+      "title": "Large fonts",
+      "hint": "Increases text size across the whole interface"
+    }
+  },
+  "localVoices": {
+    "title": "Local voices",
+    "experimental": {
+      "title": "Show experimental models",
+      "hint": "Shows Bark, Fish Speech, and other items outside the main flow. They remain off the recommended path for end users."
+    }
+  },
+  "shortcuts": {
+    "title": "Global shortcuts",
+    "description": "Press any combination from any app. Custom editing is coming in the next version.",
+    "focus": "Focus the window and the text field",
+    "compact": "Open compact mode",
+    "toggleMic": "Toggle the virtual microphone",
+    "stop": "Stop the playing audio",
+    "phrases": "Speak quick phrase 1 to 9"
+  },
+  "about": {
+    "title": "About VoiceLaunch TTS",
+    "description": "VoiceLaunch TTS is a free and open-source assistive communication tool. It helps anyone who prefers, needs, or chooses to turn text into voice with speed, autonomy, and privacy.",
+    "replay": "Replay the intro tutorial",
+    "version": "Version",
+    "license": "License",
+    "mainFlow": "Main flow",
+    "mainFlowValue": "Piper, Kokoro, virtual microphone",
+    "advanced": "Advanced feature",
+    "advancedValue": "XTTS v2 after validating NVIDIA/CUDA"
+  }
+}

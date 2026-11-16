@@ -1,0 +1,166 @@
+{
+  "nav": {
+    "speak": "Speak",
+    "shortcuts": "Shortcuts",
+    "settings": "Settings"
+  },
+  "backend": {
+    "startingTitle": "Starting local backend",
+    "unavailableTitle": "Local voices unavailable",
+    "startingDescription": "The interface is already ready. Local voices become available once the backend finishes starting. Online voices (Edge TTS) can already be used in \"Speak\".",
+    "unavailableDescription": "You can still use online voices (Edge TTS) without installation in \"Speak\". To unlock Piper/Kokoro, use Retry or open Settings.",
+    "retry": "Retry",
+    "diagnostics": "Diagnostics",
+    "command": "command:",
+    "executor": "executor:",
+    "url": "url:",
+    "detail": "detail:",
+    "unreachable": "Could not reach the local backend."
+  },
+  "titleBar": {
+    "ready": "Ready to speak",
+    "starting": "Starting...",
+    "failed": "Backend failed",
+    "offline": "Offline",
+    "shortcutsTitle": "Keyboard shortcuts",
+    "shortcutsAria": "View keyboard shortcuts",
+    "compactTitle": "Compact mode",
+    "compactAria": "Toggle compact mode",
+    "alwaysOnTop": "Always on top",
+    "minimize": "Minimize window",
+    "maximize": "Maximize window",
+    "close": "Close window"
+  },
+  "sidebar": {
+    "tagline": "Online voice (Edge TTS) · Open Source"
+  },
+  "compact": {
+    "chooseOnlineStatus": "Choose an online voice on the Speak screen",
+    "startingLocal": "Starting local backend...",
+    "micOn": "Mic ON",
+    "micOff": "Mic OFF",
+    "voiceModel": "Voice model",
+    "noModel": "No model",
+    "moreOptions": "More options",
+    "speedAndSettings": "Speed and settings",
+    "speed": "Speed",
+    "speechSpeed": "Speech speed",
+    "keep": "Keep",
+    "placeholder": "> type and press Enter",
+    "stop": "Stop",
+    "speak": "Speak"
+  },
+  "toast": {
+    "backendStarting": {
+      "title": "Backend starting",
+      "body": "Speech will be available once the local backend finishes starting."
+    },
+    "speechFailed": {
+      "title": "Speech failed"
+    },
+    "onlineFailedLocal": {
+      "title": "Online voice failed",
+      "body": "Speaking with the local voice ({{engine}})."
+    },
+    "onlineError": {
+      "title": "Online voice error",
+      "body": "Could not generate the voice."
+    },
+    "noOnlineVoice": {
+      "title": "No online voice",
+      "body": "Choose an online voice on the Speak screen."
+    },
+    "noVoiceAvailable": {
+      "title": "No voice available",
+      "body": "{{label}}."
+    },
+    "backendRestart": {
+      "title": "Local backend",
+      "body": "The backend did not confirm an immediate restart. Still monitoring."
+    },
+    "noCable": {
+      "title": "Virtual mic has no cable",
+      "body": "The voice will play on the speaker, not on Discord. Open Settings > Virtual microphone."
+    },
+    "noPhrase": {
+      "title": "Shortcut has no phrase",
+      "body": "Set up quick phrases on the Speak tab."
+    },
+    "backendOfflinePhrase": {
+      "title": "Backend offline",
+      "body": "Local voices unavailable. Switch to Online on the Speak tab."
+    },
+    "backendOfflineShortcut": {
+      "title": "Backend offline",
+      "body": "The local shortcut needs the Python backend running."
+    },
+    "audioFailed": "Could not generate the audio.",
+    "localAudioFailed": "Could not generate the local audio.",
+    "noOnlineVoiceTab": {
+      "title": "No online voice",
+      "body": "Choose an online voice on the Speak tab before using shortcuts."
+    },
+    "noOnlineVoiceShortcut": {
+      "title": "No online voice",
+      "body": "Choose a voice in the shortcut or on the Speak screen."
+    },
+    "phraseSpokenLocal": {
+      "title": "Online voice failed",
+      "body": "Phrase spoken with the local voice ({{engine}})."
+    },
+    "shortcutSpokenLocal": {
+      "title": "Online voice failed",
+      "body": "Shortcut spoken with the local voice ({{engine}})."
+    },
+    "shortcutFailed": {
+      "title": "Shortcut failed"
+    },
+    "virtualMic": {
+      "title": "Virtual microphone",
+      "enabled": "Virtual microphone enabled.",
+      "disabled": "Virtual microphone disabled."
+    },
+    "shortcutsBlocked": {
+      "title": "{{count}} shortcut(s) blocked",
+      "body": "Another app is already using: {{list}}. Try Ctrl+Alt or F-key combos in \"Shortcuts\"."
+    }
+  },
+  "cheatsheet": {
+    "title": "Keyboard shortcuts",
+    "items": {
+      "focusField": {
+        "keys": "Ctrl+Shift+F",
+        "desc": "Focus text field"
+      },
+      "speakText": {
+        "keys": "Enter",
+        "desc": "Speak text"
+      },
+      "newLine": {
+        "keys": "Shift+Enter",
+        "desc": "New line"
+      },
+      "voiceShortcut": {
+        "keys": "Ctrl+Shift+1..9",
+        "desc": "Voice shortcut 1-9"
+      },
+      "toggleMic": {
+        "keys": "Ctrl+Shift+M",
+        "desc": "Toggle mic"
+      },
+      "compactMode": {
+        "keys": "Ctrl+Shift+V",
+        "desc": "Compact mode"
+      },
+      "stopAudio": {
+        "keys": "Ctrl+Shift+S",
+        "desc": "Stop audio"
+      },
+      "closeModal": {
+        "keys": "Escape",
+        "desc": "Close modal / stop"
+      }
+    },
+    "footer": "Ctrl+Alt+1..9 and Ctrl+Shift+F1..F12 are available in Voice Shortcuts."
+  }
+}

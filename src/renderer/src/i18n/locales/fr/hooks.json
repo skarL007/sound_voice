@@ -1,0 +1,17 @@
+{
+  "loadVoicesFailed": "Impossible de charger les voix en ligne.",
+  "shortcut": {
+    "writePhrase": "Écrivez la phrase",
+    "writePhraseMessage": "Saisissez ce que le raccourci doit dire.",
+    "chooseVoice": "Choisissez une voix",
+    "chooseVoiceMessage": "Sélectionnez d’abord une voix en ligne (sur l’écran Parler).",
+    "noKey": "Aucune touche disponible",
+    "noKeyMessage": "Toutes les touches de raccourci sont utilisées.",
+    "created": "Raccourci créé",
+    "createdMessage": "{{hotkey}} → dit votre phrase",
+    "noVoice": "Aucune voix",
+    "noVoiceMessage": "Choisissez une voix pour le raccourci.",
+    "testFailed": "Échec du test",
+    "testFailedMessage": "Impossible de générer la voix."
+  }
+}

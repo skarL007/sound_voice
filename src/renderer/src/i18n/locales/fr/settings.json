@@ -1,0 +1,81 @@
+{
+  "title": "Paramètres",
+  "language": {
+    "title": "Langue",
+    "label": "Langue de l’interface",
+    "hint": "S’applique immédiatement et reste mémorisée."
+  },
+  "backend": {
+    "title": "Moteur Python (voix locales)",
+    "port": "Port",
+    "uptime": "Durée de fonctionnement",
+    "restart": "Redémarrer le moteur",
+    "restartAria": "Redémarrer le moteur Python",
+    "status": {
+      "running": "En ligne",
+      "starting": "Démarrage",
+      "error": "Échec",
+      "offline": "Hors ligne"
+    }
+  },
+  "voiceSource": {
+    "title": "Source de la voix",
+    "description": "En mode automatique, l’application utilise la voix en ligne (Edge) quand une connexion est disponible, et bascule sur la voix locale (Kokoro/Piper) hors ligne ou si Edge échoue.",
+    "groupLabel": "Source de la voix",
+    "auto": {
+      "title": "Automatique (recommandé)",
+      "hint": "En ligne si possible, local si besoin"
+    },
+    "cloud": {
+      "title": "Toujours en ligne",
+      "hint": "Edge TTS : pas de repli local"
+    },
+    "local": {
+      "title": "Toujours en local",
+      "hint": "Piper/Kokoro : fonctionne hors ligne"
+    }
+  },
+  "virtualMic": {
+    "title": "Micro virtuel",
+    "installed": "Micro virtuel installé. Dans Discord, Zoom ou vos jeux, choisissez CABLE Output comme microphone.",
+    "missing": "Micro virtuel pas encore détecté. Il est fourni avec le programme d’installation de l’application (redémarrez Windows si vous venez de l’installer)."
+  },
+  "accessibility": {
+    "title": "Accessibilité",
+    "highContrast": {
+      "title": "Contraste élevé",
+      "hint": "Couleurs à fort contraste pour une meilleure visibilité"
+    },
+    "largeFont": {
+      "title": "Grande police",
+      "hint": "Agrandit le texte dans toute l’interface"
+    }
+  },
+  "localVoices": {
+    "title": "Voix locales",
+    "experimental": {
+      "title": "Afficher les modèles expérimentaux",
+      "hint": "Affiche Bark, Fish Speech et d’autres éléments hors du parcours principal. Ils restent en dehors du parcours recommandé pour les utilisateurs finaux."
+    }
+  },
+  "shortcuts": {
+    "title": "Raccourcis globaux",
+    "description": "Appuyez sur une combinaison depuis n’importe quelle application. La personnalisation arrivera dans la prochaine version.",
+    "focus": "Mettre la fenêtre et le champ de texte au premier plan",
+    "compact": "Ouvrir le mode compact",
+    "toggleMic": "Activer ou couper le micro virtuel",
+    "stop": "Arrêter l’audio en cours",
+    "phrases": "Dire la phrase rapide 1 à 9"
+  },
+  "about": {
+    "title": "À propos de VoiceLaunch TTS",
+    "description": "VoiceLaunch TTS est un outil de communication assistée, libre et gratuit. Il aide toute personne qui préfère, a besoin ou choisit de transformer du texte en voix avec rapidité, autonomie et confidentialité.",
+    "replay": "Revoir le didacticiel",
+    "version": "Version",
+    "license": "Licence",
+    "mainFlow": "Parcours principal",
+    "mainFlowValue": "Piper, Kokoro, micro virtuel",
+    "advanced": "Fonction avancée",
+    "advancedValue": "XTTS v2 après validation de NVIDIA/CUDA"
+  }
+}

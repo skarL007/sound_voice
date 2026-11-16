@@ -1,4 +1,5 @@
 import type { HardwareInfo, ModelInfo } from '../../../shared/types'
+import i18n from '../i18n'
 
 export type MvpModelLevel = 'stable' | 'advanced' | 'experimental'
 
@@ -56,10 +57,10 @@ export function getRecommendedSetup(hardware: HardwareInfo | null): {
     primaryModelId: 'piper',
     secondaryModelId: 'kokoro',
     advancedModelId: hardware?.isCudaAvailable ? 'xtts_v2' : undefined,
-    summary: 'Start with Piper for a frictionless first local voice.',
+    summary: i18n.t('utils:model.summary'),
     gpuNote: hardware?.isCudaAvailable
-      ? 'XTTS v2 can be enabled later as an advanced feature on NVIDIA/CUDA.'
-      : 'The reliable local path is Piper and Kokoro.',
+      ? i18n.t('utils:model.gpuCuda')
+      : i18n.t('utils:model.gpuNoCuda'),
   }
 }
 
@@ -70,6 +71,6 @@ export function getCloneCapability(hardware: HardwareInfo | null): { enabled: bo
 
   return {
     enabled: false,
-    reason: 'Practical voice cloning requires NVIDIA with validated CUDA.',
+    reason: i18n.t('utils:model.cloneReason'),
   }
 }

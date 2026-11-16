@@ -1,0 +1,80 @@
+{
+  "playbook": {
+    "steps": {
+      "cloud": { "title": "Parlez dès maintenant avec Edge TTS", "description": "Des centaines de voix naturelles fonctionnent tout de suite : sans installation, sans GPU, juste internet." },
+      "piper": { "title": "Installer Piper en local", "description": "Moteur ONNX léger qui tourne sur le processeur. Plus de 50 langues. Fonctionne hors ligne après le téléchargement." },
+      "kokoro": { "title": "Améliorer la qualité avec Kokoro", "description": "Moteur avec un MOS de 4,2 pour seulement 300 Mo. Tourne toujours sur le processeur." },
+      "xtts": { "title": "Activer le clonage avec XTTS v2", "description": "Clonez n’importe quelle voix à partir d’un échantillon de 6 à 30 s. Nécessite un GPU NVIDIA avec CUDA validé." },
+      "mic": { "title": "Configurer le micro virtuel", "description": "Installez VB-Cable, choisissez CABLE Input comme sortie et réglez CABLE Output dans Discord/VRChat." },
+      "shortcuts": { "title": "Créer vos raccourcis vocaux", "description": "Chaque raccourci déclenche une phrase avec une voix fixe : il fonctionne en jeu sans mettre l’application au premier plan." }
+    },
+    "nvidiaCuda": {
+      "headline": "Parcours complet NVIDIA + CUDA",
+      "summary": "Vous avez accès au parcours premium : Edge TTS en ligne, Piper/Kokoro en local et clonage XTTS.",
+      "note": "CUDA {{version}}. Vous pouvez activer XTTS v2 quand vous voulez cloner une voix.",
+      "cudaDetected": "détecté"
+    },
+    "amd": {
+      "headline": "Parcours léger pour AMD",
+      "summary": "Sous Windows, AMD n’a pas de framework TTS GPU stable. Vous utiliserez le parcours processeur + en ligne : il convient très bien à Discord et aux jeux.",
+      "note1": "Piper et Kokoro tournent directement sur votre processeur, sans pilote particulier.",
+      "note2": "Le clonage XTTS v2 nécessite NVIDIA + CUDA : il sort donc de votre parcours. Utilisez les voix en ligne, il y en a des centaines."
+    },
+    "intel": {
+      "headline": "Parcours processeur + en ligne (Intel)",
+      "summary": "Le GPU intégré Intel n’accélère le TTS dans aucun framework stable. Vous utiliserez Edge TTS en ligne et des modèles légers sur processeur.",
+      "note": "Piper a été conçu pour des processeurs modestes. La première phrase prend moins d’une seconde."
+    },
+    "cpu": {
+      "headline": "Parcours universel (sans GPU dédié)",
+      "summary": "Edge TTS en ligne couvre tous les besoins. Piper peut être installé pour un usage hors ligne sur processeur.",
+      "note": "Votre machine a été détectée comme de niveau processeur. Les parcours avancés nécessitent un GPU NVIDIA avec CUDA."
+    },
+    "nvidiaNoCuda": {
+      "headline": "NVIDIA détecté : pas de CUDA",
+      "summary": "Le GPU est présent, mais CUDA Toolkit est introuvable. Utilisez le parcours processeur + en ligne pour l’instant ; installez CUDA plus tard pour débloquer le clonage.",
+      "note": "Installez CUDA Toolkit 11.8 ou supérieur et relancez l’application pour activer XTTS et le clonage."
+    }
+  },
+  "hotkey": {
+    "unsupportedKey": "Touche non prise en charge. Utilisez des lettres, des chiffres, F1 à F24 ou les flèches.",
+    "needModifier": "Combinez avec Ctrl ou Alt (évite les conflits avec la saisie).",
+    "nameRequired": "Le nom est obligatoire.",
+    "textRequired": "Le texte est obligatoire.",
+    "hotkeyRequired": "Le raccourci clavier est obligatoire.",
+    "reserved": "Ce raccourci clavier est réservé par le système.",
+    "selectVoice": "Sélectionnez une voix.",
+    "speedRange": "Vitesse comprise entre 0,5 et 2,0."
+  },
+  "defaultShortcuts": {
+    "gg": { "name": "GG bien joué", "text": "GG, beau match !" },
+    "watchOut": { "name": "Attention !", "text": "Attention, ennemi en approche !" },
+    "greeting": { "name": "Salutation", "text": "Salut tout le monde, comment allez-vous ?" }
+  },
+  "router": {
+    "explicitCloud": "Voix en ligne (Edge)",
+    "explicitLocal": "Voix locale ({{engine}})",
+    "noLocal": "Aucune voix locale installée",
+    "autoOnline": "Auto → Edge (en ligne)",
+    "autoLocal": "Auto → {{engine}} ({{why}})",
+    "whyOffline": "hors ligne",
+    "whyEdgeUnavailable": "Edge indisponible",
+    "edgeUnavailableNoLocal": "Edge indisponible : aucune voix locale installée",
+    "offlineNoLocal": "Hors ligne : aucune voix locale installée"
+  },
+  "model": {
+    "summary": "Commencez avec Piper pour obtenir sans effort une première voix locale.",
+    "gpuCuda": "XTTS v2 pourra être activé plus tard comme fonction avancée sur NVIDIA/CUDA.",
+    "gpuNoCuda": "Le parcours local fiable passe par Piper et Kokoro.",
+    "cloneReason": "Le clonage de voix pratique nécessite NVIDIA avec CUDA validé."
+  },
+  "mic": {
+    "launchedDownloaded": "Téléchargé, programme d’installation ouvert. Cliquez sur « Install Driver » et redémarrez Windows si on vous le demande.",
+    "launched": "Programme d’installation ouvert. Suivez les étapes de VB-Cable et redémarrez Windows si on vous le demande.",
+    "manual": "Installation automatique impossible. Téléchargez VB-Cable depuis le site officiel, puis revenez vérifier.",
+    "error": "Impossible d’installer VB-Cable. Réessayez ou utilisez le site officiel."
+  },
+  "audio": {
+    "playFailed": "Impossible de lire l’audio : toutes les stratégies ont échoué."
+  }
+}

@@ -90,6 +90,7 @@ export interface Api {
   closeWindow: () => void
   setAlwaysOnTop: (value: boolean) => void
   setCompactMode: (enabled: boolean) => void
+  setLanguage: (lng: string) => void
   openExternal: (url: string) => void
   getBackendStatus: () => Promise<BackendStatus>
   restartBackend: () => Promise<boolean>
@@ -182,6 +183,7 @@ const api: Api = {
   closeWindow: () => ipcRenderer.send('window:close'),
   setAlwaysOnTop: (value) => ipcRenderer.send('window:always-on-top', value),
   setCompactMode: (enabled) => ipcRenderer.send('window:set-compact', enabled),
+  setLanguage: (lng) => ipcRenderer.send('i18n:set-language', lng),
   openExternal: (url) => ipcRenderer.send('shell:open-external', url),
 
   getBackendStatus: () => ipcRenderer.invoke('backend:status'),

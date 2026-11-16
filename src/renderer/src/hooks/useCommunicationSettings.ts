@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import type { AppSettings, TTSHistoryItem } from '../../../shared/types'
+import i18n, { resolveLanguage } from '../i18n'
 import {
   DEFAULT_COMMUNICATION_STATE,
+  getDefaultQuickPhrases,
   pushHistoryItem,
   removeQuickPhrase,
   sanitizeCommunicationState,
@@ -12,7 +14,7 @@ import {
 export function useCommunicationSettings() {
   const [text, setText] = useState(DEFAULT_COMMUNICATION_STATE.ttsDraft)
   const [history, setHistory] = useState<TTSHistoryItem[]>(DEFAULT_COMMUNICATION_STATE.ttsHistory)
-  const [quickPhrases, setQuickPhrases] = useState<string[]>(DEFAULT_COMMUNICATION_STATE.quickPhrases)
+  const [quickPhrases, setQuickPhrases] = useState<string[]>(() => getDefaultQuickPhrases(i18n.language))
   const [keepTextAfterSpeak, setKeepTextAfterSpeak] = useState(DEFAULT_COMMUNICATION_STATE.keepTextAfterSpeak)
   const [hydrated, setHydrated] = useState(false)
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -24,7 +26,7 @@ export function useCommunicationSettings() {
       .loadSettings()
       .then((settings) => {
         if (!active) return
-        const state = sanitizeCommunicationState(settings)
+        const state = sanitizeCommunicationState(settings, resolveLanguage(settings))
         setText(state.ttsDraft)
         setHistory(state.ttsHistory)
         setQuickPhrases(state.quickPhrases)
@@ -39,7 +41,7 @@ export function useCommunicationSettings() {
     const syncFromWindowEvent = (event: Event) => {
       const detail = (event as CustomEvent<Partial<AppSettings> | null>).detail
       if (!detail) return
-      const sanitized = sanitizeCommunicationState(detail)
+      const sanitized = sanitizeCommunicationState(detail, resolveLanguage(detail))
       if (Object.prototype.hasOwnProperty.call(detail, 'ttsDraft')) {
         setText(sanitized.ttsDraft)
       }
@@ -101,6 +103,6 @@ export function useCommunicationSettings() {
     hydrated,
     addHistoryItem: (item: TTSHistoryItem) => setHistory((current) => pushHistoryItem(current, item)),
     addQuickPhrase: (phrase: string) => setQuickPhrases((current) => upsertQuickPhrase(current, phrase)),
-    deleteQuickPhrase: (phrase: string) => setQuickPhrases((current) => removeQuickPhrase(current, phrase)),
+    deleteQuickPhrase: (phrase: string) => setQuickPhrases((current) => removeQuickPhrase(current, phrase, i18n.language)),
   }
 }

@@ -1,0 +1,88 @@
+{
+  "title": "Speak",
+  "subtitle": "Main console for composing, repeating, and quick-firing voice.",
+  "virtualMic": {
+    "tooltip": "Sends the voice as a virtual microphone to Discord, Zoom, and games",
+    "active": "Virtual mic active",
+    "enable": "Enable virtual mic",
+    "on": "Virtual mic on",
+    "off": "Virtual mic off",
+    "banner": "The generated audio will be sent to the <strong>virtual microphone</strong>. Select \"CABLE Output\" as the microphone in Discord, Zoom, or games."
+  },
+  "history": {
+    "label": "Phrase history",
+    "hide": "Hide history",
+    "show": "Show history",
+    "title": "Persistent history",
+    "empty": "No phrases yet.",
+    "loadPhrase": "Load phrase: {{text}}",
+    "repeat": "Repeat",
+    "pin": "Pin"
+  },
+  "export": {
+    "label": "Export history as CSV",
+    "button": "Export CSV",
+    "emptyTitle": "Empty history",
+    "emptyMessage": "There are no phrases in the history to export.",
+    "doneTitle": "CSV exported",
+    "doneMessage_one": "{{count}} phrase exported successfully.",
+    "doneMessage_other": "{{count}} phrases exported successfully."
+  },
+  "status": {
+    "chooseVoice": "Choose a voice",
+    "generating": "Generating audio...",
+    "speaking": "Speaking now"
+  },
+  "speed": {
+    "title": "Speed",
+    "aria": "Speech speed",
+    "note": "Online voices come from Microsoft Edge TTS. They work instantly, with no installation, but need internet.",
+    "selected": "Selected voice: <voice>{{voice}}</voice>"
+  },
+  "input": {
+    "placeholder": "> type a phrase. Enter sends. Shift+Enter for a new line.",
+    "characters_one": "{{count}} character",
+    "characters_other": "{{count}} characters",
+    "keepText": "Keep text after speaking",
+    "clear": "Clear",
+    "clearAria": "Clear text",
+    "savePhrase": "Save phrase",
+    "savePhraseAria": "Save current phrase as a quick shortcut",
+    "generating": "Generating...",
+    "stop": "Stop",
+    "speak": "Speak",
+    "ariaGenerating": "Generating audio...",
+    "ariaStop": "Stop speaking",
+    "ariaSpeak": "Speak text"
+  },
+  "shortcuts": {
+    "title": "Quick shortcuts",
+    "intro": "Write the phrase, click <strong>Create shortcut</strong>, and trigger it with the key anywhere (Discord, game).",
+    "placeholder": "What should the shortcut say? (e.g. GG, great match!)",
+    "key": "Key:",
+    "create": "Create shortcut",
+    "empty": "No shortcuts yet. Create the first one above."
+  },
+  "toasts": {
+    "onlineFailed": "Could not generate the online voice.",
+    "localFailed": "Could not generate the audio.",
+    "speechFailed": "Speech failed",
+    "micNotRouted": "Voice not on the virtual microphone",
+    "micNotRoutedMessage": "The voice played on the speaker ({{reason}}) — Discord didn't hear it.",
+    "cableNotFound": "CABLE Input not found",
+    "cableUnavailable": "cable unavailable",
+    "chooseOnline": "Choose an online voice",
+    "chooseOnlineMessage": "Select a voice from the Edge TTS list before speaking.",
+    "noVoice": "No voice available",
+    "noVoiceMessage": "{{label}}. Install Piper (50 MB) to speak offline.",
+    "onlineFailedTitle": "Online voice failed",
+    "fallbackLocal": "Speaking with the local voice ({{engine}}).",
+    "onlineError": "Online voice error",
+    "permissionDenied": "Microphone permission denied",
+    "permissionDeniedMessage": "Without it the app can't see device names or find CABLE Input. Allow access and try again.",
+    "chooseOutput": "Choose the audio output",
+    "chooseOutputMessage": "Open Settings > Virtual microphone and select CABLE Input so Discord hears the online voice.",
+    "micNotFound": "Virtual microphone not found",
+    "micNotFoundMessage": "It comes with the app installer. If you just installed it, restart Windows."
+  }
+}

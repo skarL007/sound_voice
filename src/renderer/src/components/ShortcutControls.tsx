@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Keyboard, Loader2, PlayCircle, Trash2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import i18n from '../i18n'
 import { acceleratorFromEvent, formatHotkeyDisplay, isHotkeyTaken } from '../utils/voiceShortcuts'
 import type { CloudVoice, VoiceShortcut } from '../../../shared/types'
 
@@ -8,7 +10,13 @@ export function cleanVoiceName(voice: CloudVoice): string {
   return voice.FriendlyName.replace(/^Microsoft\s+/i, '').replace(/\s+Online\s+\(Natural\).*$/i, '')
 }
 
-export function localeRank(locale: string): number {
+export function localeRank(locale: string, lng?: string): number {
+  if (lng?.toLowerCase().startsWith('fr')) {
+    if (locale === 'fr-FR') return 0
+    if (locale.startsWith('fr')) return 1
+    if (locale === 'en-US') return 2
+    return 9
+  }
   if (locale === 'pt-BR') return 0
   if (locale === 'pt-PT') return 1
   if (locale.startsWith('pt')) return 2
@@ -18,7 +26,7 @@ export function localeRank(locale: string): number {
 
 export function deriveName(text: string): string {
   const t = text.trim().replace(/\s+/g, ' ')
-  return t.slice(0, 40) || 'Shortcut'
+  return t.slice(0, 40) || i18n.t('components:shortcut.defaultName')
 }
 
 /**
@@ -39,6 +47,7 @@ export function HotkeyCapture({
   excludeId?: string
   ariaLabel: string
 }) {
+  const { t } = useTranslation('components', { keyPrefix: 'shortcut' })
   const [capturing, setCapturing] = useState(false)
   const [preview, setPreview] = useState('')
   const [hint, setHint] = useState<string | null>(null)
@@ -66,11 +75,11 @@ export function HotkeyCapture({
         return
       }
       if (!result.accelerator) {
-        setHint(result.error ?? 'Invalid combination.')
+        setHint(result.error ?? t('invalidCombination'))
         return
       }
       if (isHotkeyTaken(result.accelerator, shortcuts, excludeId)) {
-        setHint('That key is already in use. Try another.')
+        setHint(t('alreadyUsed'))
         return
       }
       onChange(result.accelerator)
@@ -79,7 +88,7 @@ export function HotkeyCapture({
     window.addEventListener('keydown', onKeyDown, true)
     return () => window.removeEventListener('keydown', onKeyDown, true)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [capturing, shortcuts, excludeId, onChange])
+  }, [capturing, shortcuts, excludeId, onChange, t])
 
   if (capturing) {
     return (
@@ -89,14 +98,14 @@ export function HotkeyCapture({
           onClick={stop}
           className="input-field font-mono text-xs inline-flex items-center gap-2"
           style={{ width: 'auto', borderColor: 'var(--vl-state-live-border)', color: 'var(--vl-state-live-text)' }}
-          aria-label={`${ariaLabel}: press the desired combination, Esc cancels`}
+          aria-label={t('capturingAria', { label: ariaLabel })}
           aria-live="polite"
         >
           <span className="inline-block h-2 w-2 rounded-full animate-pulse" style={{ background: 'var(--vl-state-live)' }} />
-          {preview || 'Press the keys...'}
+          {preview || t('pressKeys')}
         </button>
         <span className="text-[10px]" style={hint ? { color: 'var(--vl-state-warn-text)' } : undefined}>
-          {hint ?? 'Esc cancels'}
+          {hint ?? t('escCancels')}
         </span>
       </span>
     )
@@ -113,10 +122,10 @@ export function HotkeyCapture({
       className="input-field font-mono text-xs inline-flex items-center gap-1.5"
       style={{ width: 'auto' }}
       aria-label={ariaLabel}
-      title="Click and press the key combination you want"
+      title={t('captureTitle')}
     >
       <Keyboard className="h-3.5 w-3.5 opacity-70" />
-      {value ? formatHotkeyDisplay(value) : 'Set key'}
+      {value ? formatHotkeyDisplay(value) : t('setKey')}
     </button>
   )
 }
@@ -132,6 +141,8 @@ export function VoiceSelect({
   onChange: (voice: string) => void
   ariaLabel: string
 }) {
+  const { t, i18n: i18nInstance } = useTranslation('components', { keyPrefix: 'shortcut' })
+  const language = i18nInstance.language
   const grouped = useMemo(() => {
     const byLocale = new Map<string, CloudVoice[]>()
     for (const voice of voices) {
@@ -140,12 +151,12 @@ export function VoiceSelect({
       byLocale.set(voice.Locale, list)
     }
     return Array.from(byLocale.entries()).sort(
-      (a, b) => localeRank(a[0]) - localeRank(b[0]) || a[0].localeCompare(b[0]),
+      (a, b) => localeRank(a[0], language) - localeRank(b[0], language) || a[0].localeCompare(b[0]),
     )
-  }, [voices])
+  }, [voices, language])
 
   if (voices.length === 0) {
-    return <span className="text-xs text-ink-soft">Loading voices...</span>
+    return <span className="text-xs text-ink-soft">{t('loadingVoices')}</span>
   }
 
   return (
@@ -155,7 +166,7 @@ export function VoiceSelect({
       className="input-field text-sm flex-1 min-w-[180px]"
       aria-label={ariaLabel}
     >
-      <option value="">Choose voice...</option>
+      <option value="">{t('chooseVoice')}</option>
       {grouped.map(([locale, list]) => (
         <optgroup key={locale} label={locale}>
           {list
@@ -195,6 +206,7 @@ export function ShortcutCard({
   onDelete: () => void
   onTest: () => void
 }) {
+  const { t } = useTranslation('components', { keyPrefix: 'shortcut' })
   const [text, setText] = useState(shortcut.text)
   useEffect(() => setText(shortcut.text), [shortcut.text])
 
@@ -221,7 +233,7 @@ export function ShortcutCard({
           onChange={(hotkey) => onUpdate({ hotkey })}
           shortcuts={allShortcuts}
           excludeId={shortcut.id}
-          ariaLabel="Shortcut key"
+          ariaLabel={t('keyAria')}
         />
         {voiceLabel && (
           <span className="text-[11px] px-2 py-0.5 rounded-full truncate max-w-[140px]" style={{ background: 'var(--vl-surface-overlay)', color: 'var(--vl-state-live-text)' }}>
@@ -235,14 +247,14 @@ export function ShortcutCard({
             onChange={(event) => onUpdate({ enabled: event.target.checked })}
             className="accent-brand-500"
           />
-          {shortcut.enabled ? 'Active' : 'Inactive'}
+          {shortcut.enabled ? t('active') : t('inactive')}
         </label>
         <button
           onClick={onDelete}
           className="btn-ghost p-1.5"
           style={{ color: 'var(--vl-state-error)' }}
-          aria-label={`Delete shortcut ${shortcut.name}`}
-          title="Delete"
+          aria-label={t('deleteAria', { name: shortcut.name })}
+          title={t('delete')}
         >
           <Trash2 className="h-3.5 w-3.5" />
         </button>
@@ -252,16 +264,16 @@ export function ShortcutCard({
         value={text}
         onChange={(event) => setText(event.target.value)}
         onBlur={commitText}
-        placeholder="What this shortcut says..."
+        placeholder={t('textPlaceholder')}
         className="terminal-textarea w-full p-3 text-sm min-h-[64px] font-mono"
         maxLength={500}
       />
 
       <div className="flex flex-wrap items-center gap-2">
-        <VoiceSelect voices={voices} value={shortcut.voice} onChange={(voice) => onUpdate({ voice })} ariaLabel="Shortcut voice" />
+        <VoiceSelect voices={voices} value={shortcut.voice} onChange={(voice) => onUpdate({ voice })} ariaLabel={t('voiceAria')} />
         <button onClick={onTest} disabled={isTesting} className="btn-secondary inline-flex items-center gap-1.5 text-xs ml-auto">
           {isTesting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <PlayCircle className="h-3.5 w-3.5" />}
-          {isTesting ? 'Playing...' : 'Test'}
+          {isTesting ? t('playing') : t('test')}
         </button>
       </div>
     </div>

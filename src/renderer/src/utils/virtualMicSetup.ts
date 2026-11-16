@@ -1,4 +1,5 @@
 import type { AudioDevice, VBCableDownloadProgress, VBCableInstallResult } from '../../../shared/types'
+import i18n from '../i18n'
 
 export type { VBCableDownloadProgress, VBCableInstallResult }
 
@@ -99,9 +100,7 @@ export function resolveVBCableInstallState(result: VBCableInstallResult): VBCabl
       state: 'launched',
       message:
         result.message ||
-        (result.downloaded
-          ? 'Downloaded and installer opened. Click "Install Driver" and restart Windows if prompted.'
-          : 'Installer opened. Follow VB-Cable and restart Windows if it asks.'),
+        i18n.t(result.downloaded ? 'utils:mic.launchedDownloaded' : 'utils:mic.launched'),
     }
   }
 
@@ -110,12 +109,12 @@ export function resolveVBCableInstallState(result: VBCableInstallResult): VBCabl
       state: 'manual',
       message:
         result.message ||
-        "Couldn't install automatically. Download VB-Cable from the official site and come back to check.",
+        i18n.t('utils:mic.manual'),
     }
   }
 
   return {
     state: 'error',
-    message: result.error || "Couldn't install VB-Cable. Try again or use the official site.",
+    message: result.error || i18n.t('utils:mic.error'),
   }
 }

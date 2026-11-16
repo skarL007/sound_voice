@@ -247,4 +247,5 @@ export interface AppSettings {
   monitorDeviceId?: string | null
   monitorDeviceLabel?: string | null
   voiceShortcuts?: VoiceShortcut[]
+  language?: 'en' | 'fr'
 }

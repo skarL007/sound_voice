@@ -1,60 +1,18 @@
 import { useState } from 'react'
 import { ChevronDown, ChevronRight, Headphones, Zap } from 'lucide-react'
+import { Trans, useTranslation } from 'react-i18next'
 
 interface DiscordVRChatGuideProps {
   defaultExpanded?: boolean
   compact?: boolean
 }
 
-const STEPS: { title: string; description: React.ReactNode }[] = [
-  {
-    title: 'Install VB-Audio Virtual Cable',
-    description: (
-      <span>
-        Download it at{' '}
-        <button
-          onClick={() => window.electronAPI?.openExternal?.('https://vb-audio.com/Cable/')}
-          className="underline"
-          style={{ color: 'var(--vl-state-live)' }}
-        >
-          vb-audio.com/Cable
-        </button>{' '}
-        or from <strong>Settings &gt; Virtual microphone &gt; Try bundled installer</strong>.
-      </span>
-    ),
-  },
-  {
-    title: 'Select CABLE Input in the app',
-    description: (
-      <span>
-        In <strong>Settings &gt; Virtual microphone</strong>, choose{' '}
-        <strong>CABLE Input (VB-Audio Virtual Cable)</strong> as the audio output.
-      </span>
-    ),
-  },
-  {
-    title: 'Set CABLE Output in Discord or your game',
-    description: (
-      <span>
-        Discord: <em>User Settings &gt; Voice &amp; Video &gt; Input Device = CABLE Output</em>.<br />
-        VRChat: <em>Settings &gt; Audio &gt; Microphone = CABLE Output</em>; enable voice activation or use PTT.<br />
-        Other games: point the default microphone to CABLE Output.
-      </span>
-    ),
-  },
-  {
-    title: 'Enable the virtual microphone on the Speak panel',
-    description: (
-      <span>
-        Click <strong>Enable virtual microphone</strong>. Online and local voices
-        will play directly through CABLE. Global shortcuts (Ctrl+Shift+1..9) work
-        in the background, even with the game focused.
-      </span>
-    ),
-  },
-]
+const STEP_IDS = ['install', 'selectInput', 'setOutput', 'enable'] as const
+
+const openVbCable = () => window.electronAPI?.openExternal?.('https://vb-audio.com/Cable/')
 
 export default function DiscordVRChatGuide({ defaultExpanded = false, compact = false }: DiscordVRChatGuideProps) {
+  const { t } = useTranslation('discord')
   const [open, setOpen] = useState(defaultExpanded)
 
   return (
@@ -67,11 +25,11 @@ export default function DiscordVRChatGuide({ defaultExpanded = false, compact = 
         <Headphones className="h-5 w-5" style={{ color: 'var(--vl-state-live)' }} />
         <div className="flex-1 min-w-0">
           <p className="text-base font-semibold text-ink-strong">
-            How to use this as a microphone in Discord, VRChat, and games
+            {t('guide.title')}
           </p>
           {!open && (
             <p className="text-xs text-ink-soft mt-0.5">
-              4 steps: install VB-Cable, select CABLE Input/Output, enable the virtual mic.
+              {t('guide.summary')}
             </p>
           )}
         </div>
@@ -84,8 +42,8 @@ export default function DiscordVRChatGuide({ defaultExpanded = false, compact = 
 
       {open && (
         <ol className={`space-y-2.5 pl-1 ${compact ? 'text-xs' : 'text-sm'}`}>
-          {STEPS.map((step, index) => (
-            <li key={step.title} className="flex items-start gap-3">
+          {STEP_IDS.map((id, index) => (
+            <li key={id} className="flex items-start gap-3">
               <span
                 className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full font-mono text-[11px] font-bold"
                 style={{
@@ -97,8 +55,26 @@ export default function DiscordVRChatGuide({ defaultExpanded = false, compact = 
                 {index + 1}
               </span>
               <div className="space-y-0.5">
-                <p className="font-medium text-ink-strong">{step.title}</p>
-                <p className="text-ink-body leading-relaxed">{step.description}</p>
+                <p className="font-medium text-ink-strong">{t(`guide.steps.${id}.title`)}</p>
+                <p className="text-ink-body leading-relaxed">
+                  <Trans
+                    i18nKey={`guide.steps.${id}.description`}
+                    ns="discord"
+                    components={{
+                      strong: <strong />,
+                      em: <em />,
+                      br: <br />,
+                      link: (
+                        <button
+                          type="button"
+                          onClick={openVbCable}
+                          className="underline"
+                          style={{ color: 'var(--vl-state-live)' }}
+                        />
+                      ),
+                    }}
+                  />
+                </p>
               </div>
             </li>
           ))}
@@ -112,9 +88,7 @@ export default function DiscordVRChatGuide({ defaultExpanded = false, compact = 
         >
           <Zap className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
           <span>
-            VRChat tip: if the game doesn't detect the mic, open the launcher and click{' '}
-            <strong>Test output</strong> in the Virtual microphone panel — this forces Windows
-            to recognize CABLE Input as active.
+            <Trans i18nKey="guide.tip" ns="discord" components={{ strong: <strong /> }} />
           </span>
         </div>
       )}

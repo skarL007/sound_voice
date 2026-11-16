@@ -5,6 +5,7 @@ import { getMainWindow, getBackendManager } from './index'
 import { detectHardware } from './hardware-detector'
 import { downloadModelWithProgress, downloadFileWithProgress, cancelDownload } from './download-manager'
 import { loadSettings, saveSettings } from './settings-store'
+import { setMainLanguage, tMain } from './i18n'
 import { logMain, getLogs, clearLogs } from './logger'
 import { join, relative, isAbsolute, resolve, dirname } from 'path'
 import { existsSync, readdirSync, statSync, unlinkSync, rmdirSync, readFileSync, mkdirSync, writeFileSync } from 'fs'
@@ -84,6 +85,9 @@ export function registerIpcHandlers(): void {
       win.setSize(1280, 800)
       win.setMinimumSize(900, 600)
     }
+  })
+  ipcMain.on('i18n:set-language', (_, lng: unknown) => {
+    if (lng === 'en' || lng === 'fr') setMainLanguage(lng)
   })
   ipcMain.on('shell:open-external', (_, url: string) => {
     if (!isHttpUrl(url)) {
@@ -412,7 +416,7 @@ export function registerIpcHandlers(): void {
     return {
       success: true,
       launched: false,
-      message: 'The bundled installer is not available. The official website was opened for manual download.',
+      message: tMain('ipc.vbcableBundledMissing'),
     }
   })
 
@@ -445,7 +449,7 @@ export function registerIpcHandlers(): void {
     try {
       if (!existsSync(workDir)) mkdirSync(workDir, { recursive: true })
     } catch (e) {
-      const error = `Could not create temporary folder: ${e}`
+      const error = tMain('ipc.vbcableTempFolder', { error: String(e) })
       sendComplete({ success: false, error })
       return { success: false, error }
     }
@@ -471,7 +475,7 @@ export function registerIpcHandlers(): void {
         success: true,
         launched: false,
         downloaded: false,
-        message: 'Could not download automatically. The official website was opened.',
+        message: tMain('ipc.vbcableDownloadFailed'),
       }
     }
 
@@ -487,7 +491,7 @@ export function registerIpcHandlers(): void {
         success: true,
         launched: false,
         downloaded: true,
-        message: 'Downloaded, but could not extract the package. The official website was opened.',
+        message: tMain('ipc.vbcableExtractFailed'),
       }
     }
 
@@ -498,7 +502,7 @@ export function registerIpcHandlers(): void {
         : [VBCABLE_DOWNLOAD.setupExe, VBCABLE_DOWNLOAD.setupExeX64]
     const exePath = order.map((name) => join(workDir, name)).find((p) => existsSync(p))
     if (!exePath) {
-      const error = 'Installer not found in the downloaded package.'
+      const error = tMain('ipc.vbcableInstallerMissing')
       sendComplete({ success: false, error })
       return { success: false, downloaded: true, error }
     }
@@ -513,7 +517,7 @@ export function registerIpcHandlers(): void {
         success: false,
         downloaded: true,
         error: launchError,
-        message: `Downloaded the installer but could not open it (${launchError}). Run it manually as administrator: ${exePath}`,
+        message: tMain('ipc.vbcableLaunchFailed', { error: launchError, path: exePath }),
       }
     }
     sendComplete({ success: true })

@@ -1,0 +1,42 @@
+{
+  "banner": {
+    "title": "Virtual microphone active",
+    "description": "Select <mono>CABLE Output</mono> as the microphone in Discord and test with the button below.",
+    "testing": "Testing...",
+    "testNow": "Test now",
+    "closeNotice": "Close notice",
+    "chooseVoice": {
+      "title": "Choose an online voice",
+      "body": "Select an Edge TTS voice before testing."
+    },
+    "testFailed": "Test failed",
+    "generateFailed": "Could not generate the audio.",
+    "noModel": {
+      "title": "No model ready",
+      "body": "Install Piper or Kokoro before testing."
+    }
+  },
+  "guide": {
+    "title": "How to use this as a microphone in Discord, VRChat, and games",
+    "summary": "4 steps: install VB-Cable, select CABLE Input/Output, enable the virtual mic.",
+    "steps": {
+      "install": {
+        "title": "Install VB-Audio Virtual Cable",
+        "description": "Download it at <link>vb-audio.com/Cable</link> or from <strong>Settings > Virtual microphone > Try bundled installer</strong>."
+      },
+      "selectInput": {
+        "title": "Select CABLE Input in the app",
+        "description": "In <strong>Settings > Virtual microphone</strong>, choose <strong>CABLE Input (VB-Audio Virtual Cable)</strong> as the audio output."
+      },
+      "setOutput": {
+        "title": "Set CABLE Output in Discord or your game",
+        "description": "Discord: <em>User Settings > Voice & Video > Input Device = CABLE Output</em>.<br/>VRChat: <em>Settings > Audio > Microphone = CABLE Output</em>; enable voice activation or use PTT.<br/>Other games: point the default microphone to CABLE Output."
+      },
+      "enable": {
+        "title": "Enable the virtual microphone on the Speak panel",
+        "description": "Click <strong>Enable virtual microphone</strong>. Online and local voices will play directly through CABLE. Global shortcuts (Ctrl+Shift+1..9) work in the background, even with the game focused."
+      }
+    },
+    "tip": "VRChat tip: if the game doesn't detect the mic, open the launcher and click <strong>Test output</strong> in the Virtual microphone panel — this forces Windows to recognize CABLE Input as active."
+  }
+}

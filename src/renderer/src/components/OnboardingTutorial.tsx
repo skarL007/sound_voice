@@ -1,5 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 import { useAppStore } from '../stores/appStore'
 import {
   ArrowRight,
@@ -49,42 +51,44 @@ function iconFor(action: PlaybookStepAction | 'welcome'): ReactNode {
   }
 }
 
-function buildSteps(hardware: HardwareInfo | null): Step[] {
+const TIP_KEYS: Partial<Record<PlaybookStepAction, string>> = {
+  'try-cloud': 'tips.tryCloud',
+  'install-piper': 'tips.installPiper',
+  'install-xtts': 'tips.installXtts',
+  'setup-mic': 'tips.setupMic',
+  'tour-shortcuts': 'tips.tourShortcuts',
+}
+
+function buildSteps(hardware: HardwareInfo | null, t: TFunction): Step[] {
   const playbook = getHardwarePlaybook(hardware)
   const intro: Step = {
-    title: 'Welcome to VoiceLaunch TTS',
-    description:
-      'A local voice station for people who can\'t speak, gamers, Discord users, or anyone who needs assistive communication. Your track was adapted to your hardware.',
+    title: t('welcome.title'),
+    description: t('welcome.description'),
     icon: iconFor('welcome'),
-    tip: `Track detected: ${playbook.headline}.`,
+    tip: t('welcome.tip', { headline: playbook.headline }),
   }
-  const playSteps: Step[] = playbook.steps.map((step) => ({
-    title: step.title,
-    description: step.description,
-    icon: iconFor(step.action),
-    tip: step.action === 'try-cloud'
-      ? 'Go to "Speak", choose a voice, and hit Enter. Works right away.'
-      : step.action === 'install-piper'
-        ? 'Cloud voices on "Speak" cover most needs out of the box. A local voice kicks in automatically as a fallback when you are offline.'
-        : step.action === 'install-xtts'
-          ? 'Voice cloning is not available in this build — use the cloud voices on "Speak" instead.'
-          : step.action === 'setup-mic'
-            ? 'In "Settings" > Virtual microphone, select CABLE Input.'
-            : step.action === 'tour-shortcuts'
-              ? 'In "Shortcuts" you create global hotkeys that trigger phrases.'
-              : undefined,
-    verify: step.action === 'setup-mic' ? 'mic-virtual' : null,
-  }))
+  const playSteps: Step[] = playbook.steps.map((step) => {
+    const tipKey = TIP_KEYS[step.action]
+    return {
+      title: step.title,
+      description: step.description,
+      icon: iconFor(step.action),
+      tip: tipKey ? t(tipKey) : undefined,
+      verify: step.action === 'setup-mic' ? 'mic-virtual' : null,
+    }
+  })
   return [intro, ...playSteps]
 }
 
 export default function OnboardingTutorial() {
+  const { t } = useTranslation('onboarding')
   const tutorialSeen = useAppStore((state) => state.tutorialSeen)
   const setTutorialSeen = useAppStore((state) => state.setTutorialSeen)
   const [isOpen, setIsOpen] = useState(false)
   const [stepIndex, setStepIndex] = useState(0)
   const [hardware, setHardware] = useState<HardwareInfo | null>(null)
-  const [steps, setSteps] = useState<Step[]>(buildSteps(null))
+  // `t` change avec la langue : le playbook et les libellés se recalculent.
+  const steps = useMemo(() => buildSteps(hardware, t), [hardware, t])
   const [micVerified, setMicVerified] = useState(false)
   const [polling, setPolling] = useState(false)
 
@@ -99,7 +103,6 @@ export default function OnboardingTutorial() {
     window.electronAPI.getHardwareInfo().then((info) => {
       if (!active) return
       setHardware(info)
-      setSteps(buildSteps(info))
     })
     return () => {
       active = false
@@ -206,7 +209,7 @@ export default function OnboardingTutorial() {
     if (stepIndex > 0) setStepIndex((index) => index - 1)
   }
 
-  const trackHardware = hardware ? `${hardware.gpuVendor.toUpperCase()} · ${hardware.ramGB} GB` : 'Detecting hardware...'
+  const trackHardware = hardware ? `${hardware.gpuVendor.toUpperCase()} · ${hardware.ramGB} GB` : t('detecting')
 
   if (!isOpen) return null
 
@@ -221,7 +224,7 @@ export default function OnboardingTutorial() {
       }}
       role="complementary"
       aria-modal="false"
-      aria-label="Onboarding tutorial"
+      aria-label={t('ariaLabel')}
       aria-labelledby="onboarding-title"
       onKeyDown={handleKeyDown}
       ref={dialogRef}
@@ -243,13 +246,13 @@ export default function OnboardingTutorial() {
       {/* Header */}
       <div className="flex justify-between items-center px-5 pt-1 pb-2 flex-shrink-0">
         <span className="text-[10px] uppercase tracking-[0.2em] text-ink-mute">
-          Step {stepIndex + 1} of {steps.length} · {trackHardware}
+          {t('stepOf', { current: stepIndex + 1, total: steps.length })} · {trackHardware}
         </span>
         <button
           onClick={close}
           className="p-2 rounded-lg text-ink-soft hover:bg-brand-500/15 hover:text-ink-strong transition-colors"
-          title="Skip tutorial"
-          aria-label="Skip tutorial"
+          title={t('skipTutorial')}
+          aria-label={t('skipTutorial')}
         >
           <X className="w-5 h-5" />
         </button>
@@ -282,7 +285,7 @@ export default function OnboardingTutorial() {
               color: 'var(--vl-purple-200)',
             }}
           >
-            <strong>Tip:</strong> {step.tip}
+            <strong>{t('tipLabel')}</strong> {step.tip}
           </div>
         )}
 
@@ -304,10 +307,10 @@ export default function OnboardingTutorial() {
             )}
             <span>
               {micVerified
-                ? 'Virtual microphone active. Discord/VRChat should hear you now.'
+                ? t('mic.verified')
                 : polling
-                  ? 'Waiting for you to enable the virtual microphone ("Enable" button on the Speak tab)...'
-                  : 'Virtual microphone not detected yet. You can continue and set it up later in Settings.'}
+                  ? t('mic.polling')
+                  : t('mic.notDetected')}
             </span>
           </div>
         )}
@@ -323,7 +326,7 @@ export default function OnboardingTutorial() {
           disabled={stepIndex === 0}
           className="px-4 py-2 text-sm text-ink-soft hover:text-ink-strong disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
         >
-          Back
+          {t('back')}
         </button>
 
         <div className="flex gap-2">
@@ -333,7 +336,7 @@ export default function OnboardingTutorial() {
               className="px-4 py-2 text-sm text-ink-soft hover:text-ink-strong flex items-center gap-1.5 transition-colors"
             >
               <SkipForward className="w-4 h-4" />
-              Skip
+              {t('skip')}
             </button>
           )}
 
@@ -341,11 +344,11 @@ export default function OnboardingTutorial() {
             {isLast ? (
               <>
                 <CheckCircle2 className="w-4 h-4" />
-                Get started
+                {t('getStarted')}
               </>
             ) : (
               <>
-                Next
+                {t('next')}
                 <ArrowRight className="w-4 h-4" />
               </>
             )}

@@ -1,0 +1,17 @@
+{
+  "loadVoicesFailed": "Failed to load online voices.",
+  "shortcut": {
+    "writePhrase": "Write the phrase",
+    "writePhraseMessage": "Type what the shortcut should say.",
+    "chooseVoice": "Choose a voice",
+    "chooseVoiceMessage": "Select an online voice first (on the Speak screen).",
+    "noKey": "No key available",
+    "noKeyMessage": "All shortcut keys are in use.",
+    "created": "Shortcut created",
+    "createdMessage": "{{hotkey}} → speaks your phrase",
+    "noVoice": "No voice",
+    "noVoiceMessage": "Choose a voice for the shortcut.",
+    "testFailed": "Test failed",
+    "testFailedMessage": "Could not generate the voice."
+  }
+}

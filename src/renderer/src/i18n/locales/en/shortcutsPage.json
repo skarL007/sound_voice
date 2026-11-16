@@ -1,0 +1,14 @@
+{
+  "title": "Voice shortcuts",
+  "intro": "The full list of your shortcuts. You can also create shortcuts right on the <strong>Speak</strong> screen. Each one triggers the phrase with its key, in any app (Discord, game).",
+  "cloudError": "Online voices unavailable ({{error}}). Check your internet and reload.",
+  "new": {
+    "title": "New shortcut",
+    "placeholder": "What should the shortcut say? (e.g. GG, great match!)",
+    "voiceAria": "New shortcut voice",
+    "keyAria": "New shortcut key",
+    "add": "Add"
+  },
+  "empty": "No shortcuts yet. Create the first one above. 👆",
+  "removed": "Shortcut removed"
+}

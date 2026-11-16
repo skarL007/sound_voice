@@ -1,0 +1,166 @@
+{
+  "nav": {
+    "speak": "Parler",
+    "shortcuts": "Raccourcis",
+    "settings": "Paramètres"
+  },
+  "backend": {
+    "startingTitle": "Démarrage du backend local",
+    "unavailableTitle": "Voix locales indisponibles",
+    "startingDescription": "L’interface est déjà prête. Les voix locales seront disponibles une fois le backend démarré. Les voix en ligne (Edge TTS) sont déjà utilisables dans l’écran Parler.",
+    "unavailableDescription": "Vous pouvez toujours utiliser les voix en ligne (Edge TTS), sans installation, dans l’écran Parler. Pour débloquer Piper/Kokoro, cliquez sur Réessayer ou ouvrez les Paramètres.",
+    "retry": "Réessayer",
+    "diagnostics": "Diagnostic",
+    "command": "commande :",
+    "executor": "exécuteur :",
+    "url": "URL :",
+    "detail": "détail :",
+    "unreachable": "Impossible de joindre le backend local."
+  },
+  "titleBar": {
+    "ready": "Prêt à parler",
+    "starting": "Démarrage…",
+    "failed": "Échec du backend",
+    "offline": "Hors ligne",
+    "shortcutsTitle": "Raccourcis clavier",
+    "shortcutsAria": "Afficher les raccourcis clavier",
+    "compactTitle": "Mode compact",
+    "compactAria": "Activer ou désactiver le mode compact",
+    "alwaysOnTop": "Toujours au premier plan",
+    "minimize": "Réduire la fenêtre",
+    "maximize": "Agrandir la fenêtre",
+    "close": "Fermer la fenêtre"
+  },
+  "sidebar": {
+    "tagline": "Voix en ligne (Edge TTS) · Open source"
+  },
+  "compact": {
+    "chooseOnlineStatus": "Choisissez une voix en ligne dans l’écran Parler",
+    "startingLocal": "Démarrage du backend local…",
+    "micOn": "Micro activé",
+    "micOff": "Micro coupé",
+    "voiceModel": "Modèle de voix",
+    "noModel": "Aucun modèle",
+    "moreOptions": "Plus d’options",
+    "speedAndSettings": "Vitesse et paramètres",
+    "speed": "Vitesse",
+    "speechSpeed": "Vitesse de parole",
+    "keep": "Garder",
+    "placeholder": "> saisissez puis appuyez sur Entrée",
+    "stop": "Arrêter",
+    "speak": "Parler"
+  },
+  "toast": {
+    "backendStarting": {
+      "title": "Backend en démarrage",
+      "body": "La parole sera disponible une fois le backend local démarré."
+    },
+    "speechFailed": {
+      "title": "Échec de la lecture"
+    },
+    "onlineFailedLocal": {
+      "title": "Échec de la voix en ligne",
+      "body": "Lecture avec la voix locale ({{engine}})."
+    },
+    "onlineError": {
+      "title": "Erreur de voix en ligne",
+      "body": "Impossible de générer la voix."
+    },
+    "noOnlineVoice": {
+      "title": "Aucune voix en ligne",
+      "body": "Choisissez une voix en ligne dans l’écran Parler."
+    },
+    "noVoiceAvailable": {
+      "title": "Aucune voix disponible",
+      "body": "{{label}}."
+    },
+    "backendRestart": {
+      "title": "Backend local",
+      "body": "Le backend n’a pas confirmé de redémarrage immédiat. Surveillance en cours."
+    },
+    "noCable": {
+      "title": "Micro virtuel sans câble",
+      "body": "La voix sera jouée sur le haut-parleur, pas dans Discord. Ouvrez Paramètres > Micro virtuel."
+    },
+    "noPhrase": {
+      "title": "Raccourci sans phrase",
+      "body": "Configurez des phrases rapides dans l’écran Parler."
+    },
+    "backendOfflinePhrase": {
+      "title": "Backend hors ligne",
+      "body": "Voix locales indisponibles. Passez en ligne dans l’écran Parler."
+    },
+    "backendOfflineShortcut": {
+      "title": "Backend hors ligne",
+      "body": "Le raccourci local nécessite que le backend Python soit démarré."
+    },
+    "audioFailed": "Impossible de générer l’audio.",
+    "localAudioFailed": "Impossible de générer l’audio local.",
+    "noOnlineVoiceTab": {
+      "title": "Aucune voix en ligne",
+      "body": "Choisissez une voix en ligne dans l’écran Parler avant d’utiliser les raccourcis."
+    },
+    "noOnlineVoiceShortcut": {
+      "title": "Aucune voix en ligne",
+      "body": "Choisissez une voix dans le raccourci ou dans l’écran Parler."
+    },
+    "phraseSpokenLocal": {
+      "title": "Échec de la voix en ligne",
+      "body": "Phrase lue avec la voix locale ({{engine}})."
+    },
+    "shortcutSpokenLocal": {
+      "title": "Échec de la voix en ligne",
+      "body": "Raccourci lu avec la voix locale ({{engine}})."
+    },
+    "shortcutFailed": {
+      "title": "Échec du raccourci"
+    },
+    "virtualMic": {
+      "title": "Micro virtuel",
+      "enabled": "Micro virtuel activé.",
+      "disabled": "Micro virtuel désactivé."
+    },
+    "shortcutsBlocked": {
+      "title": "{{count}} raccourci(s) bloqué(s)",
+      "body": "Une autre application utilise déjà : {{list}}. Essayez des combinaisons Ctrl+Alt ou avec les touches F dans l’écran Raccourcis."
+    }
+  },
+  "cheatsheet": {
+    "title": "Raccourcis clavier",
+    "items": {
+      "focusField": {
+        "keys": "Ctrl+Shift+F",
+        "desc": "Activer le champ de texte"
+      },
+      "speakText": {
+        "keys": "Entrée",
+        "desc": "Lire le texte"
+      },
+      "newLine": {
+        "keys": "Maj+Entrée",
+        "desc": "Nouvelle ligne"
+      },
+      "voiceShortcut": {
+        "keys": "Ctrl+Shift+1..9",
+        "desc": "Raccourci vocal 1-9"
+      },
+      "toggleMic": {
+        "keys": "Ctrl+Shift+M",
+        "desc": "Activer/couper le micro"
+      },
+      "compactMode": {
+        "keys": "Ctrl+Shift+V",
+        "desc": "Mode compact"
+      },
+      "stopAudio": {
+        "keys": "Ctrl+Shift+S",
+        "desc": "Arrêter l’audio"
+      },
+      "closeModal": {
+        "keys": "Échap",
+        "desc": "Fermer la fenêtre / arrêter"
+      }
+    },
+    "footer": "Ctrl+Alt+1..9 et Ctrl+Shift+F1..F12 sont disponibles dans l’écran Raccourcis."
+  }
+}

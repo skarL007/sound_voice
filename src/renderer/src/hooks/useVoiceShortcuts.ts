@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAppStore } from '../stores/appStore'
 import { playCloudAudio } from '../utils/cloudAudio'
 import { toast } from '../utils/toast'
+import i18n from '../i18n'
 import { deriveName } from '../components/ShortcutControls'
 import {
   HOTKEY_SLOTS,
@@ -40,7 +41,7 @@ export function useVoiceShortcuts() {
         setCloudVoices(response.voices)
         setCloudError(null)
       } else {
-        setCloudError(response.error || 'Failed to load online voices.')
+        setCloudError(response.error || i18n.t('hooks:loadVoicesFailed'))
       }
     })
     const handleTriggered = (event: Event) => {
@@ -77,7 +78,11 @@ export function useVoiceShortcuts() {
   }, [voiceShortcuts])
 
   const resolveVoice = (preferred?: string): string =>
-    preferred || cloudVoiceDefault || cloudVoices[0]?.ShortName || ''
+    preferred ||
+    cloudVoiceDefault ||
+    (i18n.language === 'fr' ? cloudVoices.find((voice) => voice.Locale === 'fr-FR')?.ShortName : undefined) ||
+    cloudVoices[0]?.ShortName ||
+    ''
 
   /** Cria um atalho a partir de um texto. Retorna o atalho criado ou null. */
   const createShortcut = (
@@ -86,17 +91,17 @@ export function useVoiceShortcuts() {
   ): VoiceShortcut | null => {
     const trimmed = text.trim()
     if (!trimmed) {
-      toast('Write the phrase', 'Type what the shortcut should say.', 'warning')
+      toast(i18n.t('hooks:shortcut.writePhrase'), i18n.t('hooks:shortcut.writePhraseMessage'), 'warning')
       return null
     }
     const voice = resolveVoice(opts?.voice)
     if (!voice) {
-      toast('Choose a voice', 'Select an online voice first (on the Speak screen).', 'warning')
+      toast(i18n.t('hooks:shortcut.chooseVoice'), i18n.t('hooks:shortcut.chooseVoiceMessage'), 'warning')
       return null
     }
     const hotkey = opts?.hotkey || suggestNextHotkey(voiceShortcuts) || HOTKEY_SLOTS[0]
     if (isHotkeyTaken(hotkey, voiceShortcuts)) {
-      toast('No key available', 'All shortcut keys are in use.', 'warning')
+      toast(i18n.t('hooks:shortcut.noKey'), i18n.t('hooks:shortcut.noKeyMessage'), 'warning')
       return null
     }
     const shortcut: VoiceShortcut = {
@@ -110,7 +115,7 @@ export function useVoiceShortcuts() {
       speed: opts?.speed ?? 1.0,
     }
     addVoiceShortcut(shortcut)
-    toast('Shortcut created', `${formatHotkeyDisplay(hotkey)} → speaks your phrase`, 'success')
+    toast(i18n.t('hooks:shortcut.created'), i18n.t('hooks:shortcut.createdMessage', { hotkey: formatHotkeyDisplay(hotkey) }), 'success')
     return shortcut
   }
 
@@ -120,7 +125,7 @@ export function useVoiceShortcuts() {
     try {
       const voice = resolveVoice(shortcut.voice)
       if (!voice) {
-        toast('No voice', 'Choose a voice for the shortcut.', 'warning')
+        toast(i18n.t('hooks:shortcut.noVoice'), i18n.t('hooks:shortcut.noVoiceMessage'), 'warning')
         return
       }
       const response = await window.electronAPI.synthesizeCloud({
@@ -130,7 +135,7 @@ export function useVoiceShortcuts() {
         pitch: shortcut.pitch,
       })
       if (!response.success || !response.audioBase64) {
-        toast('Test failed', response.error || 'Could not generate the voice.', 'error')
+        toast(i18n.t('hooks:shortcut.testFailed'), response.error || i18n.t('hooks:shortcut.testFailedMessage'), 'error')
         return
       }
       await playCloudAudio(response.audioBase64, response.mimeType ?? 'audio/webm', {
@@ -138,7 +143,7 @@ export function useVoiceShortcuts() {
         monitorDeviceId,
       })
     } catch (error) {
-      toast('Test failed', String(error), 'error')
+      toast(i18n.t('hooks:shortcut.testFailed'), String(error), 'error')
     } finally {
       setTestingId(null)
     }

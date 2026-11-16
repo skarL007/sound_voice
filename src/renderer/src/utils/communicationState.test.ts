@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
   DEFAULT_QUICK_PHRASES,
+  DEFAULT_QUICK_PHRASES_FR,
+  getDefaultQuickPhrases,
   MAX_HISTORY_ITEMS,
   MAX_QUICK_PHRASES,
   buildHistoryItem,
@@ -9,6 +11,26 @@ import {
   sanitizeCommunicationState,
   upsertQuickPhrase,
 } from './communicationState'
+
+describe('quick phrases defaults by language', () => {
+  it('uses French phrases on first launch with a French interface', () => {
+    expect(getDefaultQuickPhrases('fr')).toEqual(DEFAULT_QUICK_PHRASES_FR)
+    expect(getDefaultQuickPhrases('fr-FR')).toEqual(DEFAULT_QUICK_PHRASES_FR)
+    expect(getDefaultQuickPhrases('en')).toEqual(DEFAULT_QUICK_PHRASES)
+    expect(getDefaultQuickPhrases(undefined)).toEqual(DEFAULT_QUICK_PHRASES)
+    expect(sanitizeCommunicationState({}, 'fr').quickPhrases).toEqual(DEFAULT_QUICK_PHRASES_FR)
+    expect(removeQuickPhrase(['Oui.'], 'Oui.', 'fr')).toEqual(DEFAULT_QUICK_PHRASES_FR)
+  })
+
+  it('never rewrites phrases already saved by the user', () => {
+    const saved = { quickPhrases: ['Hello.', 'Mes mots'] }
+    expect(sanitizeCommunicationState(saved, 'fr').quickPhrases).toEqual(['Hello.', 'Mes mots'])
+  })
+
+  it('keeps as many French defaults as English ones', () => {
+    expect(DEFAULT_QUICK_PHRASES_FR).toHaveLength(DEFAULT_QUICK_PHRASES.length)
+  })
+})
 
 describe('communicationState', () => {
   it('falls back to defaults when settings are empty', () => {
