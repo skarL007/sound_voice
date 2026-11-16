@@ -1,4 +1,4 @@
 import { vi } from 'vitest'
 
-// Les assertions existantes sont en anglais : on fige la langue detectee.
+// Existing assertions are in English: pin the detected language.
 vi.stubGlobal('navigator', { language: 'en-US' })

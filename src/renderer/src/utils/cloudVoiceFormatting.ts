@@ -15,7 +15,7 @@ export const POPULAR_LOCALES = [
 
 const isFrench = (lng?: string): boolean => Boolean(lng?.toLowerCase().startsWith('fr'))
 
-/** Locale proposee en premier : fr-FR pour l'interface francaise, pt-BR sinon (comportement historique). */
+/** Locale offered first: fr-FR for the French UI, pt-BR otherwise (historical behaviour). */
 export function defaultLocaleFilter(lng?: string): string {
   return isFrench(lng) ? 'fr-FR' : 'pt-BR'
 }
@@ -49,7 +49,7 @@ export function sortAvailableLocales(voices: CloudVoice[], lng?: string): string
   const set = new Set<string>()
   for (const voice of voices) set.add(voice.Locale)
   const sorted = Array.from(set).sort()
-  // Interface francaise : fr-FR d'abord, puis les autres fr-*.
+  // French UI: fr-FR first, then the other fr-* locales.
   const frenchFirst = isFrench(lng)
     ? sorted.filter((locale) => locale.startsWith('fr')).sort((a, b) => Number(b === 'fr-FR') - Number(a === 'fr-FR') || a.localeCompare(b))
     : []

@@ -29,7 +29,7 @@ export const DEFAULT_QUICK_PHRASES_FR = [
   'J’ai mal.',
 ]
 
-/** Phrases de départ dans la langue de l'interface ; 'en' pour toute langue inconnue. */
+/** Starter phrases in the UI language; 'en' for any unknown language. */
 export function getDefaultQuickPhrases(lng?: string): string[] {
   return lng?.toLowerCase().startsWith('fr') ? DEFAULT_QUICK_PHRASES_FR : DEFAULT_QUICK_PHRASES
 }

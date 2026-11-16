@@ -87,7 +87,7 @@ export default function OnboardingTutorial() {
   const [isOpen, setIsOpen] = useState(false)
   const [stepIndex, setStepIndex] = useState(0)
   const [hardware, setHardware] = useState<HardwareInfo | null>(null)
-  // `t` change avec la langue : le playbook et les libellés se recalculent.
+  // `t` changes with the language, so the playbook and labels are recomputed.
   const steps = useMemo(() => buildSteps(hardware, t), [hardware, t])
   const [micVerified, setMicVerified] = useState(false)
   const [polling, setPolling] = useState(false)

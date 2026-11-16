@@ -13,13 +13,13 @@ export function detectLanguage(navigatorLanguage?: string): Language {
   return navigatorLanguage?.toLowerCase().startsWith('fr') ? 'fr' : 'en'
 }
 
-/** Langue enregistree si valide, sinon celle deja detectee de maniere synchrone au demarrage. */
+/** Saved language when valid, else the one detected synchronously at startup. */
 export function resolveLanguage(settings?: { language?: unknown } | null): Language {
   if (isLanguage(settings?.language)) return settings.language
   return isLanguage(i18n.language) ? i18n.language : 'en'
 }
 
-// locales/<lng>/<namespace>.json : le nom du fichier est le namespace.
+// locales/<lng>/<namespace>.json: the file name is the namespace.
 type JsonModule = { default: Record<string, unknown> }
 const modules = import.meta.glob<JsonModule>('./locales/*/*.json', { eager: true })
 
@@ -60,7 +60,7 @@ i18n.on('languageChanged', (lng) => {
 if (typeof document !== 'undefined') document.documentElement.lang = i18n.language
 pushLanguageToMain(i18n.language)
 
-// Reglage persistant (settings.json, cle `language`) : prioritaire sur la detection.
+// Persisted setting (settings.json, `language` key) wins over detection.
 if (typeof window !== 'undefined') {
   void window.electronAPI
     ?.loadSettings?.()
@@ -72,7 +72,7 @@ if (typeof window !== 'undefined') {
     .catch(() => undefined)
 }
 
-/** Change la langue de l'interface et la persiste. */
+/** Switches the UI language and persists it. */
 export function setLanguage(lng: Language): Promise<unknown> {
   window.electronAPI?.saveSettings?.({ language: lng })
   return i18n.changeLanguage(lng)

@@ -106,7 +106,7 @@ function buildDefaultProfiles(carriedQuickPhrases?: string[], lng?: string): Pro
 }
 
 export function migrateSettings(saved: Partial<AppSettings> | null | undefined): Partial<AppSettings> {
-  // Donnees initiales creees dans la langue de l'interface (langue enregistree, sinon detection synchrone).
+  // Seed data is created in the UI language (saved language, else the synchronous detection).
   const lng = resolveLanguage(saved)
   const ensureMvpDefaults = (base: Partial<AppSettings>): Partial<AppSettings> => ({
     voiceSource: 'auto',

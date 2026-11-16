@@ -15,7 +15,7 @@ export function getMainLanguage(): MainLanguage {
   return current
 }
 
-/** Repli : langue courante, puis en, puis la cle elle-meme. */
+/** Fallback: current language, then en, then the key itself. */
 export function tMain(key: string, vars?: Record<string, string | number>): string {
   const template = dictionaries[current][key] ?? dictionaries.en[key] ?? key
   if (!vars) return template

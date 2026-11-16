@@ -1,4 +1,4 @@
-// Chaines du processus main : cle plate -> texte, interpolation {{var}}.
+// Main-process strings: flat key -> text, {{var}} interpolation.
 export const en: Record<string, string> = {
   'edgeTts.voicesFetchFailed': 'Failed to fetch Edge TTS voices: HTTP {{status}}',
   'edgeTts.emptyText': 'Empty text.',
