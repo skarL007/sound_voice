@@ -1,3 +1,5 @@
+**English** · [Français](CONTRIBUTING.fr.md)
+
 # Contributing to VoiceLaunch TTS
 
 Thanks for your interest! VoiceLaunch TTS is an assistive communication

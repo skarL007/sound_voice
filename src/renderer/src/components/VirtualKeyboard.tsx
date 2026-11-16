@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Keyboard, X, Delete, CornerDownLeft, Space } from 'lucide-react'
 
 interface VirtualKeyboardProps {
@@ -24,19 +25,21 @@ const KEY_BASE_STYLE: React.CSSProperties = {
 }
 
 export function VirtualKeyboardButton({ onClick }: { onClick: () => void }) {
+  const { t } = useTranslation('components', { keyPrefix: 'virtualKeyboard' })
   return (
     <button
       onClick={onClick}
       className="btn-secondary flex items-center gap-2 text-sm"
-      title="Virtual keyboard"
+      title={t('buttonTitle')}
     >
       <Keyboard className="w-4 h-4" />
-      Keyboard
+      {t('buttonLabel')}
     </button>
   )
 }
 
 export default function VirtualKeyboard({ onKeyPress, onBackspace, onEnter, onSpace }: VirtualKeyboardProps) {
+  const { t } = useTranslation('components', { keyPrefix: 'virtualKeyboard' })
   const [isOpen, setIsOpen] = useState(false)
   const [isShift, setIsShift] = useState(false)
 
@@ -45,12 +48,12 @@ export default function VirtualKeyboard({ onKeyPress, onBackspace, onEnter, onSp
       <button
         onClick={() => setIsOpen(true)}
         className="btn-secondary flex items-center gap-2 text-sm"
-        title="Open virtual keyboard"
-        aria-label="Open virtual keyboard"
+        title={t('open')}
+        aria-label={t('open')}
         aria-expanded={false}
       >
         <Keyboard className="w-4 h-4" />
-        Virtual keyboard
+        {t('openLabel')}
       </button>
     )
   }
@@ -63,18 +66,18 @@ export default function VirtualKeyboard({ onKeyPress, onBackspace, onEnter, onSp
   return (
     <div className="hud-frame p-3 space-y-2 animate-lift-in">
       <div className="flex items-center justify-between mb-1">
-        <span className="text-xs font-medium text-ink-soft uppercase tracking-wider" id="vkb-label">Virtual keyboard</span>
+        <span className="text-xs font-medium text-ink-soft uppercase tracking-wider" id="vkb-label">{t('openLabel')}</span>
         <button
           onClick={() => setIsOpen(false)}
           className="p-1 rounded text-ink-soft hover:bg-brand-500/15 hover:text-ink-strong transition-colors"
-          title="Close keyboard"
-          aria-label="Close virtual keyboard"
+          title={t('closeTitle')}
+          aria-label={t('closeAria')}
         >
           <X className="w-4 h-4" />
         </button>
       </div>
 
-      <div className="space-y-1.5" role="group" aria-label="Character keys">
+      <div className="space-y-1.5" role="group" aria-label={t('charKeys')}>
         {rows.map((row, ri) => (
           <div key={ri} className="flex gap-1 justify-center">
             {row.map((key) => {
@@ -102,17 +105,17 @@ export default function VirtualKeyboard({ onKeyPress, onBackspace, onEnter, onSp
             isShift ? 'btn-primary' : ''
           }`}
           style={isShift ? undefined : KEY_BASE_STYLE}
-          aria-label={isShift ? 'Shift enabled' : 'Shift disabled'}
+          aria-label={isShift ? t('shiftOn') : t('shiftOff')}
           aria-pressed={isShift}
         >
-          Shift
+          {t('shift')}
         </button>
 
         <button
           onClick={onSpace}
           className="h-10 px-8 rounded-lg text-sm font-medium border transition-colors"
           style={KEY_BASE_STYLE}
-          aria-label="Space"
+          aria-label={t('space')}
         >
           <Space className="w-4 h-4" />
         </button>
@@ -121,7 +124,7 @@ export default function VirtualKeyboard({ onKeyPress, onBackspace, onEnter, onSp
           onClick={onBackspace}
           className="h-10 px-4 rounded-lg text-sm font-medium border transition-colors"
           style={{ ...KEY_BASE_STYLE, color: 'var(--vl-state-error)' }}
-          aria-label="Delete"
+          aria-label={t('delete')}
         >
           <Delete className="w-4 h-4" />
         </button>
@@ -129,7 +132,7 @@ export default function VirtualKeyboard({ onKeyPress, onBackspace, onEnter, onSp
         <button
           onClick={onEnter}
           className="btn-primary h-10 px-4 rounded-lg"
-          aria-label="Send"
+          aria-label={t('send')}
         >
           <CornerDownLeft className="w-4 h-4" />
         </button>

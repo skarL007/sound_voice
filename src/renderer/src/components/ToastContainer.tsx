@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useToastStore } from '../stores/toastStore'
 import { useAppStore } from '../stores/appStore'
 import { CheckCircle2, AlertCircle, Info, AlertTriangle, X } from 'lucide-react'
@@ -20,6 +21,7 @@ const styleByType: Record<ToastType, { borderColor: string; background: string }
 }
 
 export default function ToastContainer() {
+  const { t } = useTranslation('components', { keyPrefix: 'toast' })
   const { toasts, removeToast, pauseToast, resumeToast } = useToastStore()
   const compactMode = useAppStore((state) => state.compactMode)
 
@@ -58,7 +60,7 @@ export default function ToastContainer() {
               <button
                 onClick={() => removeToast(toast.id)}
                 className="p-1 rounded-md text-ink-soft hover:bg-brand-500/15 hover:text-ink-strong transition-colors"
-                aria-label="Close notification"
+                aria-label={t('close')}
               >
                 <X className="w-4 h-4" />
               </button>

@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import type { AppSettings, BackendStatus, Profile, VoiceShortcut, VoiceSource } from '../../../shared/types'
-import { DEFAULT_QUICK_PHRASES, MAX_QUICK_PHRASES } from '../utils/communicationState'
+import { getDefaultQuickPhrases, MAX_QUICK_PHRASES } from '../utils/communicationState'
+import i18n, { resolveLanguage } from '../i18n'
 import { EDGE_FAILURE_COOLDOWN_MS } from '../utils/engineRouter'
 import { HOTKEY_SLOTS, defaultShortcuts, generateShortcutId } from '../utils/voiceShortcuts'
 
@@ -96,14 +97,17 @@ const DEFAULT_PROFILE_ID = 'padrao'
 // Perfil unico: o app deixou de separar "padrao" e "jogo". buildDefaultProfiles
 // so cria o perfil padrao; perfis salvos antigos (incl. 'jogo' custom) continuam
 // validos pela migracao — apenas nao ha mais UI para troca-los.
-function buildDefaultProfiles(carriedQuickPhrases?: string[]): Profile[] {
+function buildDefaultProfiles(carriedQuickPhrases?: string[], lng?: string): Profile[] {
   const padraoPhrases = carriedQuickPhrases && carriedQuickPhrases.length > 0
     ? carriedQuickPhrases.slice(0, MAX_QUICK_PHRASES)
-    : DEFAULT_QUICK_PHRASES
-  return [{ id: DEFAULT_PROFILE_ID, name: 'Default', quickPhrases: padraoPhrases }]
+    : getDefaultQuickPhrases(lng)
+  const name = lng === 'fr' ? 'Par défaut' : 'Default'
+  return [{ id: DEFAULT_PROFILE_ID, name, quickPhrases: padraoPhrases }]
 }
 
 export function migrateSettings(saved: Partial<AppSettings> | null | undefined): Partial<AppSettings> {
+  // Seed data is created in the UI language (saved language, else the synchronous detection).
+  const lng = resolveLanguage(saved)
   const ensureMvpDefaults = (base: Partial<AppSettings>): Partial<AppSettings> => ({
     voiceSource: 'auto',
     cableDeviceId: null,
@@ -126,7 +130,7 @@ export function migrateSettings(saved: Partial<AppSettings> | null | undefined):
   if (!saved) {
     return ensureMvpDefaults({
       schemaVersion: SCHEMA_VERSION,
-      profiles: buildDefaultProfiles(),
+      profiles: buildDefaultProfiles(undefined, lng),
       activeProfileId: DEFAULT_PROFILE_ID,
     })
   }
@@ -140,7 +144,7 @@ export function migrateSettings(saved: Partial<AppSettings> | null | undefined):
   const profiles =
     Array.isArray(saved.profiles) && saved.profiles.length > 0
       ? saved.profiles
-      : buildDefaultProfiles(saved.quickPhrases)
+      : buildDefaultProfiles(saved.quickPhrases, lng)
   const activeProfileId =
     saved.activeProfileId && profiles.some((profile) => profile.id === saved.activeProfileId)
       ? saved.activeProfileId
@@ -214,7 +218,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ showExperimentalModels: value })
     saveToDisk({ showExperimentalModels: value })
   },
-  profiles: buildDefaultProfiles(),
+  profiles: buildDefaultProfiles(undefined, i18n.language),
   activeProfileId: DEFAULT_PROFILE_ID,
   voiceSource: 'auto',
   setVoiceSource: (source) => {
@@ -304,7 +308,7 @@ if (typeof window !== 'undefined') {
       defaultSpeed: migrated.defaultSpeed ?? 1.0,
       tutorialSeen: migrated.tutorialSeen ?? false,
       showExperimentalModels: migrated.showExperimentalModels ?? false,
-      profiles: migrated.profiles ?? buildDefaultProfiles(),
+      profiles: migrated.profiles ?? buildDefaultProfiles(undefined, resolveLanguage(migrated)),
       activeProfileId: migrated.activeProfileId ?? DEFAULT_PROFILE_ID,
       voiceSource: migrated.voiceSource ?? 'auto',
       cloudVoice: migrated.cloudVoice ?? null,

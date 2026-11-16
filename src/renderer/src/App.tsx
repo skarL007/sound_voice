@@ -1,4 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
+import i18n, { resolveLanguage } from './i18n'
 import { HashRouter, Routes, Route, NavLink, Navigate } from 'react-router-dom'
 import {
   AlertTriangle,
@@ -37,9 +39,9 @@ import type { BackendStatus, ModelInfo } from '../../shared/types'
 // App focado no online (Edge TTS): jornada começa → fala → atalho → ajustes.
 // As telas locais (instalar modelos, clonar voz) saem da navegacao.
 const navItems = [
-  { to: '/', icon: Volume2, label: 'Speak' },
-  { to: '/shortcuts', icon: Keyboard, label: 'Shortcuts' },
-  { to: '/settings', icon: Settings, label: 'Settings' },
+  { to: '/', icon: Volume2, labelKey: 'nav.speak' },
+  { to: '/shortcuts', icon: Keyboard, labelKey: 'nav.shortcuts' },
+  { to: '/settings', icon: Settings, labelKey: 'nav.settings' },
 ]
 
 const INITIAL_BACKEND_STATUS: BackendStatus = {
@@ -61,6 +63,7 @@ function BackendBanner({
   onRetry: () => void
   voiceSource: 'auto' | 'local' | 'cloud'
 }) {
+  const { t } = useTranslation('app')
   if (status.running) return null
 
   const isStarting = status.phase === 'starting'
@@ -73,11 +76,10 @@ function BackendBanner({
     return null
   }
 
-  const title = isStarting ? 'Starting local backend' : 'Local voices unavailable'
+  const title = isStarting ? t('backend.startingTitle') : t('backend.unavailableTitle')
   const description = isStarting
-    ? 'The interface is already ready. Local voices become available once the backend finishes starting. Online voices (Edge TTS) can already be used in "Speak".'
-    : (status.lastError ? `${status.lastError}. ` : '') +
-      'You can still use online voices (Edge TTS) without installation in "Speak". To unlock Piper/Kokoro, use Retry or open Settings.'
+    ? t('backend.startingDescription')
+    : (status.lastError ? `${status.lastError}. ` : '') + t('backend.unavailableDescription')
 
   const containerStyle = isStarting
     ? { borderBottomColor: 'var(--vl-state-warn-border)', background: 'var(--vl-state-warn-bg)' }
@@ -102,23 +104,23 @@ function BackendBanner({
             <p className="text-sm text-ink-body">{description}</p>
             {!isStarting && hasDetails && (
               <div className="mt-2 rounded-lg p-2 font-mono text-[11px] leading-5 grid gap-1" style={{ background: 'var(--vl-surface-sunken)', border: '1px solid var(--vl-state-error-border)' }}>
-                {diagnostics?.command && <div><span className="text-ink-mute">command:</span> {diagnostics.command}</div>}
-                {diagnostics?.executor && <div><span className="text-ink-mute">executor:</span> {diagnostics.executor}</div>}
-                {diagnostics?.url && <div><span className="text-ink-mute">url:</span> {diagnostics.url}</div>}
-                {diagnostics?.detail && <div><span className="text-ink-mute">detail:</span> {diagnostics.detail}</div>}
+                {diagnostics?.command && <div><span className="text-ink-mute">{t('backend.command')}</span> {diagnostics.command}</div>}
+                {diagnostics?.executor && <div><span className="text-ink-mute">{t('backend.executor')}</span> {diagnostics.executor}</div>}
+                {diagnostics?.url && <div><span className="text-ink-mute">{t('backend.url')}</span> {diagnostics.url}</div>}
+                {diagnostics?.detail && <div><span className="text-ink-mute">{t('backend.detail')}</span> {diagnostics.detail}</div>}
               </div>
             )}
             {isStarting && hasDetails && (
               <details className="mt-2 text-xs text-ink-soft">
                 <summary className="cursor-pointer inline-flex items-center gap-1 select-none hover:text-ink-strong">
                   <ChevronDown className="h-3 w-3" />
-                  Diagnostics
+                  {t('backend.diagnostics')}
                 </summary>
                 <div className="mt-2 grid gap-1 font-mono text-[11px] leading-5">
-                  {diagnostics?.command && <div><span className="text-ink-mute">command:</span> {diagnostics.command}</div>}
-                  {diagnostics?.executor && <div><span className="text-ink-mute">executor:</span> {diagnostics.executor}</div>}
-                  {diagnostics?.url && <div><span className="text-ink-mute">url:</span> {diagnostics.url}</div>}
-                  {diagnostics?.detail && <div><span className="text-ink-mute">detail:</span> {diagnostics.detail}</div>}
+                  {diagnostics?.command && <div><span className="text-ink-mute">{t('backend.command')}</span> {diagnostics.command}</div>}
+                  {diagnostics?.executor && <div><span className="text-ink-mute">{t('backend.executor')}</span> {diagnostics.executor}</div>}
+                  {diagnostics?.url && <div><span className="text-ink-mute">{t('backend.url')}</span> {diagnostics.url}</div>}
+                  {diagnostics?.detail && <div><span className="text-ink-mute">{t('backend.detail')}</span> {diagnostics.detail}</div>}
                 </div>
               </details>
             )}
@@ -131,7 +133,7 @@ function BackendBanner({
             className="btn-secondary inline-flex items-center gap-2 self-start text-sm disabled:opacity-60"
           >
             <RefreshCw className={`h-4 w-4 ${retrying ? 'animate-spin' : ''}`} />
-            Retry
+            {t('backend.retry')}
           </button>
         </div>
       </div>
@@ -146,18 +148,19 @@ function TitleBar({
   backendStatus: BackendStatus
   onCheatsheet: () => void
 }) {
+  const { t } = useTranslation('app')
   const alwaysOnTop = useAppStore((state) => state.alwaysOnTop)
   const setAlwaysOnTop = useAppStore((state) => state.setAlwaysOnTop)
   const compactMode = useAppStore((state) => state.compactMode)
   const setCompactMode = useAppStore((state) => state.setCompactMode)
 
   const subtitleText = backendStatus.running
-    ? 'Ready to speak'
+    ? t('titleBar.ready')
     : backendStatus.phase === 'starting'
-      ? 'Starting...'
+      ? t('titleBar.starting')
       : backendStatus.phase === 'error'
-        ? 'Backend failed'
-        : 'Offline'
+        ? t('titleBar.failed')
+        : t('titleBar.offline')
 
   const subtitleColor = backendStatus.running
     ? 'var(--vl-state-ready)'
@@ -193,45 +196,45 @@ function TitleBar({
         <button
           onClick={onCheatsheet}
           className="titlebar-btn text-slate-400 hover:bg-chrome-800 hover:text-brand-300"
-          title="Keyboard shortcuts"
-          aria-label="View keyboard shortcuts"
+          title={t('titleBar.shortcutsTitle')}
+          aria-label={t('titleBar.shortcutsAria')}
         >
           <Keyboard className="w-4 h-4" />
         </button>
         <button
           onClick={() => setCompactMode(!compactMode)}
           className={`titlebar-btn ${compactMode ? 'bg-brand-400/10 text-brand-300' : 'text-slate-400 hover:bg-chrome-800 hover:text-brand-300'}`}
-          title="Compact mode"
-          aria-label="Toggle compact mode"
+          title={t('titleBar.compactTitle')}
+          aria-label={t('titleBar.compactAria')}
         >
           <PictureInPicture className="w-4 h-4" />
         </button>
         <button
           onClick={() => setAlwaysOnTop(!alwaysOnTop)}
           className={`titlebar-btn ${alwaysOnTop ? 'bg-brand-400/10 text-brand-300' : 'text-slate-400 hover:bg-chrome-800 hover:text-brand-300'}`}
-          title="Always on top"
-          aria-label="Always on top"
+          title={t('titleBar.alwaysOnTop')}
+          aria-label={t('titleBar.alwaysOnTop')}
         >
           <Pin className="w-4 h-4" />
         </button>
         <button
           onClick={() => window.electronAPI.minimizeWindow()}
           className="titlebar-btn text-slate-400 hover:bg-chrome-800 hover:text-slate-100"
-          aria-label="Minimize window"
+          aria-label={t('titleBar.minimize')}
         >
           <Minus className="w-4 h-4" />
         </button>
         <button
           onClick={() => window.electronAPI.maximizeWindow()}
           className="titlebar-btn text-slate-400 hover:bg-chrome-800 hover:text-slate-100"
-          aria-label="Maximize window"
+          aria-label={t('titleBar.maximize')}
         >
           <Square className="w-4 h-4" />
         </button>
         <button
           onClick={() => window.electronAPI.closeWindow()}
           className="titlebar-btn text-slate-400 hover:bg-red-500/80 hover:text-white"
-          aria-label="Close window"
+          aria-label={t('titleBar.close')}
         >
           <X className="w-4 h-4" />
         </button>
@@ -241,6 +244,7 @@ function TitleBar({
 }
 
 function Sidebar() {
+  const { t } = useTranslation('app')
   const [appVersion, setAppVersion] = useState<string | null>(null)
 
   useEffect(() => {
@@ -270,7 +274,7 @@ function Sidebar() {
         <NavLink
           key={item.to}
           to={item.to}
-          aria-label={item.label}
+          aria-label={t(item.labelKey)}
           className={({ isActive }) =>
             [
               'nav-link',
@@ -286,7 +290,7 @@ function Sidebar() {
                 className="w-5 h-5 flex-shrink-0"
                 style={isActive ? { color: 'var(--vl-state-ready)' } : undefined}
               />
-              <span className="hidden lg:block text-sm font-medium">{item.label}</span>
+              <span className="hidden lg:block text-sm font-medium">{t(item.labelKey)}</span>
             </>
           )}
         </NavLink>
@@ -295,7 +299,7 @@ function Sidebar() {
       <div className="mt-auto px-1 py-3 space-y-3">
         <div className="hidden lg:block text-xs text-ink-mute px-3">
           <p>VoiceLaunch TTS{appVersion ? ` v${appVersion}` : ''}</p>
-          <p>Online voice (Edge TTS) · Open Source</p>
+          <p>{t('sidebar.tagline')}</p>
         </div>
       </div>
     </nav>
@@ -303,6 +307,7 @@ function Sidebar() {
 }
 
 function CompactView({ backendStatus }: { backendStatus: BackendStatus }) {
+  const { t } = useTranslation('app')
   const defaultModelId = useAppStore((state) => state.defaultModelId)
   const setDefaultModelId = useAppStore((state) => state.setDefaultModelId)
   const defaultSpeed = useAppStore((state) => state.defaultSpeed)
@@ -366,17 +371,17 @@ function CompactView({ backendStatus }: { backendStatus: BackendStatus }) {
     routePreview.engine === 'edge'
       ? cloudVoice
         ? routePreview.label
-        : 'Choose an online voice on the Speak screen'
+        : t('compact.chooseOnlineStatus')
       : routePreview.engine
         ? localReady
           ? routePreview.label
-          : 'Starting local backend...'
+          : t('compact.startingLocal')
         : routePreview.label
   const statusColor = canSpeak ? 'var(--vl-state-ready)' : 'var(--vl-state-warn)'
 
   const speakLocalCompact = async (textToSpeak: string, localModelId: string): Promise<boolean> => {
     if (!backendStatus.running) {
-      toast('Backend starting', 'Speech will be available once the local backend finishes starting.', 'info')
+      toast(t('toast.backendStarting.title'), t('toast.backendStarting.body'), 'info')
       return false
     }
     const response = await window.electronAPI.synthesize({
@@ -386,7 +391,7 @@ function CompactView({ backendStatus }: { backendStatus: BackendStatus }) {
     })
     if (cancelRef.current) return true
     if (!response.success || !response.audioPath) {
-      if (response.error) toast('Speech failed', response.error, 'error')
+      if (response.error) toast(t('toast.speechFailed.title'), response.error, 'error')
       return false
     }
     await window.electronAPI.playAudio(response.audioPath)
@@ -438,11 +443,11 @@ function CompactView({ backendStatus }: { backendStatus: BackendStatus }) {
           ? routeEngine({ ...buildRouteInput(textToSpeak.length), online: false })
           : null
         if (fallback?.engine && fallback.modelId) {
-          toast('Online voice failed', `Speaking with the local voice (${fallback.engine}).`, 'info')
+          toast(t('toast.onlineFailedLocal.title'), t('toast.onlineFailedLocal.body', { engine: fallback.engine }), 'info')
           await speakLocalCompact(textToSpeak, fallback.modelId)
           return
         }
-        toast('Online voice error', response.error || 'Could not generate the voice.', 'error')
+        toast(t('toast.onlineError.title'), response.error || t('toast.onlineError.body'), 'error')
         return
       }
       if (decision.engine && decision.modelId) {
@@ -450,12 +455,12 @@ function CompactView({ backendStatus }: { backendStatus: BackendStatus }) {
         return
       }
       if (decision.engine === 'edge' && !cloudVoice) {
-        toast('No online voice', 'Choose an online voice on the Speak screen.', 'warning')
+        toast(t('toast.noOnlineVoice.title'), t('toast.noOnlineVoice.body'), 'warning')
         return
       }
-      toast('No voice available', `${decision.label}.`, 'warning')
+      toast(t('toast.noVoiceAvailable.title'), t('toast.noVoiceAvailable.body', { label: decision.label }), 'warning')
     } catch (error) {
-      toast('Speech failed', String(error), 'error')
+      toast(t('toast.speechFailed.title'), String(error), 'error')
     } finally {
       setIsSpeaking(false)
     }
@@ -486,16 +491,16 @@ function CompactView({ backendStatus }: { backendStatus: BackendStatus }) {
           aria-pressed={virtualMicEnabled}
         >
           <Mic className="h-3.5 w-3.5" />
-          {virtualMicEnabled ? 'Mic ON' : 'Mic OFF'}
+          {virtualMicEnabled ? t('compact.micOn') : t('compact.micOff')}
         </button>
         <select
           value={activeModel?.id ?? ''}
           onChange={(e) => setDefaultModelId(e.target.value)}
           disabled={availableModels.length === 0}
           className="input-field flex-1 min-w-0 py-1.5 text-xs"
-          aria-label="Voice model"
+          aria-label={t('compact.voiceModel')}
         >
-          {availableModels.length === 0 && <option value="">No model</option>}
+          {availableModels.length === 0 && <option value="">{t('compact.noModel')}</option>}
           {availableModels.map((model) => (
             <option key={model.id} value={model.id}>
               {model.name}
@@ -506,8 +511,8 @@ function CompactView({ backendStatus }: { backendStatus: BackendStatus }) {
           onClick={() => setShowAdvanced((value) => !value)}
           className="btn-ghost px-2 py-1.5 text-xs"
           aria-expanded={showAdvanced}
-          aria-label="More options"
-          title="Speed and settings"
+          aria-label={t('compact.moreOptions')}
+          title={t('compact.speedAndSettings')}
         >
           <MoreHorizontal className="h-4 w-4" />
         </button>
@@ -515,7 +520,7 @@ function CompactView({ backendStatus }: { backendStatus: BackendStatus }) {
 
       {showAdvanced && (
         <div className="hud-frame flex items-center gap-3 p-3 text-xs">
-          <span className="text-ink-soft">Speed</span>
+          <span className="text-ink-soft">{t('compact.speed')}</span>
           <input
             type="range"
             min={0.5}
@@ -524,7 +529,7 @@ function CompactView({ backendStatus }: { backendStatus: BackendStatus }) {
             value={defaultSpeed}
             onChange={(e) => setDefaultSpeed(parseFloat(e.target.value))}
             className="flex-1 accent-brand-400"
-            aria-label="Speech speed"
+            aria-label={t('compact.speechSpeed')}
             aria-valuemin={0.5}
             aria-valuemax={2.0}
             aria-valuenow={defaultSpeed}
@@ -538,7 +543,7 @@ function CompactView({ backendStatus }: { backendStatus: BackendStatus }) {
               onChange={(event) => setKeepTextAfterSpeak(event.target.checked)}
               className="accent-brand-500"
             />
-            Keep
+            {t('compact.keep')}
           </label>
         </div>
       )}
@@ -549,7 +554,7 @@ function CompactView({ backendStatus }: { backendStatus: BackendStatus }) {
         value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder="> type and press Enter"
+        placeholder={t('compact.placeholder')}
         className="terminal-textarea min-h-[150px] flex-1 resize-none p-3 text-base leading-6 outline-none placeholder:text-ink-mute"
         autoFocus
       />
@@ -593,17 +598,17 @@ function CompactView({ backendStatus }: { backendStatus: BackendStatus }) {
         onClick={() => void speak(text)}
         disabled={isSpeaking ? false : !text.trim() || !canSpeak}
         className={`btn-primary ${canSpeak && text.trim() ? 'btn-primary--armed' : ''} flex items-center justify-center gap-2 py-3 text-sm font-semibold`}
-        aria-label={isSpeaking ? 'Stop' : 'Speak'}
+        aria-label={isSpeaking ? t('compact.stop') : t('compact.speak')}
       >
         {isSpeaking ? (
           <>
             <Square className="w-4 h-4" />
-            Stop
+            {t('compact.stop')}
           </>
         ) : (
           <>
             <Send className="w-4 h-4" />
-            Speak
+            {t('compact.speak')}
           </>
         )}
       </button>
@@ -641,7 +646,7 @@ export default function App() {
             ...prev,
             running: false,
             phase: 'error',
-            lastError: 'Could not reach the local backend.',
+            lastError: i18n.t('app:backend.unreachable'),
           }))
         }
       }
@@ -664,7 +669,7 @@ export default function App() {
     try {
       const restarted = await window.electronAPI.restartBackend()
       if (!restarted) {
-        toast('Local backend', 'The backend did not confirm an immediate restart. Still monitoring.', 'warning')
+        toast(i18n.t('app:toast.backendRestart.title'), i18n.t('app:toast.backendRestart.body'), 'warning')
       }
       const status = await window.electronAPI.getBackendStatus()
       setBackendStatus(status)
@@ -744,11 +749,7 @@ export default function App() {
         void window.electronAPI.saveSettings({ cableDeviceId: result.id, cableDeviceLabel: result.label })
         return result.id
       }
-      toast(
-        'Virtual mic has no cable',
-        'The voice will play on the speaker, not on Discord. Open Settings > Virtual microphone.',
-        'warning',
-      )
+      toast(i18n.t('app:toast.noCable.title'), i18n.t('app:toast.noCable.body'), 'warning')
       return undefined
     }
 
@@ -760,13 +761,13 @@ export default function App() {
         window.electronAPI.getModelRegistry(),
         window.electronAPI.getVirtualMicStatus(),
       ])
-      const communication = sanitizeCommunicationState(settings)
+      const communication = sanitizeCommunicationState(settings, resolveLanguage(settings))
       const phrase = communication.quickPhrases[index]
       const source = settings.voiceSource ?? 'auto'
       const speed = settings.defaultSpeed || 1
 
       if (!phrase) {
-        toast('Shortcut has no phrase', 'Set up quick phrases on the Speak tab.', 'warning')
+        toast(i18n.t('app:toast.noPhrase.title'), i18n.t('app:toast.noPhrase.body'), 'warning')
         return
       }
 
@@ -798,7 +799,7 @@ export default function App() {
 
       const speakLocalPhrase = async (localModelId: string): Promise<boolean> => {
         if (!runtimeStatus.running) {
-          toast('Backend offline', 'Local voices unavailable. Switch to Online on the Speak tab.', 'info')
+          toast(i18n.t('app:toast.backendOfflinePhrase.title'), i18n.t('app:toast.backendOfflinePhrase.body'), 'info')
           return false
         }
         const response = await window.electronAPI.synthesize({
@@ -807,7 +808,7 @@ export default function App() {
           speed,
         })
         if (!response.success || !response.audioPath) {
-          toast('Speech failed', response.error || 'Could not generate the audio.', 'error')
+          toast(i18n.t('app:toast.speechFailed.title'), response.error || i18n.t('app:toast.audioFailed'), 'error')
           return false
         }
         await window.electronAPI.playAudio(response.audioPath)
@@ -818,13 +819,13 @@ export default function App() {
       try {
         const decision = routeEngine(routeInput)
         if (decision.engine === null) {
-          toast('No voice available', `${decision.label}.`, 'warning')
+          toast(i18n.t('app:toast.noVoiceAvailable.title'), i18n.t('app:toast.noVoiceAvailable.body', { label: decision.label }), 'warning')
           return
         }
         if (decision.engine === 'edge') {
           const cloudVoice = settings.cloudVoice
           if (!cloudVoice) {
-            toast('No online voice', 'Choose an online voice on the Speak tab before using shortcuts.', 'warning')
+            toast(i18n.t('app:toast.noOnlineVoiceTab.title'), i18n.t('app:toast.noOnlineVoiceTab.body'), 'warning')
             return
           }
           const response = await window.electronAPI.synthesizeCloud({
@@ -837,10 +838,10 @@ export default function App() {
             // Auto: falhou online, fala com a voz local na mesma acao.
             const fallback = source === 'auto' ? routeEngine({ ...routeInput, online: false }) : null
             if (fallback?.engine && fallback.modelId && (await speakLocalPhrase(fallback.modelId))) {
-              toast('Online voice failed', `Phrase spoken with the local voice (${fallback.engine}).`, 'info')
+              toast(i18n.t('app:toast.phraseSpokenLocal.title'), i18n.t('app:toast.phraseSpokenLocal.body', { engine: fallback.engine }), 'info')
               return
             }
-            toast('Online voice error', response.error || 'Could not generate the voice.', 'error')
+            toast(i18n.t('app:toast.onlineError.title'), response.error || i18n.t('app:toast.onlineError.body'), 'error')
             return
           }
           useAppStore.getState().reportEdgeSuccess()
@@ -855,7 +856,7 @@ export default function App() {
           await speakLocalPhrase(decision.modelId)
         }
       } catch (error) {
-        toast('Shortcut failed', String(error), 'error')
+        toast(i18n.t('app:toast.shortcutFailed.title'), String(error), 'error')
       }
     }
 
@@ -866,8 +867,8 @@ export default function App() {
       void window.electronAPI.setVirtualMic(nextState)
       window.dispatchEvent(new CustomEvent('voicelaunch:virtual-mic-changed', { detail: nextState }))
       toast(
-        'Virtual microphone',
-        nextState ? 'Virtual microphone enabled.' : 'Virtual microphone disabled.',
+        i18n.t('app:toast.virtualMic.title'),
+        nextState ? i18n.t('app:toast.virtualMic.enabled') : i18n.t('app:toast.virtualMic.disabled'),
         'info',
       )
     }
@@ -885,8 +886,8 @@ export default function App() {
       if (!conflicted || conflicted.length === 0) return
       const conflictList = conflicted.slice(0, 3).map(formatHotkeyDisplay).join(', ') + (conflicted.length > 3 ? '...' : '')
       toast(
-        `${conflicted.length} shortcut(s) blocked`,
-        `Another app is already using: ${conflictList}. Try Ctrl+Alt or F-key combos in "Shortcuts".`,
+        i18n.t('app:toast.shortcutsBlocked.title', { count: conflicted.length }),
+        i18n.t('app:toast.shortcutsBlocked.body', { list: conflictList }),
         'warning',
       )
     })
@@ -908,7 +909,7 @@ export default function App() {
 
       const speakLocalShortcut = async (localModelId: string): Promise<boolean> => {
         if (!runtimeStatus.running) {
-          toast('Backend offline', 'The local shortcut needs the Python backend running.', 'warning')
+          toast(i18n.t('app:toast.backendOfflineShortcut.title'), i18n.t('app:toast.backendOfflineShortcut.body'), 'warning')
           return false
         }
         const response = await window.electronAPI.synthesize({
@@ -917,7 +918,7 @@ export default function App() {
           speed: shortcut.speed,
         })
         if (!response.success || !response.audioPath) {
-          toast('Shortcut failed', response.error || 'Could not generate the local audio.', 'error')
+          toast(i18n.t('app:toast.shortcutFailed.title'), response.error || i18n.t('app:toast.localAudioFailed'), 'error')
           return false
         }
         await window.electronAPI.playAudio(response.audioPath)
@@ -949,12 +950,12 @@ export default function App() {
               await speakLocalShortcut(fallback.modelId)
               return
             }
-            toast('No voice available', `${fallback.label}.`, 'warning')
+            toast(i18n.t('app:toast.noVoiceAvailable.title'), i18n.t('app:toast.noVoiceAvailable.body', { label: fallback.label }), 'warning')
             return
           }
 
           if (!voice) {
-            toast('No online voice', 'Choose a voice in the shortcut or on the Speak screen.', 'warning')
+            toast(i18n.t('app:toast.noOnlineVoiceShortcut.title'), i18n.t('app:toast.noOnlineVoiceShortcut.body'), 'warning')
             return
           }
           const response = await window.electronAPI.synthesizeCloud({
@@ -967,10 +968,10 @@ export default function App() {
             useAppStore.getState().reportEdgeFailure()
             const fallback = localFallbackFor(shortcut.text.length)
             if (fallback.engine && fallback.modelId && (await speakLocalShortcut(fallback.modelId))) {
-              toast('Online voice failed', `Shortcut spoken with the local voice (${fallback.engine}).`, 'info')
+              toast(i18n.t('app:toast.shortcutSpokenLocal.title'), i18n.t('app:toast.shortcutSpokenLocal.body', { engine: fallback.engine }), 'info')
               return
             }
-            toast('Shortcut failed', response.error || 'Could not generate the voice.', 'error')
+            toast(i18n.t('app:toast.shortcutFailed.title'), response.error || i18n.t('app:toast.onlineError.body'), 'error')
             return
           }
           useAppStore.getState().reportEdgeSuccess()
@@ -982,7 +983,7 @@ export default function App() {
         }
         await speakLocalShortcut(shortcut.voice)
       } catch (error) {
-        toast('Shortcut failed', String(error), 'error')
+        toast(i18n.t('app:toast.shortcutFailed.title'), String(error), 'error')
       }
     }
 
@@ -1043,18 +1044,19 @@ export default function App() {
 
 // ─── Cheatsheet Modal ────────────────────────────────────────────────────────
 
-const SHORTCUTS = [
-  { keys: 'Ctrl+Shift+F', desc: 'Focus text field' },
-  { keys: 'Enter', desc: 'Speak text' },
-  { keys: 'Shift+Enter', desc: 'New line' },
-  { keys: 'Ctrl+Shift+1..9', desc: 'Voice shortcut 1-9' },
-  { keys: 'Ctrl+Shift+M', desc: 'Toggle mic' },
-  { keys: 'Ctrl+Shift+V', desc: 'Compact mode' },
-  { keys: 'Ctrl+Shift+S', desc: 'Stop audio' },
-  { keys: 'Escape', desc: 'Close modal / stop' },
-]
+const SHORTCUT_IDS = [
+  'focusField',
+  'speakText',
+  'newLine',
+  'voiceShortcut',
+  'toggleMic',
+  'compactMode',
+  'stopAudio',
+  'closeModal',
+] as const
 
 function CheatsheetModal({ onClose }: { onClose: () => void }) {
+  const { t } = useTranslation('app')
   const dialogRef = useRef<HTMLDivElement>(null)
   const previousFocusRef = useRef<Element | null>(null)
 
@@ -1091,7 +1093,7 @@ function CheatsheetModal({ onClose }: { onClose: () => void }) {
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
       role="dialog"
       aria-modal="true"
-      aria-label="Keyboard shortcuts"
+      aria-label={t('cheatsheet.title')}
       onKeyDown={handleKeyDown}
       ref={dialogRef}
     >
@@ -1099,30 +1101,30 @@ function CheatsheetModal({ onClose }: { onClose: () => void }) {
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-lg font-bold text-ink-strong flex items-center gap-2">
             <Keyboard className="w-5 h-5" style={{ color: 'var(--vl-state-ready)' }} />
-            Keyboard shortcuts
+            {t('cheatsheet.title')}
           </h2>
           <button
             onClick={onClose}
             className="p-2 rounded-lg text-ink-soft hover:bg-brand-500/15 hover:text-ink-strong transition-colors"
-            aria-label="Close"
+            aria-label={t('common:close')}
           >
             <X className="w-5 h-5" />
           </button>
         </div>
         <div className="grid gap-2">
-          {SHORTCUTS.map(({ keys, desc }) => (
-            <div key={keys} className="flex items-center justify-between gap-4 py-2" style={{ borderBottom: '1px solid var(--vl-hud-border)' }}>
-              <span className="text-xs text-ink-soft">{desc}</span>
+          {SHORTCUT_IDS.map((id) => (
+            <div key={id} className="flex items-center justify-between gap-4 py-2" style={{ borderBottom: '1px solid var(--vl-hud-border)' }}>
+              <span className="text-xs text-ink-soft">{t(`cheatsheet.items.${id}.desc`)}</span>
               <kbd
                 className="shrink-0 rounded-lg px-2 py-1 text-[11px] font-mono font-semibold"
                 style={{ background: 'rgba(109,93,230,0.14)', border: '1px solid var(--vl-hud-border-strong)', color: 'var(--vl-purple-200)' }}
               >
-                {keys}
+                {t(`cheatsheet.items.${id}.keys`)}
               </kbd>
             </div>
           ))}
         </div>
-        <p className="mt-4 text-xs text-ink-mute">Ctrl+Alt+1..9 and Ctrl+Shift+F1..F12 are available in Voice Shortcuts.</p>
+        <p className="mt-4 text-xs text-ink-mute">{t('cheatsheet.footer')}</p>
       </div>
     </div>
   )

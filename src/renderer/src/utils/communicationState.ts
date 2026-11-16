@@ -16,6 +16,24 @@ export const DEFAULT_QUICK_PHRASES = [
   "I'm in pain.",
 ]
 
+export const DEFAULT_QUICK_PHRASES_FR = [
+  'Bonjour.',
+  'Je ne peux pas parler pour le moment.',
+  'Pouvez-vous lire ce que j’ai écrit ?',
+  'Oui.',
+  'Non.',
+  'J’ai besoin d’aide.',
+  'Pouvez-vous répéter, s’il vous plaît ?',
+  'J’ai besoin d’eau.',
+  'Où sont les toilettes ?',
+  'J’ai mal.',
+]
+
+/** Starter phrases in the UI language; 'en' for any unknown language. */
+export function getDefaultQuickPhrases(lng?: string): string[] {
+  return lng?.toLowerCase().startsWith('fr') ? DEFAULT_QUICK_PHRASES_FR : DEFAULT_QUICK_PHRASES
+}
+
 export interface CommunicationState {
   ttsDraft: string
   ttsHistory: TTSHistoryItem[]
@@ -55,7 +73,10 @@ function sanitizeHistoryItem(value: unknown): TTSHistoryItem | null {
   }
 }
 
-export function sanitizeCommunicationState(settings: Partial<AppSettings> | null | undefined): CommunicationState {
+export function sanitizeCommunicationState(
+  settings: Partial<AppSettings> | null | undefined,
+  lng?: string,
+): CommunicationState {
   const rawQuickPhrases = Array.isArray(settings?.quickPhrases) ? settings.quickPhrases : []
   const quickPhrases = rawQuickPhrases
     .filter((value): value is string => typeof value === 'string')
@@ -74,7 +95,7 @@ export function sanitizeCommunicationState(settings: Partial<AppSettings> | null
   return {
     ttsDraft: typeof settings?.ttsDraft === 'string' ? settings.ttsDraft.slice(0, 5000) : '',
     ttsHistory,
-    quickPhrases: quickPhrases.length > 0 ? quickPhrases : DEFAULT_QUICK_PHRASES,
+    quickPhrases: quickPhrases.length > 0 ? quickPhrases : getDefaultQuickPhrases(lng),
     keepTextAfterSpeak: typeof settings?.keepTextAfterSpeak === 'boolean' ? settings.keepTextAfterSpeak : true,
   }
 }
@@ -122,10 +143,10 @@ export function upsertQuickPhrase(phrases: string[], phrase: string): string[] {
   ].slice(0, MAX_QUICK_PHRASES)
 }
 
-export function removeQuickPhrase(phrases: string[], phrase: string): string[] {
+export function removeQuickPhrase(phrases: string[], phrase: string, lng?: string): string[] {
   const normalized = normalizePhrase(phrase)
   const next = phrases.filter((entry) => entry.toLowerCase() !== normalized.toLowerCase())
-  return next.length > 0 ? next : DEFAULT_QUICK_PHRASES
+  return next.length > 0 ? next : getDefaultQuickPhrases(lng)
 }
 
 export function serializeCommunicationState(state: CommunicationState): Pick<AppSettings, 'ttsDraft' | 'ttsHistory' | 'quickPhrases' | 'keepTextAfterSpeak'> {

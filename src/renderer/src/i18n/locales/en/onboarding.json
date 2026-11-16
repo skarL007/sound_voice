@@ -1,0 +1,28 @@
+{
+  "welcome": {
+    "title": "Welcome to VoiceLaunch TTS",
+    "description": "A local voice station for people who can't speak, gamers, Discord users, or anyone who needs assistive communication. Your track was adapted to your hardware.",
+    "tip": "Track detected: {{headline}}."
+  },
+  "tips": {
+    "tryCloud": "Go to \"Speak\", choose a voice, and hit Enter. Works right away.",
+    "installPiper": "Cloud voices on \"Speak\" cover most needs out of the box. A local voice kicks in automatically as a fallback when you are offline.",
+    "installXtts": "Voice cloning is not available in this build — use the cloud voices on \"Speak\" instead.",
+    "setupMic": "In \"Settings\" > Virtual microphone, select CABLE Input.",
+    "tourShortcuts": "In \"Shortcuts\" you create global hotkeys that trigger phrases."
+  },
+  "tipLabel": "Tip:",
+  "stepOf": "Step {{current}} of {{total}}",
+  "detecting": "Detecting hardware...",
+  "skipTutorial": "Skip tutorial",
+  "ariaLabel": "Onboarding tutorial",
+  "mic": {
+    "verified": "Virtual microphone active. Discord/VRChat should hear you now.",
+    "polling": "Waiting for you to enable the virtual microphone (\"Enable\" button on the Speak tab)...",
+    "notDetected": "Virtual microphone not detected yet. You can continue and set it up later in Settings."
+  },
+  "back": "Back",
+  "skip": "Skip",
+  "getStarted": "Get started",
+  "next": "Next"
+}

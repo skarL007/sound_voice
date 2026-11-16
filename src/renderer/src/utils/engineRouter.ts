@@ -11,6 +11,8 @@
  * backend, and every input needed for the decision is already here.
  */
 
+import i18n from '../i18n'
+
 export type RoutedEngine = 'edge' | 'kokoro' | 'piper' | null
 
 export type RoutingReason =
@@ -82,37 +84,37 @@ function pickLocalEngine(input: EngineRouteInput): { engine: 'kokoro' | 'piper';
 
 export function routeEngine(input: EngineRouteInput): EngineDecision {
   if (input.mode === 'cloud') {
-    return { engine: 'edge', reason: 'explicit-cloud', label: 'Online voice (Edge)' }
+    return { engine: 'edge', reason: 'explicit-cloud', label: i18n.t('utils:router.explicitCloud') }
   }
 
   if (input.mode === 'local') {
     const preferred = input.preferredLocalModelId
     if (preferred && input.installedModels.includes(preferred) && (preferred === 'kokoro' || preferred === 'piper')) {
-      return { engine: preferred, modelId: preferred, reason: 'explicit-local', label: `Local voice (${preferred})` }
+      return { engine: preferred, modelId: preferred, reason: 'explicit-local', label: i18n.t('utils:router.explicitLocal', { engine: preferred }) }
     }
     const local = pickLocalEngine(input)
     if (local) {
-      return { ...local, reason: 'explicit-local', label: `Local voice (${local.engine})` }
+      return { ...local, reason: 'explicit-local', label: i18n.t('utils:router.explicitLocal', { engine: local.engine }) }
     }
-    return { engine: null, reason: 'offline-no-local-voice', label: 'No local voice installed' }
+    return { engine: null, reason: 'offline-no-local-voice', label: i18n.t('utils:router.noLocal') }
   }
 
   // Auto
   if (input.online && input.edgeHealthy) {
-    return { engine: 'edge', reason: 'online', label: 'Auto → Edge (online)' }
+    return { engine: 'edge', reason: 'online', label: i18n.t('utils:router.autoOnline') }
   }
 
   const reason: RoutingReason = input.online ? 'edge-unhealthy' : 'offline'
   const local = pickLocalEngine(input)
   if (local) {
-    const why = reason === 'offline' ? 'offline' : 'Edge unavailable'
-    return { ...local, reason, label: `Auto → ${capitalize(local.engine)} (${why})` }
+    const why = i18n.t(reason === 'offline' ? 'utils:router.whyOffline' : 'utils:router.whyEdgeUnavailable')
+    return { ...local, reason, label: i18n.t('utils:router.autoLocal', { engine: capitalize(local.engine), why }) }
   }
 
   return {
     engine: null,
     reason: 'offline-no-local-voice',
-    label: input.online ? 'Edge unavailable — no local voice installed' : 'Offline — no local voice installed',
+    label: i18n.t(input.online ? 'utils:router.edgeUnavailableNoLocal' : 'utils:router.offlineNoLocal'),
   }
 }
 

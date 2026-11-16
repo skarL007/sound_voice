@@ -1,0 +1,80 @@
+{
+  "playbook": {
+    "steps": {
+      "cloud": { "title": "Speak now with Edge TTS", "description": "Hundreds of natural voices work right away — no install, no GPU, just internet." },
+      "piper": { "title": "Install local Piper", "description": "Lightweight ONNX engine that runs on CPU. 50+ languages. Works offline after downloading." },
+      "kokoro": { "title": "Boost quality with Kokoro", "description": "Engine with MOS 4.2 in just 300 MB. Still runs on CPU." },
+      "xtts": { "title": "Enable cloning with XTTS v2", "description": "Clone any voice with a 6-30s sample. Requires an NVIDIA GPU with validated CUDA." },
+      "mic": { "title": "Set up the virtual microphone", "description": "Install VB-Cable, select CABLE Input as output, and set CABLE Output in Discord/VRChat." },
+      "shortcuts": { "title": "Create your voice shortcuts", "description": "Each shortcut triggers a phrase with a fixed voice — works in-game without bringing the app to the front." }
+    },
+    "nvidiaCuda": {
+      "headline": "Full NVIDIA + CUDA track",
+      "summary": "You have the premium path unlocked: online Edge TTS, local Piper/Kokoro, and XTTS cloning.",
+      "note": "CUDA {{version}}. You can enable XTTS v2 whenever you want to clone a voice.",
+      "cudaDetected": "detected"
+    },
+    "amd": {
+      "headline": "Lightweight track for AMD",
+      "summary": "On Windows, AMD has no stable GPU TTS framework. You will use the CPU+cloud track — works great for Discord and games.",
+      "note1": "Piper and Kokoro run directly on your CPU, no special driver needed.",
+      "note2": "XTTS v2 cloning requires NVIDIA + CUDA, so it is outside your flow. Use online voices — there are hundreds."
+    },
+    "intel": {
+      "headline": "CPU + cloud track (Intel)",
+      "summary": "Intel iGPU does not accelerate TTS in any stable framework. You will use online Edge TTS and lightweight CPU models.",
+      "note": "Piper was designed to run on modest CPUs. The first utterance takes under 1 second."
+    },
+    "cpu": {
+      "headline": "Universal track (no dedicated GPU)",
+      "summary": "Online Edge TTS covers everything. Piper can be installed for offline use on CPU.",
+      "note": "Detected your machine as CPU tier. Advanced tracks require an NVIDIA GPU with CUDA."
+    },
+    "nvidiaNoCuda": {
+      "headline": "NVIDIA detected — no CUDA",
+      "summary": "The GPU is present, but the CUDA Toolkit was not found. Use the CPU+cloud track for now; install CUDA later to unlock cloning.",
+      "note": "Install CUDA Toolkit 11.8+ and reopen the app to enable XTTS and cloning."
+    }
+  },
+  "hotkey": {
+    "unsupportedKey": "Unsupported key. Use letters, numbers, F1-F24, or arrows.",
+    "needModifier": "Combine with Ctrl or Alt (avoids conflicting with typing).",
+    "nameRequired": "Name is required.",
+    "textRequired": "Text is required.",
+    "hotkeyRequired": "Hotkey is required.",
+    "reserved": "Hotkey is reserved by the system.",
+    "selectVoice": "Select a voice.",
+    "speedRange": "Speed between 0.5 and 2.0."
+  },
+  "defaultShortcuts": {
+    "gg": { "name": "GG well played", "text": "GG, great match!" },
+    "watchOut": { "name": "Watch out!", "text": "Watch out, enemy incoming!" },
+    "greeting": { "name": "Greeting", "text": "Hey everyone, how are you doing?" }
+  },
+  "router": {
+    "explicitCloud": "Online voice (Edge)",
+    "explicitLocal": "Local voice ({{engine}})",
+    "noLocal": "No local voice installed",
+    "autoOnline": "Auto → Edge (online)",
+    "autoLocal": "Auto → {{engine}} ({{why}})",
+    "whyOffline": "offline",
+    "whyEdgeUnavailable": "Edge unavailable",
+    "edgeUnavailableNoLocal": "Edge unavailable — no local voice installed",
+    "offlineNoLocal": "Offline — no local voice installed"
+  },
+  "model": {
+    "summary": "Start with Piper for a frictionless first local voice.",
+    "gpuCuda": "XTTS v2 can be enabled later as an advanced feature on NVIDIA/CUDA.",
+    "gpuNoCuda": "The reliable local path is Piper and Kokoro.",
+    "cloneReason": "Practical voice cloning requires NVIDIA with validated CUDA."
+  },
+  "mic": {
+    "launchedDownloaded": "Downloaded and installer opened. Click \"Install Driver\" and restart Windows if prompted.",
+    "launched": "Installer opened. Follow VB-Cable and restart Windows if it asks.",
+    "manual": "Couldn't install automatically. Download VB-Cable from the official site and come back to check.",
+    "error": "Couldn't install VB-Cable. Try again or use the official site."
+  },
+  "audio": {
+    "playFailed": "Could not play the audio: all strategies failed."
+  }
+}

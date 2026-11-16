@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { CloudVoice } from '../../../shared/types'
+import i18n from '../i18n'
 
 interface UseCloudVoicesResult {
   voices: CloudVoice[]
@@ -38,7 +39,7 @@ export function useCloudVoices(): UseCloudVoicesResult {
           setVoices(response.voices)
           setError(null)
         } else {
-          setError(response.error || 'Failed to load online voices.')
+          setError(response.error || i18n.t('hooks:loadVoicesFailed'))
         }
       })
       .catch((err) => {

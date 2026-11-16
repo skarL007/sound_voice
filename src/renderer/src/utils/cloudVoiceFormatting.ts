@@ -13,6 +13,13 @@ export const POPULAR_LOCALES = [
   'ja-JP',
 ]
 
+const isFrench = (lng?: string): boolean => Boolean(lng?.toLowerCase().startsWith('fr'))
+
+/** Locale offered first: fr-FR for the French UI, pt-BR otherwise (historical behaviour). */
+export function defaultLocaleFilter(lng?: string): string {
+  return isFrench(lng) ? 'fr-FR' : 'pt-BR'
+}
+
 export const SAMPLE_TEXT_BY_LOCALE: Record<string, string> = {
   'pt-BR': 'Ola! Eu sou a voz que voce esta ouvindo.',
   'pt-PT': 'Ola! Eu sou a voz que estas a ouvir.',
@@ -38,13 +45,17 @@ export function shortVoiceLabel(voice: CloudVoice): string {
   return friendly || voice.ShortName.split('-').slice(-1)[0].replace(/Neural$/, '')
 }
 
-export function sortAvailableLocales(voices: CloudVoice[]): string[] {
+export function sortAvailableLocales(voices: CloudVoice[], lng?: string): string[] {
   const set = new Set<string>()
   for (const voice of voices) set.add(voice.Locale)
   const sorted = Array.from(set).sort()
-  const popular = POPULAR_LOCALES.filter((locale) => set.has(locale))
-  const rest = sorted.filter((locale) => !popular.includes(locale))
-  return [...popular, ...rest]
+  // French UI: fr-FR first, then the other fr-* locales.
+  const frenchFirst = isFrench(lng)
+    ? sorted.filter((locale) => locale.startsWith('fr')).sort((a, b) => Number(b === 'fr-FR') - Number(a === 'fr-FR') || a.localeCompare(b))
+    : []
+  const popular = POPULAR_LOCALES.filter((locale) => set.has(locale) && !frenchFirst.includes(locale))
+  const rest = sorted.filter((locale) => !popular.includes(locale) && !frenchFirst.includes(locale))
+  return [...frenchFirst, ...popular, ...rest]
 }
 
 export function filterCloudVoices(

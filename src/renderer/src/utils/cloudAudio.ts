@@ -1,3 +1,5 @@
+import i18n from '../i18n'
+
 let currentAudios: HTMLAudioElement[] = []
 let currentUrl: string | null = null
 let currentAudioContext: AudioContext | null = null
@@ -191,7 +193,7 @@ export async function playCloudAudio(
     URL.revokeObjectURL(blobUrl)
     if (token !== playbackToken) return
     if (await tryPlayWithWebAudio(bytes, outputs, token)) return
-    throw new Error('Could not play the audio: all strategies failed.')
+    throw new Error(i18n.t('utils:audio.playFailed'))
   }
 
   // Cabo e/ou monitor: toca em todas as saidas ao mesmo tempo.
@@ -203,7 +205,7 @@ export async function playCloudAudio(
   const blobUrl = URL.createObjectURL(blob)
   if (await tryPlayWithUrl(blobUrl, cableSink, token)) return
   URL.revokeObjectURL(blobUrl)
-  throw new Error('Nao foi possivel reproduzir o audio: todas as estrategias falharam.')
+  throw new Error(i18n.t('utils:audio.playFailed'))
 }
 
 export function stopCloudAudio(): void {

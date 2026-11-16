@@ -1,6 +1,7 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest'
 import type { AppSettings } from '../../../shared/types'
 import { migrateSettings, SCHEMA_VERSION } from './appStore'
+import { DEFAULT_QUICK_PHRASES_FR } from '../utils/communicationState'
 import { HOTKEY_SLOTS } from '../utils/voiceShortcuts'
 
 interface TestSaveAPI {
@@ -96,6 +97,17 @@ describe('migrateSettings', () => {
     expect(result.profiles).toHaveLength(1)
     expect(result.profiles?.[0].id).toBe('padrao')
     expect(result.activeProfileId).toBe('padrao')
+  })
+
+  it('creates default phrases in French on first launch with a French interface', () => {
+    const result = migrateSettings({ language: 'fr' })
+    expect(result.profiles?.[0].quickPhrases).toEqual(DEFAULT_QUICK_PHRASES_FR)
+    expect(result.profiles?.[0].name).toBe('Par défaut')
+  })
+
+  it('does not rewrite saved quick phrases for a French interface', () => {
+    const result = migrateSettings({ language: 'fr', quickPhrases: ['Hello.'] })
+    expect(result.profiles?.[0].quickPhrases).toEqual(['Hello.'])
   })
 
   it('preserves legacy quick phrases as the padrao profile content', () => {

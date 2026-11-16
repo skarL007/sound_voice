@@ -1,4 +1,5 @@
 import type { HardwareInfo } from '../../../shared/types'
+import i18n from '../i18n'
 
 export type PlaybookStepAction = 'try-cloud' | 'install-piper' | 'install-kokoro' | 'install-xtts' | 'setup-mic' | 'tour-shortcuts'
 
@@ -27,53 +28,53 @@ function vendor(hw: HardwareInfo | null): 'nvidia' | 'amd' | 'intel' | 'unknown'
   return 'unknown'
 }
 
-const STEP_CLOUD: PlaybookStep = {
-  title: 'Speak now with Edge TTS',
-  description: 'Hundreds of natural voices work right away — no install, no GPU, just internet.',
+const stepCloud = (): PlaybookStep => ({
+  title: i18n.t('utils:playbook.steps.cloud.title'),
+  description: i18n.t('utils:playbook.steps.cloud.description'),
   action: 'try-cloud',
   href: '#/',
   tone: 'live',
-}
+})
 
-const STEP_PIPER: PlaybookStep = {
-  title: 'Install local Piper',
-  description: 'Lightweight ONNX engine that runs on CPU. 50+ languages. Works offline after downloading.',
+const stepPiper = (): PlaybookStep => ({
+  title: i18n.t('utils:playbook.steps.piper.title'),
+  description: i18n.t('utils:playbook.steps.piper.description'),
   action: 'install-piper',
   href: '#/settings',
   tone: 'ready',
-}
+})
 
-const STEP_KOKORO: PlaybookStep = {
-  title: 'Boost quality with Kokoro',
-  description: 'Engine with MOS 4.2 in just 300 MB. Still runs on CPU.',
+const stepKokoro = (): PlaybookStep => ({
+  title: i18n.t('utils:playbook.steps.kokoro.title'),
+  description: i18n.t('utils:playbook.steps.kokoro.description'),
   action: 'install-kokoro',
   href: '#/settings',
   tone: 'ready',
-}
+})
 
-const STEP_XTTS: PlaybookStep = {
-  title: 'Enable cloning with XTTS v2',
-  description: 'Clone any voice with a 6-30s sample. Requires an NVIDIA GPU with validated CUDA.',
+const stepXtts = (): PlaybookStep => ({
+  title: i18n.t('utils:playbook.steps.xtts.title'),
+  description: i18n.t('utils:playbook.steps.xtts.description'),
   action: 'install-xtts',
   href: '#/settings',
   tone: 'ready',
-}
+})
 
-const STEP_MIC: PlaybookStep = {
-  title: 'Set up the virtual microphone',
-  description: 'Install VB-Cable, select CABLE Input as output, and set CABLE Output in Discord/VRChat.',
+const stepMic = (): PlaybookStep => ({
+  title: i18n.t('utils:playbook.steps.mic.title'),
+  description: i18n.t('utils:playbook.steps.mic.description'),
   action: 'setup-mic',
   href: '#/settings',
   tone: 'live',
-}
+})
 
-const STEP_SHORTCUTS: PlaybookStep = {
-  title: 'Create your voice shortcuts',
-  description: 'Each shortcut triggers a phrase with a fixed voice — works in-game without bringing the app to the front.',
+const stepShortcuts = (): PlaybookStep => ({
+  title: i18n.t('utils:playbook.steps.shortcuts.title'),
+  description: i18n.t('utils:playbook.steps.shortcuts.description'),
   action: 'tour-shortcuts',
   href: '#/shortcuts',
   tone: 'ready',
-}
+})
 
 export function getHardwarePlaybook(hw: HardwareInfo | null): HardwarePlaybook {
   const ven = vendor(hw)
@@ -81,71 +82,71 @@ export function getHardwarePlaybook(hw: HardwareInfo | null): HardwarePlaybook {
 
   if (ven === 'nvidia' && cuda) {
     return {
-      headline: 'Full NVIDIA + CUDA track',
-      summary: 'You have the premium path unlocked: online Edge TTS, local Piper/Kokoro, and XTTS cloning.',
+      headline: i18n.t('utils:playbook.nvidiaCuda.headline'),
+      summary: i18n.t('utils:playbook.nvidiaCuda.summary'),
       trackBadge: 'NVIDIA',
       trackTone: 'success',
-      steps: [STEP_CLOUD, STEP_PIPER, STEP_KOKORO, STEP_XTTS, STEP_MIC, STEP_SHORTCUTS],
+      steps: [stepCloud(), stepPiper(), stepKokoro(), stepXtts(), stepMic(), stepShortcuts()],
       advancedAvailable: true,
       notes: [
-        { tone: 'info', text: 'CUDA ' + (hw?.cudaVersion || 'detected') + '. You can enable XTTS v2 whenever you want to clone a voice.' },
+        { tone: 'info', text: i18n.t('utils:playbook.nvidiaCuda.note', { version: hw?.cudaVersion || i18n.t('utils:playbook.nvidiaCuda.cudaDetected') }) },
       ],
     }
   }
 
   if (ven === 'amd') {
     return {
-      headline: 'Lightweight track for AMD',
-      summary: 'On Windows, AMD has no stable GPU TTS framework. You will use the CPU+cloud track — works great for Discord and games.',
+      headline: i18n.t('utils:playbook.amd.headline'),
+      summary: i18n.t('utils:playbook.amd.summary'),
       trackBadge: 'AMD',
       trackTone: 'live',
-      steps: [STEP_CLOUD, STEP_PIPER, STEP_KOKORO, STEP_MIC, STEP_SHORTCUTS],
+      steps: [stepCloud(), stepPiper(), stepKokoro(), stepMic(), stepShortcuts()],
       advancedAvailable: false,
       notes: [
-        { tone: 'info', text: 'Piper and Kokoro run directly on your CPU, no special driver needed.' },
-        { tone: 'info', text: 'XTTS v2 cloning requires NVIDIA + CUDA, so it is outside your flow. Use online voices — there are hundreds.' },
+        { tone: 'info', text: i18n.t('utils:playbook.amd.note1') },
+        { tone: 'info', text: i18n.t('utils:playbook.amd.note2') },
       ],
     }
   }
 
   if (ven === 'intel') {
     return {
-      headline: 'CPU + cloud track (Intel)',
-      summary: 'Intel iGPU does not accelerate TTS in any stable framework. You will use online Edge TTS and lightweight CPU models.',
+      headline: i18n.t('utils:playbook.intel.headline'),
+      summary: i18n.t('utils:playbook.intel.summary'),
       trackBadge: 'Intel',
       trackTone: 'live',
-      steps: [STEP_CLOUD, STEP_PIPER, STEP_MIC, STEP_SHORTCUTS],
+      steps: [stepCloud(), stepPiper(), stepMic(), stepShortcuts()],
       advancedAvailable: false,
       notes: [
-        { tone: 'info', text: 'Piper was designed to run on modest CPUs. The first utterance takes under 1 second.' },
+        { tone: 'info', text: i18n.t('utils:playbook.intel.note') },
       ],
     }
   }
 
   if (ven === 'unknown' || !hw) {
     return {
-      headline: 'Universal track (no dedicated GPU)',
-      summary: 'Online Edge TTS covers everything. Piper can be installed for offline use on CPU.',
+      headline: i18n.t('utils:playbook.cpu.headline'),
+      summary: i18n.t('utils:playbook.cpu.summary'),
       trackBadge: 'CPU',
       trackTone: 'live',
-      steps: [STEP_CLOUD, STEP_PIPER, STEP_MIC, STEP_SHORTCUTS],
+      steps: [stepCloud(), stepPiper(), stepMic(), stepShortcuts()],
       advancedAvailable: false,
       notes: [
-        { tone: 'info', text: 'Detected your machine as CPU tier. Advanced tracks require an NVIDIA GPU with CUDA.' },
+        { tone: 'info', text: i18n.t('utils:playbook.cpu.note') },
       ],
     }
   }
 
   // NVIDIA without CUDA
   return {
-    headline: 'NVIDIA detected — no CUDA',
-    summary: 'The GPU is present, but the CUDA Toolkit was not found. Use the CPU+cloud track for now; install CUDA later to unlock cloning.',
+    headline: i18n.t('utils:playbook.nvidiaNoCuda.headline'),
+    summary: i18n.t('utils:playbook.nvidiaNoCuda.summary'),
     trackBadge: 'NVIDIA',
     trackTone: 'warn',
-    steps: [STEP_CLOUD, STEP_PIPER, STEP_KOKORO, STEP_MIC, STEP_SHORTCUTS],
+    steps: [stepCloud(), stepPiper(), stepKokoro(), stepMic(), stepShortcuts()],
     advancedAvailable: false,
     notes: [
-      { tone: 'warn', text: 'Install CUDA Toolkit 11.8+ and reopen the app to enable XTTS and cloning.' },
+      { tone: 'warn', text: i18n.t('utils:playbook.nvidiaNoCuda.note') },
     ],
   }
 }

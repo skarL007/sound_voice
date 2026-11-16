@@ -1,3 +1,5 @@
+**English** · [Français](fr/VOICE_CLONING.md)
+
 # Voice Cloning — User Guide
 
 ## What Is Voice Cloning?

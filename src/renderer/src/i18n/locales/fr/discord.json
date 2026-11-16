@@ -1,0 +1,42 @@
+{
+  "banner": {
+    "title": "Micro virtuel actif",
+    "description": "Sélectionnez <mono>CABLE Output</mono> comme microphone dans Discord, puis testez avec le bouton ci-dessous.",
+    "testing": "Test en cours…",
+    "testNow": "Tester",
+    "closeNotice": "Fermer l’avis",
+    "chooseVoice": {
+      "title": "Choisissez une voix en ligne",
+      "body": "Sélectionnez une voix Edge TTS avant de tester."
+    },
+    "testFailed": "Échec du test",
+    "generateFailed": "Impossible de générer l’audio.",
+    "noModel": {
+      "title": "Aucun modèle prêt",
+      "body": "Installez Piper ou Kokoro avant de tester."
+    }
+  },
+  "guide": {
+    "title": "Utiliser VoiceLaunch comme microphone dans Discord, VRChat et les jeux",
+    "summary": "4 étapes : installer VB-Cable, choisir CABLE Input/Output, activer le micro virtuel.",
+    "steps": {
+      "install": {
+        "title": "Installer VB-Audio Virtual Cable",
+        "description": "Téléchargez-le sur <link>vb-audio.com/Cable</link> ou utilisez le programme d’installation fourni avec l’application."
+      },
+      "selectInput": {
+        "title": "Choisir CABLE Input dans l’application",
+        "description": "Dans <strong>Paramètres > Micro virtuel</strong>, choisissez <strong>CABLE Input (VB-Audio Virtual Cable)</strong> comme sortie audio."
+      },
+      "setOutput": {
+        "title": "Définir CABLE Output dans Discord ou votre jeu",
+        "description": "Discord : <em>Paramètres utilisateur > Voix et vidéo > Périphérique d’entrée = CABLE Output</em>.<br/>VRChat : <em>Settings > Audio > Microphone = CABLE Output</em> ; activez la détection vocale ou utilisez le push-to-talk.<br/>Autres jeux : définissez CABLE Output comme microphone par défaut."
+      },
+      "enable": {
+        "title": "Activer le micro virtuel dans l’écran Parler",
+        "description": "Cliquez sur <strong>Activer le micro virtuel</strong>. Les voix en ligne et locales seront jouées directement via CABLE. Les raccourcis globaux (Ctrl+Shift+1..9) fonctionnent en arrière-plan, même quand le jeu est au premier plan."
+      }
+    },
+    "tip": "Astuce VRChat : si le jeu ne détecte pas le micro, ouvrez le lanceur et cliquez sur <strong>Tester l’audio (carillon)</strong> dans Paramètres > Micro virtuel. Cela force Windows à reconnaître CABLE Input comme actif."
+  }
+}

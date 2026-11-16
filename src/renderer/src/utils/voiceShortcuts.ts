@@ -1,4 +1,5 @@
 import type { VoiceShortcut } from '../../../shared/types'
+import i18n from '../i18n'
 
 export const HOTKEY_SLOTS: string[] = [
   ...Array.from({ length: 9 }, (_, i) => `CommandOrControl+Shift+${i + 1}`),
@@ -129,7 +130,7 @@ export function acceleratorFromEvent(event: HotkeyEventLike): HotkeyCaptureResul
       accelerator: null,
       pending: false,
       preview: previewLabel(mods),
-      error: 'Unsupported key. Use letters, numbers, F1-F24, or arrows.',
+      error: i18n.t('utils:hotkey.unsupportedKey'),
     }
   }
 
@@ -139,7 +140,7 @@ export function acceleratorFromEvent(event: HotkeyEventLike): HotkeyCaptureResul
       accelerator: null,
       pending: false,
       preview: previewLabel([...mods, mainKey]),
-      error: 'Combine with Ctrl or Alt (avoids conflicting with typing).',
+      error: i18n.t('utils:hotkey.needModifier'),
     }
   }
 
@@ -173,12 +174,12 @@ export function suggestNextHotkey(shortcuts: VoiceShortcut[]): string | null {
 
 export function validateVoiceShortcut(shortcut: VoiceShortcut): string[] {
   const errors: string[] = []
-  if (!shortcut.name.trim()) errors.push('Name is required.')
-  if (!shortcut.text.trim()) errors.push('Text is required.')
-  if (!shortcut.hotkey) errors.push('Hotkey is required.')
-  else if (isReservedHotkey(shortcut.hotkey)) errors.push('Hotkey is reserved by the system.')
-  if (!shortcut.voice) errors.push('Select a voice.')
-  if (shortcut.speed < 0.5 || shortcut.speed > 2.0) errors.push('Speed between 0.5 and 2.0.')
+  if (!shortcut.name.trim()) errors.push(i18n.t('utils:hotkey.nameRequired'))
+  if (!shortcut.text.trim()) errors.push(i18n.t('utils:hotkey.textRequired'))
+  if (!shortcut.hotkey) errors.push(i18n.t('utils:hotkey.hotkeyRequired'))
+  else if (isReservedHotkey(shortcut.hotkey)) errors.push(i18n.t('utils:hotkey.reserved'))
+  if (!shortcut.voice) errors.push(i18n.t('utils:hotkey.selectVoice'))
+  if (shortcut.speed < 0.5 || shortcut.speed > 2.0) errors.push(i18n.t('utils:hotkey.speedRange'))
   return errors
 }
 
@@ -187,32 +188,32 @@ export function defaultShortcuts(cloudVoice: string | null): VoiceShortcut[] {
   return [
     {
       id: 'gg-triunfante',
-      name: 'GG well played',
+      name: i18n.t('utils:defaultShortcuts.gg.name'),
       hotkey: 'CommandOrControl+Shift+1',
       enabled: true,
       voiceSource: 'cloud',
       voice: cloudVoice,
-      text: 'GG, great match!',
+      text: i18n.t('utils:defaultShortcuts.gg.text'),
       speed: 1.0,
     },
     {
       id: 'cuidado',
-      name: 'Watch out!',
+      name: i18n.t('utils:defaultShortcuts.watchOut.name'),
       hotkey: 'CommandOrControl+Shift+2',
       enabled: true,
       voiceSource: 'cloud',
       voice: cloudVoice,
-      text: 'Watch out, enemy incoming!',
+      text: i18n.t('utils:defaultShortcuts.watchOut.text'),
       speed: 1.0,
     },
     {
       id: 'oi-pessoal',
-      name: 'Greeting',
+      name: i18n.t('utils:defaultShortcuts.greeting.name'),
       hotkey: 'CommandOrControl+Shift+3',
       enabled: true,
       voiceSource: 'cloud',
       voice: cloudVoice,
-      text: 'Hey everyone, how are you doing?',
+      text: i18n.t('utils:defaultShortcuts.greeting.text'),
       speed: 1.0,
     },
   ]

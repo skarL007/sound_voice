@@ -1,0 +1,14 @@
+{
+  "title": "Raccourcis vocaux",
+  "intro": "La liste complète de vos raccourcis. Vous pouvez aussi en créer directement depuis l’écran <strong>Parler</strong>. Chacun déclenche sa phrase avec sa touche, dans n’importe quelle application (Discord, jeu).",
+  "cloudError": "Voix en ligne indisponibles ({{error}}). Vérifiez votre connexion internet et rechargez.",
+  "new": {
+    "title": "Nouveau raccourci",
+    "placeholder": "Que doit dire le raccourci ? (par ex. GG, beau match !)",
+    "voiceAria": "Voix du nouveau raccourci",
+    "keyAria": "Touche du nouveau raccourci",
+    "add": "Ajouter"
+  },
+  "empty": "Aucun raccourci pour l’instant. Créez le premier ci-dessus. 👆",
+  "removed": "Raccourci supprimé"
+}

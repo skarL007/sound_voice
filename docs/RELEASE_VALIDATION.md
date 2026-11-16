@@ -1,3 +1,5 @@
+**English** · [Français](fr/RELEASE_VALIDATION.md)
+
 # Release Validation Protocol — Virtual Mic (Discord + Games)
 
 This is the final manual gate before tagging a public release. It validates the

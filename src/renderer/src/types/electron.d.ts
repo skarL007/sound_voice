@@ -62,6 +62,7 @@ export interface Api {
   closeWindow: () => void
   setAlwaysOnTop: (value: boolean) => void
   setCompactMode: (enabled: boolean) => void
+  setLanguage: (lng: string) => void
   openExternal: (url: string) => void
   getBackendStatus: () => Promise<BackendStatus>
   restartBackend: () => Promise<boolean>

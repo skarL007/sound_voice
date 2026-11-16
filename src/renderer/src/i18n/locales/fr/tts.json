@@ -1,0 +1,88 @@
+{
+  "title": "Parler",
+  "subtitle": "Console principale pour composer, répéter et déclencher vos voix en un clin d’œil.",
+  "virtualMic": {
+    "tooltip": "Envoie la voix comme un micro virtuel vers Discord, Zoom et les jeux",
+    "active": "Micro virtuel actif",
+    "enable": "Activer le micro virtuel",
+    "on": "Micro virtuel activé",
+    "off": "Micro virtuel désactivé",
+    "banner": "L’audio généré sera envoyé au <strong>micro virtuel</strong>. Sélectionnez « CABLE Output » comme microphone dans Discord, Zoom ou vos jeux."
+  },
+  "history": {
+    "label": "Historique des phrases",
+    "hide": "Masquer l’historique",
+    "show": "Afficher l’historique",
+    "title": "Historique permanent",
+    "empty": "Aucune phrase pour le moment.",
+    "loadPhrase": "Charger la phrase : {{text}}",
+    "repeat": "Répéter",
+    "pin": "Épingler"
+  },
+  "export": {
+    "label": "Exporter l’historique en CSV",
+    "button": "Exporter en CSV",
+    "emptyTitle": "Historique vide",
+    "emptyMessage": "L’historique ne contient aucune phrase à exporter.",
+    "doneTitle": "CSV exporté",
+    "doneMessage_one": "{{count}} phrase exportée avec succès.",
+    "doneMessage_other": "{{count}} phrases exportées avec succès."
+  },
+  "status": {
+    "chooseVoice": "Choisir une voix",
+    "generating": "Génération de l’audio…",
+    "speaking": "Lecture en cours"
+  },
+  "speed": {
+    "title": "Vitesse",
+    "aria": "Vitesse de la parole",
+    "note": "Les voix en ligne viennent de Microsoft Edge TTS. Elles fonctionnent immédiatement, sans installation, mais nécessitent internet.",
+    "selected": "Voix sélectionnée : <voice>{{voice}}</voice>"
+  },
+  "input": {
+    "placeholder": "> saisissez une phrase. Entrée l’envoie. Maj+Entrée pour un retour à la ligne.",
+    "characters_one": "{{count}} caractère",
+    "characters_other": "{{count}} caractères",
+    "keepText": "Conserver le texte après la lecture",
+    "clear": "Effacer",
+    "clearAria": "Effacer le texte",
+    "savePhrase": "Enregistrer",
+    "savePhraseAria": "Enregistrer la phrase actuelle comme raccourci rapide",
+    "generating": "Génération…",
+    "stop": "Arrêter",
+    "speak": "Parler",
+    "ariaGenerating": "Génération de l’audio…",
+    "ariaStop": "Arrêter la lecture",
+    "ariaSpeak": "Lire le texte"
+  },
+  "shortcuts": {
+    "title": "Raccourcis rapides",
+    "intro": "Écrivez la phrase, cliquez sur <strong>Créer le raccourci</strong>, puis déclenchez-la avec la touche depuis n’importe où (Discord, jeu).",
+    "placeholder": "Que doit dire le raccourci ? (ex. : GG, beau match !)",
+    "key": "Touche :",
+    "create": "Créer le raccourci",
+    "empty": "Aucun raccourci pour le moment. Créez le premier ci-dessus."
+  },
+  "toasts": {
+    "onlineFailed": "Impossible de générer la voix en ligne.",
+    "localFailed": "Impossible de générer l’audio.",
+    "speechFailed": "Échec de la lecture",
+    "micNotRouted": "Voix absente du micro virtuel",
+    "micNotRoutedMessage": "La voix a été jouée sur le haut-parleur ({{reason}}) : Discord ne l’a pas entendue.",
+    "cableNotFound": "CABLE Input introuvable",
+    "cableUnavailable": "câble indisponible",
+    "chooseOnline": "Choisissez une voix en ligne",
+    "chooseOnlineMessage": "Sélectionnez une voix dans la liste Edge TTS avant de parler.",
+    "noVoice": "Aucune voix disponible",
+    "noVoiceMessage": "{{label}}. Installez Piper (50 Mo) pour parler hors ligne.",
+    "onlineFailedTitle": "Échec de la voix en ligne",
+    "fallbackLocal": "Lecture avec la voix locale ({{engine}}).",
+    "onlineError": "Erreur de la voix en ligne",
+    "permissionDenied": "Autorisation du microphone refusée",
+    "permissionDeniedMessage": "Sans elle, l’application ne voit pas les noms des périphériques et ne trouve pas CABLE Input. Autorisez l’accès et réessayez.",
+    "chooseOutput": "Choisissez la sortie audio",
+    "chooseOutputMessage": "Ouvrez Paramètres > Micro virtuel et sélectionnez CABLE Input pour que Discord entende la voix en ligne.",
+    "micNotFound": "Micro virtuel introuvable",
+    "micNotFoundMessage": "Il est fourni avec le programme d’installation de l’application. Si vous venez de l’installer, redémarrez Windows."
+  }
+}

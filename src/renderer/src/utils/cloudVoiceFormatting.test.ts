@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { CloudVoice } from '../../../shared/types'
 import {
+  defaultLocaleFilter,
   filterCloudVoices,
   localeFlag,
   shortVoiceLabel,
@@ -73,6 +74,20 @@ describe('sortAvailableLocales', () => {
     ]
     const sorted = sortAvailableLocales(voices)
     expect(sorted).toEqual(['pt-BR', 'en-US'])
+  })
+})
+
+describe('French interface locale preference', () => {
+  it('puts fr-FR first, then other fr-*, then the usual order', () => {
+    const voices = ['pt-BR', 'en-US', 'fr-CA', 'fr-FR', 'fr-BE', 'zh-CN'].map((Locale) => makeVoice({ Locale }))
+    expect(sortAvailableLocales(voices, 'fr')).toEqual(['fr-FR', 'fr-BE', 'fr-CA', 'pt-BR', 'en-US', 'zh-CN'])
+    expect(sortAvailableLocales(voices, 'en')).toEqual(['pt-BR', 'en-US', 'fr-FR', 'fr-BE', 'fr-CA', 'zh-CN'])
+  })
+
+  it('picks fr-FR as the initial filter in French, pt-BR otherwise', () => {
+    expect(defaultLocaleFilter('fr')).toBe('fr-FR')
+    expect(defaultLocaleFilter('en')).toBe('pt-BR')
+    expect(defaultLocaleFilter(undefined)).toBe('pt-BR')
   })
 })
 

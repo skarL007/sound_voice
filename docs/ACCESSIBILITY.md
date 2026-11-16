@@ -1,3 +1,5 @@
+**English** · [Français](fr/ACCESSIBILITY.md)
+
 # Accessibility - VoiceLaunch TTS
 
 ## Mission

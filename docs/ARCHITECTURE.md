@@ -1,3 +1,5 @@
+**English** · [Français](fr/ARCHITECTURE.md)
+
 # Architecture
 
 VoiceLaunch TTS is an Electron desktop app with a bundled Python backend. This

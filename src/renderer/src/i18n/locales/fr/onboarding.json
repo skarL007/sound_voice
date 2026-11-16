@@ -1,0 +1,28 @@
+{
+  "welcome": {
+    "title": "Bienvenue dans VoiceLaunch TTS",
+    "description": "Une station vocale locale pour les personnes qui ne peuvent pas parler, les joueurs, les utilisateurs de Discord et toute personne ayant besoin d’une communication assistée. Votre parcours a été adapté à votre matériel.",
+    "tip": "Parcours détecté : {{headline}}."
+  },
+  "tips": {
+    "tryCloud": "Allez dans l’écran Parler, choisissez une voix et appuyez sur Entrée. Cela fonctionne immédiatement.",
+    "installPiper": "Les voix en ligne de l’écran Parler couvrent l’essentiel sans rien installer. Une voix locale prend automatiquement le relais quand vous êtes hors ligne.",
+    "installXtts": "Le clonage de voix n’est pas disponible dans cette version : utilisez plutôt les voix en ligne de l’écran Parler.",
+    "setupMic": "Dans Paramètres > Micro virtuel, sélectionnez CABLE Input.",
+    "tourShortcuts": "Dans l’écran Raccourcis, vous créez des raccourcis globaux qui déclenchent des phrases."
+  },
+  "tipLabel": "Astuce :",
+  "stepOf": "Étape {{current}} sur {{total}}",
+  "detecting": "Détection du matériel…",
+  "skipTutorial": "Passer le didacticiel",
+  "ariaLabel": "Didacticiel d’accueil",
+  "mic": {
+    "verified": "Micro virtuel actif. Discord/VRChat devrait vous entendre maintenant.",
+    "polling": "En attente de l’activation du micro virtuel (bouton « Activer le micro virtuel » de l’écran Parler)…",
+    "notDetected": "Micro virtuel pas encore détecté. Vous pouvez continuer et le configurer plus tard dans les Paramètres."
+  },
+  "back": "Retour",
+  "skip": "Passer",
+  "getStarted": "Commencer",
+  "next": "Suivant"
+}
